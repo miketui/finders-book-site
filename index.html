@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<title>Family Emergency Binder &amp; Legacy Organizer | Finder's Book</title>
+<meta name="description" content="Organize the people, documents, and first steps your family may need in an emergency. Get a 49-page fillable and printable binder with five practical tools.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#14372D">
+<meta name="author" content="Joanne Godfrey and Michael David">
+<link rel="canonical" href="https://finders-book-v34.vercel.app/">
+
+<meta property="og:type" content="product">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="The Family Clarity Co.">
+<meta property="og:url" content="https://finders-book-v34.vercel.app/">
+<meta property="og:title" content="The Finder's Book | Family Emergency Binder">
+<meta property="og:description" content="A 49-page fillable and printable organizer that maps who to call and where important records live, without storing passwords.">
+<meta property="og:image" content="https://finders-book-v34.vercel.app/assets/og-finders-book.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Finder's Book, a 49-page family emergency and legacy organizer.">
+<meta property="product:price:amount" content="49.00">
+<meta property="product:price:currency" content="USD">
+<meta property="product:availability" content="in stock">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Finder's Book | Family Emergency Binder">
+<meta name="twitter:description" content="49 fillable and printable pages that help trusted people find the right contact, record, or secure system.">
+<meta name="twitter:image" content="https://finders-book-v34.vercel.app/assets/og-finders-book.jpg">
+<meta name="twitter:image:alt" content="The Finder's Book family emergency binder and legacy organizer.">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="assets/cover.webp" type="image/webp" fetchpriority="high">
+<link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-normal.woff2" type="font/woff2" crossorigin>
+<link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-italic.woff2" type="font/woff2" crossorigin>
+
+<style>
+@font-face{
+  font-family:"Newsreader Local";font-style:normal;font-display:swap;font-weight:200 800;
+  src:url("assets/fonts/newsreader-latin-variable-normal.woff2") format("woff2-variations");
+}
+@font-face{
+  font-family:"Newsreader Local";font-style:italic;font-display:swap;font-weight:200 800;
+  src:url("assets/fonts/newsreader-latin-variable-italic.woff2") format("woff2-variations");
+}
+@font-face{
+  font-family:"Archivo Local";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("assets/fonts/archivo-latin-variable-normal.woff2") format("woff2-variations");
+}
+
+/* ============================================================
+   THE FINDER'S BOOK: design tokens
+   Palette lifted from the artifact's own trade dress:
+   pine #14372D (cover ink) · cream #FAF4E8 (interior paper) · gold #B8923D
+   Every text pairing below is verified WCAG AA.
+   ============================================================ */
+:root{
+  --pine-900:#0B1F19;
+  --pine:#14372D;
+  --pine-700:#1D4A3C;
+  --paper:#FAF4E8;
+  --paper-hi:#FDFAF1;
+  --paper-sh:#F0E7D5;
+  --sage:#DCE6E0;
+  --gold:#B8923D;        /* rules + decoration only, 2.66 on cream */
+  --gold-hi:#DFC99D;     /* gold text on pine, 8.04 AA */
+  --gold-ink:#7A5E22;    /* gold text on cream, 5.55 AA */
+  --mute:#4A5D55;        /* muted text on cream, 6.42 AA */
+  --mute-pine:#A9BDB2;   /* muted text on pine, 6.57 AA */
+  --hair:rgba(20,55,45,.16);
+  --hair-lt:rgba(250,244,232,.20);
+  --serif:"Newsreader Local",Georgia,"Times New Roman",serif;
+  --sans:"Archivo Local",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:3px;
+  --shadow:0 24px 60px -30px rgba(11,31,25,.45);
+  --shadow-sm:0 10px 30px -18px rgba(11,31,25,.40);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --wrap:1180px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  margin:0;background:var(--paper);color:var(--pine);
+  font-family:var(--serif);font-size:1.0625rem;line-height:1.65;
+  font-optical-sizing:auto;-webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit}
+h1,h2,h3,h4{margin:0;font-weight:400;line-height:1.1;letter-spacing:-.012em}
+p{margin:0 0 1rem}
+:focus-visible{
+  outline:3px solid var(--paper-hi);outline-offset:2px;border-radius:2px;
+  box-shadow:0 0 0 5px var(--pine-700);
+}
+
+.skip{position:absolute;left:-9999px;top:0;background:var(--pine);color:var(--paper);padding:.85rem 1.25rem;z-index:200;font-family:var(--sans);font-size:.85rem}
+.skip:focus{left:.5rem;top:.5rem}
+
+.wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 clamp(1.15rem,4vw,2.5rem)}
+.band{padding:clamp(4rem,9vw,7.5rem) 0}
+.band-pine{background:var(--pine);color:var(--paper)}
+.band-deep{background:var(--pine-900);color:var(--paper)}
+.band-sage{background:var(--sage)}
+.band-hi{background:var(--paper-hi)}
+
+/* ---------- SIGNATURE: the ruled field ----------
+   The book's own grammar: a small-caps label over a gold hairline.
+   Reused as the structural device for every section. */
+.eyebrow{
+  font-family:var(--sans);font-size:.7rem;font-weight:600;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--gold-ink);
+  display:flex;align-items:center;gap:.85rem;margin:0 0 1.4rem;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--gold);opacity:.55;max-width:190px}
+.band-pine .eyebrow,.band-deep .eyebrow{color:var(--gold-hi)}
+.band-pine .eyebrow::after,.band-deep .eyebrow::after{background:var(--gold-hi);opacity:.4}
+
+.rfield{border-top:1px solid var(--hair);padding-top:.7rem;margin-bottom:1.5rem}
+.rfield-label{
+  display:block;font-family:var(--sans);font-size:.64rem;font-weight:600;
+  letter-spacing:.17em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.4rem;
+}
+.rfield-value{font-size:1rem;line-height:1.5}
+.band-pine .rfield,.band-deep .rfield{border-top-color:var(--hair-lt)}
+.band-pine .rfield-label,.band-deep .rfield-label{color:var(--gold-hi)}
+
+/* ---------- type scale ---------- */
+.h-xl{font-size:clamp(2.6rem,6.4vw,4.5rem);line-height:1.04;letter-spacing:-.028em}
+.h-lg{font-size:clamp(1.95rem,4.1vw,3rem);line-height:1.1;letter-spacing:-.022em}
+.h-md{font-size:clamp(1.35rem,2.3vw,1.7rem);line-height:1.22;letter-spacing:-.014em}
+.h-sm{font-size:1.1rem;line-height:1.32}
+.lede{font-size:clamp(1.08rem,1.6vw,1.24rem);line-height:1.62;color:var(--mute);max-width:60ch}
+.band-pine .lede,.band-deep .lede{color:var(--mute-pine)}
+.ital{font-style:italic;color:var(--pine-700)}
+.band-pine .ital{color:var(--gold-hi)}
+.measure{max-width:62ch}
+.small{font-size:.9rem;line-height:1.55;color:var(--mute)}
+.band-pine .small,.band-deep .small{color:var(--mute-pine)}
+.tiny{font-family:var(--sans);font-size:.78rem;line-height:1.5;color:var(--mute)}
+.band-pine .tiny,.band-deep .tiny{color:var(--mute-pine)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.6rem;
+  font-family:var(--sans);font-size:.95rem;font-weight:600;letter-spacing:.005em;
+  padding:1.02rem 1.75rem;border-radius:var(--r);border:1.5px solid transparent;
+  text-decoration:none;cursor:pointer;transition:transform .22s var(--ease),background .22s var(--ease),border-color .22s var(--ease),color .22s var(--ease);
+  text-align:center;line-height:1.2;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:var(--pine);color:var(--paper);border-color:var(--pine)}
+.btn-primary:hover{background:var(--pine-900);border-color:var(--pine-900)}
+.band-pine .btn-primary,.band-deep .btn-primary{background:var(--paper);color:var(--pine);border-color:var(--paper)}
+.band-pine .btn-primary:hover,.band-deep .btn-primary:hover{background:var(--paper-hi);border-color:var(--paper-hi)}
+.btn-ghost{background:transparent;color:var(--pine);border-color:var(--hair)}
+.btn-ghost:hover{border-color:var(--pine);background:rgba(20,55,45,.04)}
+.band-pine .btn-ghost,.band-deep .btn-ghost{color:var(--paper);border-color:var(--hair-lt)}
+.band-pine .btn-ghost:hover,.band-deep .btn-ghost:hover{border-color:var(--paper);background:rgba(250,244,232,.08)}
+.btn-row{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2rem}
+.btn-note{font-family:var(--sans);font-size:.8rem;color:var(--mute);margin-top:1rem}
+.band-pine .btn-note,.band-deep .btn-note{color:var(--mute-pine)}
+
+/* ---------- header ---------- */
+.hdr{
+  position:sticky;top:0;z-index:90;background:rgba(20,55,45,.94);
+  backdrop-filter:saturate(150%) blur(12px);-webkit-backdrop-filter:saturate(150%) blur(12px);
+  border-bottom:1px solid var(--hair-lt);
+}
+.hdr-in{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:66px}
+.brand{display:inline-flex;align-items:center;min-height:44px;font-family:var(--serif);font-size:1.02rem;color:var(--paper);text-decoration:none;letter-spacing:-.01em;white-space:nowrap}
+.brand em{font-style:italic;color:var(--gold-hi)}
+.nav{display:flex;align-items:center;gap:1.85rem}
+.nav a{display:inline-flex;align-items:center;min-height:44px;font-family:var(--sans);font-size:.84rem;color:var(--mute-pine);text-decoration:none;transition:color .2s}
+.nav a:hover{color:var(--paper)}
+.hdr .btn{padding:.66rem 1.15rem;font-size:.84rem;min-height:44px}
+@media (max-width:860px){.nav{display:none}}
+
+/* ---------- hero ---------- */
+.hero{background:var(--pine);color:var(--paper);position:relative;overflow:hidden;padding:clamp(3.5rem,7vw,6rem) 0 clamp(4rem,8vw,6.5rem)}
+.hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(115% 80% at 82% 8%,rgba(184,146,61,.20),transparent 62%);
+}
+.hero-grid{position:relative;display:grid;grid-template-columns:1.06fr .94fr;gap:clamp(2.5rem,5vw,4.5rem);align-items:center}
+@media (max-width:960px){.hero-grid{grid-template-columns:1fr;gap:3rem}}
+.hero h1{color:var(--paper)}
+.hero .lede{margin-top:1.6rem}
+.hero .eyebrow{color:var(--gold-hi)}
+.hero .eyebrow::after{background:var(--gold-hi);opacity:.4}
+.hero .lede,.hero .btn-note{color:var(--mute-pine)}
+.hero .ital{color:var(--gold-hi)}
+.hero .btn-primary{background:var(--paper);color:var(--pine);border-color:var(--paper)}
+.hero .btn-primary:hover{background:var(--paper-hi);border-color:var(--paper-hi)}
+.hero .btn-ghost{color:var(--paper);border-color:var(--hair-lt)}
+.hero .btn-ghost:hover{color:var(--paper);border-color:var(--paper);background:rgba(250,244,232,.08)}
+
+/* hero snapshot card: the product's page 2, rendered live */
+.snap{
+  background:var(--paper);color:var(--pine);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:clamp(1.6rem,3vw,2.4rem);
+  border-top:4px solid var(--gold);position:relative;
+}
+.snap-top{display:grid;grid-template-columns:1fr auto;gap:1.25rem;align-items:start;margin-bottom:1.55rem}
+.hero-cover{
+  width:76px;height:auto;aspect-ratio:1100/1423;object-fit:cover;
+  border:1px solid var(--hair);border-radius:2px;box-shadow:var(--shadow-sm);
+  transform:rotate(1.5deg);
+}
+.snap-head{font-family:var(--sans);font-size:.63rem;font-weight:700;letter-spacing:.19em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.35rem}
+.snap-title{font-size:1.3rem;margin-bottom:.35rem}
+.snap-sub{font-family:var(--sans);font-size:.76rem;color:var(--mute);margin:0;line-height:1.5}
+.snap-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1.6rem}
+@media (max-width:440px){.snap-grid{grid-template-columns:1fr}}
+.snap-grid .rfield{margin-bottom:1.25rem}
+.snap-grid .rfield-value{font-style:italic;color:var(--pine-700);font-size:.97rem}
+.snap-foot{border-top:1px solid var(--hair);padding-top:.9rem;margin-top:.4rem;font-family:var(--sans);font-size:.7rem;color:var(--mute);line-height:1.5}
+
+/* the fields write themselves in, once */
+.writein{opacity:1;animation:writein .55s var(--ease) forwards}
+.writein:nth-of-type(1){animation-delay:.35s}
+.writein:nth-of-type(2){animation-delay:.5s}
+.writein:nth-of-type(3){animation-delay:.65s}
+.writein:nth-of-type(4){animation-delay:.8s}
+@keyframes writein{from{transform:translateY(5px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.writein{animation:none;opacity:1}}
+
+/* ---------- factual proof strip ---------- */
+.proof-strip{background:var(--paper-hi);border-bottom:1px solid var(--hair)}
+.proof-list{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(4,1fr);
+}
+.proof-list li{padding:1.35rem clamp(1rem,2.2vw,1.7rem);border-right:1px solid var(--hair)}
+.proof-list li:first-child{padding-left:0}
+.proof-list li:last-child{border-right:0;padding-right:0}
+.proof-list strong{display:block;font-size:1.02rem;font-weight:500;line-height:1.3;margin-bottom:.18rem}
+.proof-list span{display:block;font-family:var(--sans);font-size:.72rem;line-height:1.45;color:var(--mute)}
+@media (max-width:760px){
+  .proof-list{grid-template-columns:1fr 1fr}
+  .proof-list li,.proof-list li:first-child,.proof-list li:last-child{padding:1.1rem}
+  .proof-list li:nth-child(2){border-right:0}
+  .proof-list li:nth-child(-n+2){border-bottom:1px solid var(--hair)}
+}
+
+/* ---------- generic layout helpers ---------- */
+.head-block{max-width:64ch;margin-bottom:clamp(2.5rem,4.5vw,3.75rem)}
+.moment-callout{font-size:1.2rem;line-height:1.5;margin-top:1.75rem}
+.security-note{margin-top:2rem;max-width:76ch}
+.inside-sections{margin-top:clamp(3rem,5vw,4.5rem)}
+.bonus-grid{gap:clamp(1.75rem,3.5vw,3rem) clamp(2rem,4vw,3.5rem)}
+.no-bottom-margin{margin-bottom:0}
+.pricing-head{max-width:58ch}
+.pricing-license{margin:2.25rem auto 0;max-width:74ch;text-align:center}
+.centered-head{margin-left:auto;margin-right:auto;text-align:center}
+.eyebrow-centered{justify-content:center}
+.final-wrap{max-width:760px;text-align:center}
+.final-lede{margin-left:auto;margin-right:auto;margin-bottom:2.25rem}
+.final-note{margin-top:1.25rem}
+.footer-summary{max-width:38ch;margin:0}
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.5rem,3.5vw,3rem)}
+.cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1.5rem,3vw,2.5rem)}
+.cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(1.2rem,2.4vw,2rem)}
+@media (max-width:900px){.cols-3,.cols-4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:620px){.cols-2,.cols-3,.cols-4{grid-template-columns:1fr}}
+
+.card{background:var(--paper-hi);border:1px solid var(--hair);border-radius:var(--r);padding:clamp(1.5rem,2.6vw,2rem)}
+.band-hi .card{background:var(--paper)}
+.card h3{margin-bottom:.6rem}
+.card p:last-child{margin-bottom:0}
+
+/* ---------- security doctrine ---------- */
+.doctrine{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.5rem,3vw,2.5rem)}
+@media (max-width:720px){.doctrine{grid-template-columns:1fr}}
+.doc-panel{border:1px solid var(--hair-lt);border-radius:var(--r);padding:clamp(1.5rem,2.8vw,2.15rem);background:rgba(250,244,232,.045)}
+.doc-panel h3{color:var(--paper);margin-bottom:1.25rem;font-size:1.28rem}
+.doc-list{list-style:none;margin:0;padding:0;font-family:var(--sans);font-size:.92rem}
+.doc-list li{padding:.62rem 0 .62rem 1.75rem;border-bottom:1px solid var(--hair-lt);position:relative;line-height:1.45}
+.doc-list li:last-child{border-bottom:0}
+.doc-yes li::before{content:"";position:absolute;left:0;top:1.02rem;width:9px;height:9px;border-radius:50%;background:var(--gold-hi)}
+.doc-no li{color:var(--mute-pine)}
+.doc-no li::before{content:"";position:absolute;left:0;top:1.28rem;width:11px;height:1.5px;background:var(--mute-pine);opacity:.75}
+.doc-no li span{text-decoration:line-through;text-decoration-color:rgba(169,189,178,.55);text-decoration-thickness:1px}
+
+/* ---------- page gallery ---------- */
+.gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(1rem,2vw,1.6rem)}
+@media (max-width:900px){.gallery{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:620px){.gallery{grid-template-columns:repeat(2,1fr)}}
+.pg{
+  border:0;padding:0;background:none;cursor:zoom-in;text-align:left;
+  font:inherit;color:inherit;display:block;width:100%;
+}
+.pg img{
+  width:100%;aspect-ratio:900/1165;object-fit:cover;border-radius:var(--r);
+  border:1px solid var(--hair);box-shadow:var(--shadow-sm);
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease);background:var(--paper-hi);
+}
+.pg:hover img{transform:translateY(-5px);box-shadow:0 22px 44px -24px rgba(11,31,25,.5)}
+.pg-cap{font-family:var(--sans);font-size:.76rem;color:var(--mute);margin-top:.65rem;line-height:1.4}
+@media (prefers-reduced-motion:reduce){.pg:hover img{transform:none}}
+
+/* ---------- steps ---------- */
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(1.2rem,2.4vw,2rem)}
+@media (max-width:900px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.steps{grid-template-columns:1fr}}
+.step{counter-increment:s;border-top:2px solid var(--gold);padding-top:1.1rem}
+.step::before{
+  content:counter(s,decimal-leading-zero);display:block;font-family:var(--sans);
+  font-size:.72rem;font-weight:700;letter-spacing:.17em;color:var(--gold-ink);margin-bottom:.7rem;
+}
+.step h3{font-size:1.12rem;margin-bottom:.45rem}
+.step p{font-size:.94rem;color:var(--mute);margin:0}
+
+/* ---------- bonuses ---------- */
+.bonus{display:grid;grid-template-columns:auto 1fr;gap:1.25rem;align-items:start}
+.bonus img{width:96px;border-radius:2px;border:1px solid var(--hair);box-shadow:var(--shadow-sm)}
+.bonus h3{font-size:1.06rem;margin-bottom:.35rem}
+.bonus p{font-size:.92rem;color:var(--mute);margin:0}
+@media (max-width:560px){.bonus{grid-template-columns:72px 1fr;gap:1rem}.bonus img{width:72px}}
+
+/* ---------- formats ---------- */
+.fmt{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.5rem,3vw,2.5rem)}
+@media (max-width:720px){.fmt{grid-template-columns:1fr}}
+
+/* ---------- pricing ---------- */
+.tiers{display:grid;grid-template-columns:.85fr 1.3fr .85fr;gap:clamp(1.1rem,2.2vw,1.8rem);align-items:stretch}
+@media (max-width:940px){.tiers{grid-template-columns:1fr;max-width:560px;margin:0 auto}}
+.tier{
+  background:var(--paper-hi);border:1px solid var(--hair);border-radius:var(--r);
+  padding:clamp(1.6rem,2.8vw,2.15rem);display:flex;flex-direction:column;
+}
+.tier-lead{background:var(--pine);color:var(--paper);border-color:var(--pine);box-shadow:var(--shadow);position:relative}
+.tier-flag{
+  position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
+  background:var(--gold);color:var(--pine-900);font-family:var(--sans);
+  font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  padding:.42rem 1rem;border-radius:2px;white-space:nowrap;
+}
+.tier-name{font-family:var(--sans);font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.9rem}
+.tier-lead .tier-name{color:var(--gold-hi)}
+.tier-price{font-size:clamp(2.4rem,4.4vw,3.1rem);line-height:1;letter-spacing:-.03em;margin-bottom:.3rem}
+.tier-price sup{font-size:.42em;top:-.85em;position:relative;font-family:var(--sans);font-weight:600}
+.tier-desc{font-size:.95rem;color:var(--mute);margin-bottom:1.5rem;min-height:2.9em}
+.tier-lead .tier-desc{color:var(--mute-pine)}
+.tier-list{list-style:none;margin:0 0 1.75rem;padding:0;font-family:var(--sans);font-size:.88rem;flex:1}
+.tier-list li{padding:.5rem 0 .5rem 1.4rem;position:relative;line-height:1.45;border-bottom:1px solid var(--hair)}
+.tier-lead .tier-list li{border-bottom-color:var(--hair-lt)}
+.tier-list li:last-child{border-bottom:0}
+.tier-list li::before{content:"";position:absolute;left:0;top:.95rem;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.tier-lead .tier-list li::before{background:var(--gold-hi)}
+.tier .btn{width:100%}
+
+/* ---------- FAQ ---------- */
+.faq{max-width:820px;margin:0 auto}
+.faq details{border-top:1px solid var(--hair)}
+.faq details:last-of-type{border-bottom:1px solid var(--hair)}
+.faq summary{
+  list-style:none;cursor:pointer;padding:1.3rem 2.5rem 1.3rem 0;position:relative;
+  font-size:1.1rem;line-height:1.4;font-family:var(--serif);
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{
+  content:"";position:absolute;right:.35rem;top:1.72rem;width:11px;height:11px;
+  border-right:1.5px solid var(--gold-ink);border-bottom:1.5px solid var(--gold-ink);
+  transform:rotate(45deg);transition:transform .25s var(--ease);
+}
+.faq details[open] summary::after{transform:rotate(-135deg)}
+.faq-body{padding:0 2.5rem 1.5rem 0;color:var(--mute);font-size:1rem}
+.faq-body p:last-child{margin-bottom:0}
+
+/* ---------- audience ---------- */
+.aud{border-top:2px solid var(--gold);padding-top:1.25rem}
+.aud h3{font-size:1.15rem;margin-bottom:.6rem}
+.aud p{font-size:.95rem;color:var(--mute);margin:0}
+
+/* ---------- creator transparency ---------- */
+.creator-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(2.5rem,6vw,5.5rem);align-items:start}
+.creator-grid .head-block{margin-bottom:0}
+.creator-note{border-top:1px solid var(--hair-lt);padding-top:1rem}
+.creator-note a{color:var(--gold-hi);text-underline-offset:.18em}
+@media (max-width:760px){.creator-grid{grid-template-columns:1fr}}
+
+/* ---------- lightbox ---------- */
+.lb{
+  position:fixed;inset:0;z-index:150;background:rgba(11,31,25,.93);
+  display:none;align-items:center;justify-content:center;padding:clamp(1rem,4vw,3rem);
+}
+.lb[open],.lb.on{display:flex}
+.lb img{max-width:min(620px,92vw);max-height:88vh;width:auto;border-radius:var(--r);box-shadow:0 40px 90px -30px rgba(0,0,0,.7)}
+.lb-close{
+  position:absolute;top:clamp(.85rem,2.5vw,1.75rem);right:clamp(.85rem,2.5vw,1.75rem);
+  background:var(--paper);color:var(--pine);border:0;border-radius:50%;
+  width:44px;height:44px;font-size:1.4rem;line-height:1;cursor:pointer;font-family:var(--sans);
+}
+.lb-cap{position:absolute;bottom:clamp(1rem,3vw,2rem);left:50%;transform:translateX(-50%);color:var(--paper);font-family:var(--sans);font-size:.82rem;text-align:center;padding:0 1rem}
+
+/* ---------- sticky mobile CTA ---------- */
+.sticky{
+  position:fixed;left:0;right:0;bottom:0;z-index:80;display:none;
+  background:rgba(11,31,25,.97);backdrop-filter:blur(10px);
+  border-top:1px solid var(--hair-lt);padding:.7rem clamp(1rem,4vw,1.5rem);
+  padding-bottom:calc(.7rem + env(safe-area-inset-bottom));
+  align-items:center;justify-content:space-between;gap:1rem;
+  transform:translateY(105%);transition:transform .3s var(--ease);
+}
+.sticky.on{transform:translateY(0)}
+.sticky-txt{font-family:var(--sans);font-size:.76rem;color:var(--mute-pine);line-height:1.3}
+.sticky-txt b{display:block;color:var(--paper);font-size:.9rem;font-weight:600}
+.sticky .btn{padding:.8rem 1.15rem;font-size:.85rem;white-space:nowrap;min-height:46px}
+@media (max-width:860px){.sticky{display:flex}body{padding-bottom:74px}}
+
+/* ---------- footer ---------- */
+.ftr{background:var(--pine-900);color:var(--mute-pine);padding:clamp(3rem,5vw,4.5rem) 0 2.5rem;font-family:var(--sans);font-size:.85rem}
+.ftr a{color:var(--gold-hi)}
+.ftr-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:2.5rem;margin-bottom:3rem}
+@media (max-width:760px){.ftr-grid{grid-template-columns:1fr;gap:2rem}}
+.ftr h2{font-family:var(--sans);font-size:.68rem;font-weight:700;line-height:1.2;letter-spacing:.17em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:1rem}
+.ftr ul{list-style:none;margin:0;padding:0}
+.ftr li{margin-bottom:.1rem}
+.ftr li a{display:inline-flex;align-items:center;min-height:44px;padding:.25rem 0}
+.ftr-legal{border-top:1px solid var(--hair-lt);padding-top:2rem;font-size:.76rem;line-height:1.65;color:rgba(169,189,178,.85)}
+.ftr-legal p{margin-bottom:.85rem}
+
+/* === v3.2 ELEVATION === */
+
+/* ============================================================
+   THE FINDER'S BOOK — v3.2 ELEVATION LAYER
+   Additive only. Inherits every token from the v3.1 system.
+   Motion is OPT-IN: it activates only when html.fx has been set
+   by the head script, which runs before first paint and checks
+   prefers-reduced-motion. With JS off or motion reduced, every
+   element renders in its final state. The CTA is never gated.
+   ============================================================ */
+
+/* ---------- 1. Entrance primitives ---------- */
+html.fx .fx-up{opacity:0;transform:translate3d(0,16px,0)}
+html.fx .fx-fade{opacity:0}
+html.fx .fx-rule{transform:scaleX(0);transform-origin:left center}
+
+html.fx .fx-up.fx-on,
+html.fx .fx-fade.fx-on{
+  opacity:1;transform:translate3d(0,0,0);
+  transition:opacity .6s var(--ease),transform .6s var(--ease);
+  transition-delay:var(--fx-d,0ms);
+}
+html.fx .fx-rule.fx-on{
+  transform:scaleX(1);
+  transition:transform .72s var(--ease);
+  transition-delay:var(--fx-d,0ms);
+}
+
+/* Hero runs on load, not on scroll — it is already in view.
+   Total choreography lands at 620ms. The CTA is in the first wave. */
+html.fx .hero .fx-up{animation:fxRise .62s var(--ease) both;animation-delay:var(--fx-d,0ms)}
+html.fx .hero .fx-rule{animation:fxDraw .72s var(--ease) both;animation-delay:var(--fx-d,0ms)}
+@keyframes fxRise{from{opacity:0;transform:translate3d(0,16px,0)}to{opacity:1;transform:none}}
+@keyframes fxDraw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* The gold hairline inside every eyebrow draws itself. */
+html.fx .eyebrow::after{transform:scaleX(0);transform-origin:left center}
+html.fx .eyebrow.fx-on::after{transform:scaleX(1);transition:transform .72s var(--ease) .1s}
+html.fx .hero .eyebrow::after{animation:fxDraw .72s var(--ease) .06s both}
+
+/* ---------- 2. Continuity Snapshot: the signature moment ----------
+   The four ruled fields fill in the way a hand would fill them:
+   left to right, one after another, ~90ms apart. */
+html.fx .rfield{opacity:0;transform:translate3d(0,8px,0)}
+html.fx .rfield.fx-on{
+  opacity:1;transform:none;
+  transition:opacity .5s var(--ease),transform .5s var(--ease);
+  transition-delay:var(--fx-d,0ms);
+}
+
+/* ---------- 3. Page previews ---------- */
+html.fx .pg{transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
+@media (hover:hover){
+  html.fx .pg:hover{transform:translateY(-5px) scale(1.012);box-shadow:var(--shadow)}
+}
+html.fx .pg:active{transform:translateY(-1px) scale(.997);transition-duration:.09s}
+
+/* ---------- 4. Pricing cards ---------- */
+html.fx .tier{transition:transform .4s var(--ease),box-shadow .4s var(--ease)}
+@media (hover:hover){
+  html.fx .tier:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+  html.fx .tier-lead:hover{transform:translateY(-6px)}
+}
+html.fx .tier:active{transform:translateY(0) scale(.995);transition-duration:.08s}
+
+/* Firm tap feedback on every button. Deliberately fast — a button
+   that feels slow feels broken. */
+html.fx .btn{transition:transform .14s var(--ease),background-color .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease)}
+html.fx .btn:active{transform:scale(.978);transition-duration:.06s}
+
+/* ---------- 5. Lightbox: expand rather than blink ---------- */
+html.fx .lb{opacity:0;transition:opacity .26s var(--ease)}
+html.fx .lb.on{opacity:1}
+html.fx .lb img{transform:scale(.955);opacity:0;transition:transform .38s var(--ease),opacity .3s var(--ease)}
+html.fx .lb.on img{transform:scale(1);opacity:1}
+
+/* ---------- 6. Lead capture: the Gap Check ---------- */
+.gap{background:var(--sage);border-top:1px solid var(--hair)}
+.gap-grid{
+  display:grid;gap:clamp(2rem,5vw,4rem);align-items:center;
+  grid-template-columns:1fr;
+}
+@media (min-width:860px){.gap-grid{grid-template-columns:1.05fr .95fr}}
+
+.gap-title{margin-bottom:.9rem}
+.gap-lede{color:var(--mute);max-width:46ch}
+.gap-list{list-style:none;margin:1.5rem 0 0;padding:0;display:grid;gap:.7rem}
+.gap-list li{
+  position:relative;padding-left:1.7rem;font-size:.97rem;color:var(--mute);
+}
+.gap-list li::before{
+  content:"";position:absolute;left:0;top:.62em;
+  width:.62rem;height:1px;background:var(--gold);
+}
+
+.gap-card{
+  background:var(--paper-hi);border:1px solid var(--hair);
+  border-radius:var(--r);padding:clamp(1.6rem,3.4vw,2.4rem);
+  box-shadow:var(--shadow-sm);
+}
+.gap-card h3{
+  font-family:var(--serif);font-size:1.35rem;line-height:1.25;
+  margin-bottom:.55rem;font-weight:400;
+}
+.gap-card .tiny{color:var(--mute)}
+
+.gap-form{display:grid;gap:.85rem;margin-top:1.4rem}
+.gap-field{display:grid;gap:.4rem}
+.gap-field label{
+  font-family:var(--sans);font-size:.7rem;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--gold-ink);
+}
+.gap-field input{
+  font-family:var(--serif);font-size:1rem;color:var(--pine);
+  background:var(--paper);border:1px solid var(--hair);
+  border-radius:var(--r);padding:.85rem .95rem;width:100%;
+  min-height:48px;/* mobile tap target */
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+}
+.gap-field input::placeholder{color:var(--mute);opacity:.62}
+.gap-field input:focus{
+  outline:none;border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(184,146,61,.18);
+}
+.gap-form .btn{width:100%;min-height:48px}
+
+/* Honeypot — visually gone, still reachable by nothing that matters */
+.gap-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+
+.gap-note{
+  font-family:var(--sans);font-size:.74rem;line-height:1.5;
+  color:var(--mute);margin:.9rem 0 0;
+}
+.gap-note a{color:var(--gold-ink);text-underline-offset:2px}
+
+.gap-msg{
+  margin:.9rem 0 0;padding:.85rem 1rem;border-radius:var(--r);
+  font-family:var(--sans);font-size:.85rem;line-height:1.5;
+  border:1px solid var(--hair);background:var(--paper);
+}
+.gap-msg[data-state="ok"]{border-color:var(--gold);background:rgba(184,146,61,.09)}
+.gap-msg[data-state="err"]{border-color:#9B3B2E;background:rgba(155,59,46,.07);color:#7A2C22}
+.gap-msg[hidden]{display:none}
+
+/* ---------- 7. Legal document pages ---------- */
+.doc{max-width:74ch;margin:0 auto;padding:clamp(3rem,8vw,6rem) 0}
+.doc h1{font-size:clamp(2rem,5vw,2.9rem);margin-bottom:.6rem}
+.doc h2{
+  font-size:clamp(1.25rem,2.6vw,1.55rem);margin:2.6rem 0 .8rem;
+  padding-top:1.6rem;border-top:1px solid var(--hair);font-weight:400;
+}
+.doc h2:first-of-type{border-top:0;padding-top:0}
+.doc h3{font-size:1.05rem;margin:1.6rem 0 .5rem;font-weight:600;font-family:var(--sans)}
+.doc p,.doc li{color:var(--mute);font-size:1.02rem}
+.doc strong{color:var(--pine)}
+.doc ul,.doc ol{padding-left:1.25rem;margin:0 0 1.15rem}
+.doc li{margin-bottom:.5rem}
+.doc a{color:var(--gold-ink)}
+.doc-meta{
+  font-family:var(--sans);font-size:.76rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--mute);margin-bottom:2.4rem;
+}
+.doc-back{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-family:var(--sans);font-size:.8rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--gold-ink);
+  text-decoration:none;margin-bottom:2rem;
+}
+.doc-back:hover{text-decoration:underline;text-underline-offset:3px}
+.doc-table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.8rem;font-size:.95rem}
+.doc-table th,.doc-table td{
+  text-align:left;padding:.7rem .8rem;border-bottom:1px solid var(--hair);
+  vertical-align:top;color:var(--mute);
+}
+.doc-table th{
+  font-family:var(--sans);font-size:.7rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold-ink);font-weight:600;
+}
+
+/* ---------- 8. Reduced motion / no-JS safety net ----------
+   Belt and braces: even if html.fx were set in error, this wins. */
+@media (prefers-reduced-motion:reduce){
+  html.fx .fx-up,html.fx .fx-fade,html.fx .rfield{opacity:1!important;transform:none!important;animation:none!important}
+  html.fx .fx-rule,html.fx .eyebrow::after{transform:scaleX(1)!important;animation:none!important}
+  html.fx .lb,html.fx .lb img{opacity:1;transform:none;transition:none}
+  html.fx .pg,html.fx .tier,html.fx .btn{transition:none}
+}
+
+</style>
+
+<!-- v3.2 ELEVATION: motion opt-in, runs before first paint -->
+<script>(function(){try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.className+=" fx";}}catch(e){}})();</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="hdr">
+  <div class="wrap hdr-in">
+    <a class="brand" href="#top" aria-label="The Family Clarity Co.">Family <em>Clarity</em> Co.</a>
+    <nav class="nav" aria-label="Section">
+      <a href="#security">Security</a>
+      <a href="#inside">What's inside</a>
+      <a href="#start">15-minute start</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="header" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
+  </div>
+</header>
+
+<main id="main">
+<span id="top"></span>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">The Finder's Book · Family emergency binder</p>
+      <h1 class="h-xl">A family emergency binder that gives loved ones <span class="ital">one clear place to start.</span></h1>
+      <p class="lede">The Finder's Book organizes who to call, what matters, and where important records live across 49 fillable and printable pages. It uses pointers instead of passwords, so your family gets a map without turning the binder into a credential vault.</p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="hero" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
+        <a class="btn btn-ghost" href="#inside" data-scroll-cta data-placement="hero-preview">Preview 12 real pages</a>
+      </div>
+      <p class="btn-note">Instant digital download · Fillable and print PDFs · Five implementation tools</p>
+    </div>
+
+    <!-- signature moment: the book's page 2, rendered live -->
+    <div class="snap">
+      <div class="snap-top">
+        <div>
+          <p class="snap-head">Page 2 · Example entries</p>
+          <h2 class="snap-title">Continuity Snapshot</h2>
+          <p class="snap-sub">A first-page handoff with four answers a trusted person can act on.</p>
+        </div>
+        <img class="hero-cover" src="assets/cover.webp" width="1100" height="1423" fetchpriority="high" decoding="async" alt="Cover of The Finder's Book Ultimate Digital Edition.">
+      </div>
+      <div class="snap-grid">
+        <div class="rfield writein">
+          <span class="rfield-label">First person to call</span>
+          <span class="rfield-value">Dana · 555 0147</span>
+        </div>
+        <div class="rfield writein">
+          <span class="rfield-label">Backup person to call</span>
+          <span class="rfield-value">Marcus · 555 0182</span>
+        </div>
+        <div class="rfield writein">
+          <span class="rfield-label">Child / dependent caretaker</span>
+          <span class="rfield-value">Aunt Ruth · next door</span>
+        </div>
+        <div class="rfield writein">
+          <span class="rfield-label">Pet caretaker</span>
+          <span class="rfield-value">Dana · keys in blue dish</span>
+        </div>
+      </div>
+      <p class="snap-foot">No passwords. No PINs. No account numbers. Only the pointers a trusted person actually needs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FACTUAL PROOF ============ -->
+<section class="proof-strip" aria-label="Product at a glance">
+  <div class="wrap">
+    <ul class="proof-list">
+      <li><strong>49 sequential pages</strong><span>Matched internal page references</span></li>
+      <li><strong>Two formats included</strong><span>Fillable PDF plus print PDF</span></li>
+      <li><strong>Credentials stay separate</strong><span>Pointers, never passwords or PINs</span></li>
+      <li><strong>Five practical tools</strong><span>Included with the Ultimate edition</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ THE MOMENT ============ -->
+<section class="band band-hi">
+  <div class="wrap">
+    <div class="head-block">
+      <p class="eyebrow">When something changes</p>
+      <h2 class="h-lg">The emergency is hard enough. Finding the basics should not make it harder.</h2>
+    </div>
+    <div class="cols-2">
+      <div class="measure">
+        <p>A fall. A hospital call at 6 a.m. A diagnosis that changes the next year. A parent who moves and cannot remember which bank holds the mortgage.</p>
+        <p>In that hour, someone who loves you starts opening drawers. They call siblings who do not know either. They try to identify the insurer, the attorney, the neighbor with the spare key, and the person who can care for the dog.</p>
+        <p class="ital moment-callout">Preparation cannot remove the hard part. It can remove avoidable searching, guessing, and delay.</p>
+      </div>
+      <div>
+        <div class="rfield">
+          <span class="rfield-label">What it replaces</span>
+          <p class="rfield-value">Scattered folders, a mental list only one person holds, and the assumption that someone else knows.</p>
+        </div>
+        <div class="rfield">
+          <span class="rfield-label">What it is not</span>
+          <p class="rfield-value">Not a will. Not a trust. Not a power of attorney. It records <em>where those documents live</em> and who is named in them.</p>
+        </div>
+        <div class="rfield">
+          <span class="rfield-label">Who fills it in</span>
+          <p class="rfield-value">You, for your family, or you and a parent together at a kitchen table over a few short sessions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECURITY DOCTRINE ============ -->
+<section class="band band-pine" id="security">
+  <div class="wrap">
+    <div class="head-block">
+      <p class="eyebrow">The security question, answered first</p>
+      <h2 class="h-lg">A family map, <span class="ital">not a password vault.</span></h2>
+      <p class="lede">Some emergency organizers collect credentials and full account details in one place. The Finder's Book is deliberately narrower: it records who, what, and where while sensitive credentials stay in a separate secure system. That reduces exposure, but it does not eliminate risk.</p>
+    </div>
+    <div class="doctrine">
+      <div class="doc-panel">
+        <h3>What the book records</h3>
+        <ul class="doc-list doc-yes">
+          <li>Who to call first, and who backs them up</li>
+          <li>Where the signed originals are physically kept</li>
+          <li>Which institutions hold what, by name</li>
+          <li>Last four digits, for identification only</li>
+          <li>Who is named as executor, agent, or guardian</li>
+          <li>Care instructions for children, dependents, and animals</li>
+          <li>A pointer to the secure system that holds the secrets</li>
+        </ul>
+      </div>
+      <div class="doc-panel">
+        <h3>What the book never records</h3>
+        <ul class="doc-list doc-no">
+          <li><span>Passwords for any account</span></li>
+          <li><span>PINs for any card or device</span></li>
+          <li><span>Two-factor recovery codes</span></li>
+          <li><span>Full account numbers</span></li>
+          <li><span>Full Social Security numbers</span></li>
+          <li><span>Combinations to safes or storage units</span></li>
+          <li><span>Locations of cash kept in the home</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="tiny security-note">Treat the completed book as private personal information. Store it according to what you choose to include, limit access to people you trust, and keep passwords, PINs, recovery codes, and complete account identifiers in a separate secure system. Bonus 2 explains how the two systems work together.</p>
+  </div>
+</section>
+
+<!-- ============ INSIDE ============ -->
+<section class="band" id="inside">
+  <div class="wrap">
+    <div class="head-block">
+      <p class="eyebrow">Real pages from the actual book</p>
+      <h2 class="h-lg">One organized map for the people you trust.</h2>
+      <p class="lede">Forty-nine sequential pages with matched internal page references. Select any page to see it full size.</p>
+    </div>
+
+    <div class="gallery">
+      <button class="pg" type="button" data-full="assets/continuity-snapshot.webp" data-cap="Page 2: Continuity Snapshot">
+        <img src="assets/continuity-snapshot.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Continuity Snapshot page listing first person to call, backup, dependent caretaker and pet caretaker.">
+        <span class="pg-cap">Continuity Snapshot</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/letter-to-finder.webp" data-cap="Page 6: A letter to the person who found this book">
+        <img src="assets/letter-to-finder.webp" width="900" height="1165" loading="lazy" decoding="async" alt="A written letter addressed to whoever finds the book, explaining what to do first.">
+        <span class="pg-cap">Letter to the finder</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/documents-locator.webp" data-cap="Page 9: My most important documents">
+        <img src="assets/documents-locator.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Document locator page recording where each signed original is kept.">
+        <span class="pg-cap">Document locator</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/trusted-people.webp" data-cap="Page 11: My two trusted people">
+        <img src="assets/trusted-people.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page for naming two trusted people with their contact details and roles.">
+        <span class="pg-cap">Two trusted people</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/levels-of-access.webp" data-cap="Pages 12–13: Levels of access and the access matrix">
+        <img src="assets/levels-of-access.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Access matrix assigning Now, Later, or Never permission levels to each trusted person.">
+        <span class="pg-cap">The access matrix</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/important-people.webp" data-cap="Page 10: The most important people">
+        <img src="assets/important-people.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page listing the most important people to notify and how to reach them.">
+        <span class="pg-cap">People to notify</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/will-locator.webp" data-cap="Page 21: The will">
+        <img src="assets/will-locator.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Will locator page recording the executor, where the original is stored, and the attorney.">
+        <span class="pg-cap">The will</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/security-doctrine.webp" data-cap="Page 5: What this book holds, and what it does not">
+        <img src="assets/security-doctrine.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page listing what never belongs in the book, including passwords, PINs and recovery codes.">
+        <span class="pg-cap">What never goes in</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/credit-cards.webp" data-cap="Page 31: Credit cards">
+        <img src="assets/credit-cards.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Credit card page recording issuer and last four digits only.">
+        <span class="pg-cap">Cards, last four only</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/email-accounts.webp" data-cap="Page 39: Email accounts">
+        <img src="assets/email-accounts.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Email accounts page explaining why email is the key to other accounts.">
+        <span class="pg-cap">Email + digital life</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/letter-to-loved-one.webp" data-cap="Page 47: A letter to whoever is reading this book">
+        <img src="assets/letter-to-loved-one.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Personal letter page addressed to a partner, child, sibling or caregiver.">
+        <span class="pg-cap">Letter to a loved one</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/how-to-use.webp" data-cap="Page 4: How to use this book">
+        <img src="assets/how-to-use.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Instructions page describing how to use and return to the book over time.">
+        <span class="pg-cap">How to use it</span>
+      </button>
+    </div>
+
+    <div class="cols-4 inside-sections">
+      <div class="rfield"><span class="rfield-label">Sections 1–3</span><p class="rfield-value">First 48 hours, critical information, trusted people and access levels</p></div>
+      <div class="rfield"><span class="rfield-label">Sections 4–6</span><p class="rfield-value">Household, contacts, legal documents, medical directives and care needs</p></div>
+      <div class="rfield"><span class="rfield-label">Sections 7–9</span><p class="rfield-value">Insurance, banking, bills, cards, retirement, investments and debts</p></div>
+      <div class="rfield"><span class="rfield-label">Sections 10–12</span><p class="rfield-value">Property, digital life, work and business, memorial wishes, annual review</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 15-MINUTE START ============ -->
+<section class="band band-sage" id="start">
+  <div class="wrap">
+    <div class="head-block">
+      <p class="eyebrow">A focused first pass</p>
+      <h2 class="h-lg">Start with four decisions. Return to the rest over time.</h2>
+      <p class="lede">Set a 15-minute timer and complete what you can. Even a partial first pass can give a trusted person a clearer starting point. Keep adding detail after life events or during an annual review.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <h3>Complete the snapshot</h3>
+        <p>Page 2. First person to call, backup, dependent and animal care, life-critical medication.</p>
+      </div>
+      <div class="step">
+        <h3>Name two trusted people</h3>
+        <p>Page 11. The two names that turn a pile of paper into a working plan.</p>
+      </div>
+      <div class="step">
+        <h3>Record document locations</h3>
+        <p>Page 9. Not the documents themselves, just where the signed originals are physically kept.</p>
+      </div>
+      <div class="step">
+        <h3>Point to your secure system</h3>
+        <p>Page 5 plus Bonus 2. Where the secrets live, and who can reach them.</p>
+      </div>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="start" data-tier="ultimate" data-price="49">Get Ultimate and begin: $49</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BONUSES ============ -->
+<section class="band">
+  <div class="wrap">
+    <div class="head-block">
+      <p class="eyebrow">Included with the Ultimate edition</p>
+      <h2 class="h-lg">Five implementation tools that get the book started, found, and used.</h2>
+      <p class="lede">A binder nobody can find is half a binder. These close the gap between filling it in and it actually working.</p>
+    </div>
+    <div class="cols-2 bonus-grid">
+      <div class="bonus">
+        <img src="assets/bonus-1-emergency-fridge-card.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Emergency Fridge Card bonus, a printable one-page card of first-hour information.">
+        <div><h3>1 · Emergency Fridge Card</h3><p>A single printable card for the first-hour essentials, designed for an agreed, easy-to-find location without account credentials.</p></div>
+      </div>
+      <div class="bonus">
+        <img src="assets/bonus-2-15-minute-secure-vault-setup-guide.webp" width="900" height="1165" loading="lazy" decoding="async" alt="15-Minute Secure Vault Setup Guide bonus for building a password manager the book points to.">
+        <div><h3>2 · 15-Minute Secure Vault Setup</h3><p>Walks you through the secure companion system the book points to, beginning with the accounts that unlock other accounts.</p></div>
+      </div>
+      <div class="bonus">
+        <img src="assets/bonus-3-continuity-check-in-plan.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Continuity Check-In Plan bonus for setting a regular check-in cadence with two people.">
+        <div><h3>3 · Continuity Check-In Plan</h3><p>Creates a reliable way for someone to know <em>when</em> to look for the book. Particularly important if you live alone.</p></div>
+      </div>
+      <div class="bonus">
+        <img src="assets/bonus-4-trusted-person-handoff-scripts.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Trusted Person Handoff Scripts bonus with copy-ready messages for difficult calls.">
+        <div><h3>4 · Trusted Person Handoff Scripts</h3><p>Copy-ready wording for the calls nobody rehearses: arranging pet care, notifying an employer, or reaching a caretaker.</p></div>
+      </div>
+      <div class="bonus">
+        <img src="assets/bonus-5-digital-legacy-link-and-qr-guide.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Digital Legacy Link and QR Guide bonus with official provider links and QR codes.">
+        <div><h3>5 · Digital Legacy Link + QR Guide</h3><p>Direct links and QR codes for legacy-contact and inactive-account settings, with a reminder to verify current provider instructions when you use them.</p></div>
+      </div>
+      <div class="bonus">
+        <img src="assets/cover.webp" width="1100" height="1423" loading="lazy" decoding="async" alt="The Finder's Book cover, Ultimate Digital Edition.">
+        <div><h3>Plus · Start Here + License</h3><p>A one-page orientation, plain-language printing and license terms, and checksums so you can verify every file you downloaded.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHO ============ -->
+<section class="band band-hi">
+  <div class="wrap">
+    <div class="head-block">
+      <p class="eyebrow">Who it is built for</p>
+      <h2 class="h-lg">Built for the person everyone calls when something changes.</h2>
+    </div>
+    <div class="cols-3">
+      <div class="aud">
+        <h3>Adult children &amp; family caregivers</h3>
+        <p>You may be the one phoning siblings, finding the insurer, and working out who has power of attorney. Fill this in with your parent before you need it, starting with one person to call and where the signed documents live.</p>
+      </div>
+      <div class="aud">
+        <h3>Solo agers &amp; people living alone</h3>
+        <p>Independence is the point, not the problem. Choose who helps, define exactly what each person may know and when, and keep your credentials outside the book entirely. The check-in plan handles the part nobody else will notice.</p>
+      </div>
+      <div class="aud">
+        <h3>Households, couples &amp; gift-givers</h3>
+        <p>When one person holds most of the household knowledge, this makes the essentials easier to share after a marriage, home purchase, birth, diagnosis, or move.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FORMATS ============ -->
+<section class="band">
+  <div class="wrap">
+    <div class="head-block">
+      <p class="eyebrow">Two editions, identical content</p>
+      <h2 class="h-lg">Type it or write it. Both are included.</h2>
+    </div>
+    <div class="fmt">
+      <div class="card">
+        <h3 class="h-md">Fillable edition</h3>
+        <p class="small">Standard AcroForm fields. Type directly into the PDF, save, and reopen. Best on a laptop or desktop in Adobe Acrobat Reader or another AcroForm-compatible reader.</p>
+        <p class="small no-bottom-margin"><strong>Before you start:</strong> save a working copy, type a test entry, close it, and reopen to confirm your reader preserves entries, particularly on mobile.</p>
+      </div>
+      <div class="card">
+        <h3 class="h-md">Print edition</h3>
+        <p class="small">The same 49 pages, laid out for handwriting. Print at home or at a copy shop, then keep the completed pages in a binder or another agreed location.</p>
+        <p class="small no-bottom-margin">You can use both: type the account and contact pages, then handwrite the personal letters.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CREATOR TRANSPARENCY ============ -->
+<section class="band band-pine" id="creators">
+  <div class="wrap creator-grid">
+    <div class="head-block">
+      <p class="eyebrow">Created with clear boundaries</p>
+      <h2 class="h-lg">An organizer should help your family find the right next step, not pretend to replace a professional.</h2>
+      <p class="lede">The Finder's Book was created by Joanne Godfrey and Michael David as a structured personal-record system. Its job is intentionally narrow: organize your directions, document locations, and trusted contacts in plain language.</p>
+    </div>
+    <div>
+      <div class="rfield">
+        <span class="rfield-label">Created by</span>
+        <p class="rfield-value">Joanne Godfrey and Michael David</p>
+      </div>
+      <div class="rfield">
+        <span class="rfield-label">What it is</span>
+        <p class="rfield-value">A personal information organizer and handoff map.</p>
+      </div>
+      <div class="rfield">
+        <span class="rfield-label">What it is not</span>
+        <p class="rfield-value">Professional advice, legal authority, or a place to store credentials.</p>
+      </div>
+      <p class="small creator-note">Legal, medical, financial, and account-access decisions remain with qualified professionals and the documents or provider settings that govern them. Questions before buying? <a href="mailto:warrenjrmd@gmail.com">Email support</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section class="band band-hi" id="pricing">
+  <div class="wrap">
+    <div class="head-block pricing-head">
+      <p class="eyebrow">Choose your edition</p>
+      <h2 class="h-lg">Start with the complete handoff system.</h2>
+      <p class="lede">One-time purchase. Delivered as files you can save and keep. No subscription.</p>
+    </div>
+    <div class="tiers">
+      <div class="tier">
+        <p class="tier-name">Essentials</p>
+        <p class="tier-price"><sup>$</sup>29</p>
+        <p class="tier-desc">The core organizer, without the implementation tools.</p>
+        <ul class="tier-list">
+          <li>49-page fillable edition</li>
+          <li>49-page print edition</li>
+          <li>Start Here orientation</li>
+          <li>Files you can save and keep</li>
+        </ul>
+        <a class="btn btn-ghost" href="https://payhip.com/b/eHcPG" data-checkout data-placement="pricing-essentials" data-tier="essentials" data-price="29">Get Essentials: $29</a>
+      </div>
+
+      <div class="tier tier-lead">
+        <span class="tier-flag">Most complete</span>
+        <p class="tier-name">Ultimate</p>
+        <p class="tier-price"><sup>$</sup>49</p>
+        <p class="tier-desc">Everything in Essentials, plus the five tools that make the book findable and usable.</p>
+        <ul class="tier-list">
+          <li>49-page fillable + print editions</li>
+          <li>Bonus 1: Emergency Fridge Card</li>
+          <li>Bonus 2: 15-Minute Secure Vault Setup</li>
+          <li>Bonus 3: Continuity Check-In Plan</li>
+          <li>Bonus 4: Trusted Person Handoff Scripts</li>
+          <li>Bonus 5: Digital Legacy Link + QR Guide</li>
+          <li>License terms + file checksums</li>
+        </ul>
+        <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="pricing-ultimate" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
+      </div>
+
+      <div class="tier">
+        <p class="tier-name">Family Bundle</p>
+        <p class="tier-price"><sup>$</sup>89</p>
+        <p class="tier-desc">For coordinating more than one household, such as a parent's and your own.</p>
+        <ul class="tier-list">
+          <li>Everything in Ultimate</li>
+          <li>Licensed for multiple households</li>
+          <li>Print copies for each household</li>
+          <li>Ideal for adult children and siblings</li>
+        </ul>
+        <a class="btn btn-ghost" href="https://payhip.com/b/xPuv4" data-checkout data-placement="pricing-bundle" data-tier="bundle" data-price="89">Get the Family Bundle: $89</a>
+      </div>
+    </div>
+    <p class="tiny pricing-license">
+      Consumer license. Personal and household use, with printing for your own household. Professional, institutional, co-branded, and white-label use require a separate written license.
+      Review the real page previews above and the <a href="/refund-policy.html">digital product refund policy</a> before purchase.
+    </p>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="band" id="faq">
+  <div class="wrap">
+    <div class="head-block centered-head">
+      <p class="eyebrow eyebrow-centered">Before you buy</p>
+      <h2 class="h-lg">Know exactly what this does, and what it does not.</h2>
+    </div>
+    <div class="faq">
+      <details>
+        <summary>Is this a will, or does it replace one?</summary>
+        <div class="faq-body"><p>No. The Finder's Book is a personal record, not a legal instrument. It is not a will, trust, contract, power of attorney, or advance directive, and it gives nobody authority over your accounts or medical decisions. What it does is record where those signed originals are kept and who is named in them, so the documents you already have can be found and used. If a question arises about legal effect, consult an attorney licensed in your jurisdiction.</p></div>
+      </details>
+      <details>
+        <summary>Isn't putting all of this in one place dangerous?</summary>
+        <div class="faq-body"><p>Any completed organizer should be treated as private personal information. The Finder's Book reduces exposure by excluding passwords, PINs, recovery codes, safe combinations, and full account or Social Security numbers. It uses last four digits for identification and points to a separate secure system for credentials. Store it according to what you choose to include and limit access to people you trust.</p></div>
+      </details>
+      <details>
+        <summary>Do I have to complete all 49 pages for it to help?</summary>
+        <div class="faq-body"><p>No. Begin with the Continuity Snapshot, two trusted people, your document locations, and a pointer to your secure system. Set a 15-minute timer for the first pass, then return after a marriage, birth, diagnosis, move, or change in work. The real value is having a clearer starting point, not filling every blank at once.</p></div>
+      </details>
+      <details>
+        <summary>Will the fillable PDF work on my computer?</summary>
+        <div class="faq-body"><p>It uses standard AcroForm fields and works in Adobe Acrobat Reader and other AcroForm-compatible readers on Windows and macOS. Desktop or laptop is strongly recommended. Some mobile PDF apps do not preserve saved entries, so save a working copy and test one entry before filling anything in. If you would rather not use a computer at all, the print edition contains the same 49 pages.</p></div>
+      </details>
+      <details>
+        <summary>How is this different from a free checklist or a cheap printable?</summary>
+        <div class="faq-body"><p>Three things. First, the security architecture uses pointers rather than credentials, with a per-person access matrix of Now, Later, and Never. Second, the first-hour guidance includes a letter written to whoever opens the book. Third, the fillable and print editions match, the sequential page references align, and the Ultimate edition includes five implementation tools. It is designed around handoff quality, not the biggest page count.</p></div>
+      </details>
+      <details>
+        <summary>My parent does not want to talk about this. What do I do?</summary>
+        <div class="faq-body"><p>Start smaller than the whole conversation. Ask who they would want called first, then where the signed documents are kept. You can frame the task as reducing guesswork for the people they trust. The book opens with a practical snapshot rather than a will for exactly that reason.</p></div>
+      </details>
+      <details>
+        <summary>Is this only an end-of-life planner?</summary>
+        <div class="faq-body"><p>No. It can support end-of-life organization, but it is also designed for hospitalization, incapacity, caregiving transitions, household handoffs, and living alone. It helps people find contacts and records. It does not replace the legal, medical, or financial documents that govern decisions.</p></div>
+      </details>
+      <details>
+        <summary>What exactly do I receive, and when?</summary>
+        <div class="faq-body"><p>Immediately after purchase you receive a download containing the 49-page fillable PDF, the 49-page print PDF, a Start Here orientation page, plain-language license and printing terms, file checksums, and, with the Ultimate and Family editions, all five bonus PDFs. Everything is delivered as files you can save and keep. There is no app or subscription.</p></div>
+      </details>
+      <details>
+        <summary>Can I use this with my clients?</summary>
+        <div class="faq-body"><p>Not under the consumer license. Attorney, advisor, coach, employer, nonprofit, institutional, commercial, co-branding, sublicensing, and white-label uses, including use as a client handout or lead magnet, require a separate written license. <a href="mailto:warrenjrmd@gmail.com">Contact us</a> for terms.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<!-- ============ FREE RESOURCE: FAMILY READINESS GAP CHECK ============ -->
+<section class="band gap" id="gap-check">
+  <div class="wrap">
+    <div class="gap-grid">
+      <div>
+        <p class="eyebrow">Free · No purchase</p>
+        <h2 class="h-lg gap-title">Not sure you need this yet? <span class="ital">Find out in four minutes.</span></h2>
+        <p class="lede gap-lede">The Family Readiness Gap Check is a one-page diagnostic. Twelve questions about what your family could actually locate tomorrow morning if you were unreachable. You score it yourself. Most people miss more than they expect.</p>
+        <ul class="gap-list">
+          <li>Twelve questions across people, documents, access, and money</li>
+          <li>A plain scoring band, so you know whether this is urgent or simply overdue</li>
+          <li>Written to stand alone &mdash; it is a diagnostic, not a sample chapter</li>
+          <li>Confirm once by email. Unsubscribe in one click.</li>
+        </ul>
+      </div>
+
+      <div class="gap-card">
+        <h3>Send me the Gap Check</h3>
+        <p class="tiny">Check your inbox for a confirmation link. The printable PDF arrives right after.</p>
+
+        <form class="gap-form" id="gapForm" novalidate>
+          <div class="gap-field">
+            <label for="gapName">First name <span aria-hidden="true">(optional)</span></label>
+            <input id="gapName" name="fields[name]" type="text" autocomplete="given-name" placeholder="Optional">
+          </div>
+          <div class="gap-field">
+            <label for="gapEmail">Email address</label>
+            <input id="gapEmail" name="fields[email]" type="email" autocomplete="email" required placeholder="you@example.com">
+          </div>
+
+          <div class="gap-hp" aria-hidden="true">
+            <label for="gapHp">Do not fill this in</label>
+            <input id="gapHp" name="company_website" type="text" tabindex="-1" autocomplete="off">
+          </div>
+
+          <button class="btn btn-primary" id="gapSubmit" type="submit">Send me the Gap Check</button>
+        </form>
+
+        <p class="gap-msg" id="gapMsg" role="status" aria-live="polite" hidden></p>
+
+        <p class="gap-note">
+          We send the checklist, occasional notes about the book, and nothing else. No sharing, no reselling.
+          See the <a href="/privacy-policy.html">privacy policy</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band band-deep" id="final-cta">
+  <div class="wrap final-wrap">
+    <p class="eyebrow eyebrow-centered">One last thing</p>
+    <h2 class="h-lg">Give the right person a clear first step.</h2>
+    <p class="lede final-lede">Surprise on the worst day is harder than honesty in advance. Every field you fill, even imperfectly, is one less question your family has to answer alone.</p>
+    <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="final" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
+    <p class="btn-note final-note">Instant download · Fillable + print · 5 bonuses · One-time payment</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr-grid">
+      <div>
+        <h2>The Finder's Book</h2>
+        <p class="footer-summary">The Family Clarity System™: a 49-page family emergency and legacy organizer by Joanne Godfrey and Michael David.</p>
+      </div>
+      <div>
+        <h2>Product</h2>
+        <ul>
+          <li><a href="#inside">What's inside</a></li>
+          <li><a href="#security">Security approach</a></li>
+          <li><a href="#pricing">Editions &amp; pricing</a></li>
+          <li><a href="#faq">Questions</a></li>
+          <li><a href="#gap-check">Free Gap Check</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Support</h2>
+        <ul>
+          <li><a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a></li>
+          <li><a href="/refund-policy.html">Refund policy</a></li>
+          <li><a href="/privacy-policy.html">Privacy policy</a></li>
+          <li><a href="mailto:warrenjrmd@gmail.com">Professional licensing</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ftr-legal">
+      <p><strong>This is not legal, medical, or financial advice.</strong> The Finder's Book is a structured template for personal record-keeping. It is not a will, trust, contract, power of attorney, or advance directive, and it confers no authority over any account, property, or medical decision. The legal documents your family will need are the originals signed and witnessed according to the law of your jurisdiction. Consult an attorney, licensed medical professional, or licensed financial advisor for questions about legal, medical, or financial effect.</p>
+      <p>Copyright © 2026 Joanne Godfrey and Michael David Warren Jr. All rights reserved. The Family Clarity System™ is a trademark of Joanne Godfrey and Michael David Warren Jr. The trade dress of this work, including its layout system, typographic treatment, and section architecture, is protected. Ultimate Digital Edition v1.2.3.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- sticky mobile CTA -->
+<aside class="sticky" id="sticky" aria-label="Purchase The Finder's Book">
+  <div class="sticky-txt"><b>The Finder's Book · $49</b>Fillable + print · Five tools</div>
+  <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="sticky" data-tier="ultimate" data-price="49">Get it now</a>
+</aside>
+
+<!-- page lightbox -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Page preview" hidden>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Close preview">&times;</button>
+  <img id="lbImg" src="assets/cover.webp" width="1100" height="1423" alt="Product page preview">
+  <p class="lb-cap" id="lbCap"></p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- analytics: fires to common analytics layers when present ---------- */
+  function track(name, params){
+    var p = Object.assign({page_variant:"v3.1"}, params || {});
+    try{
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(Object.assign({event:name}, p));
+      if (typeof window.gtag === "function") window.gtag("event", name, p);
+      if (typeof window.plausible === "function") window.plausible(name, {props:p});
+      if (typeof window.fbq === "function" && name === "checkout_click") window.fbq("track","InitiateCheckout",p);
+    }catch(e){}
+  }
+
+  /* ---------- UTM attribution, held for this session ---------- */
+  try{
+    var qs = new URLSearchParams(location.search), utm = {}, keys = ["utm_source","utm_medium","utm_campaign","utm_content","utm_term"];
+    keys.forEach(function(k){ if (qs.get(k)) utm[k] = qs.get(k); });
+    if (Object.keys(utm).length) sessionStorage.setItem("fb_utm", JSON.stringify(utm));
+  }catch(e){}
+  function attribution(){
+    try{ return JSON.parse(sessionStorage.getItem("fb_utm") || "{}"); }catch(e){ return {}; }
+  }
+
+  track("landing_view", Object.assign({offer:"the-finders-book"}, attribution()));
+
+  function forwardAttribution(el){
+    var raw = el.getAttribute("href") || "";
+    if (!/^https?:\/\//i.test(raw)) return;
+    try{
+      var url = new URL(raw), source = attribution();
+      Object.keys(source).forEach(function(key){
+        if (!url.searchParams.has(key)) url.searchParams.set(key, source[key]);
+      });
+      el.href = url.toString();
+    }catch(e){}
+  }
+
+  /* ---------- real checkout clicks only ---------- */
+  document.querySelectorAll("[data-checkout]").forEach(function(el){
+    el.addEventListener("click", function(){
+      forwardAttribution(el);
+      track("checkout_click", Object.assign({
+        placement: el.getAttribute("data-placement"),
+        tier: el.getAttribute("data-tier") || "n/a",
+        value: Number(el.getAttribute("data-price") || 0),
+        currency: "USD"
+      }, attribution()));
+    });
+  });
+
+  /* ---------- supporting CTA clicks ---------- */
+  document.querySelectorAll("[data-scroll-cta]").forEach(function(el){
+    el.addEventListener("click", function(){
+      track("cta_click", Object.assign({
+        placement: el.getAttribute("data-placement") || "n/a",
+        destination: el.getAttribute("href") || ""
+      }, attribution()));
+    });
+  });
+
+  /* ---------- lightbox ---------- */
+  var lb = document.getElementById("lb"),
+      lbImg = document.getElementById("lbImg"),
+      lbCap = document.getElementById("lbCap"),
+      lbClose = document.getElementById("lbClose"),
+      lastFocus = null;
+
+  function openLb(src, cap){
+    lastFocus = document.activeElement;
+    lbImg.src = src; lbImg.alt = cap; lbCap.textContent = cap;
+    lb.hidden = false; lb.classList.add("on");
+    document.body.style.overflow = "hidden";
+    lbClose.focus();
+    track("product_preview_open", {page: cap});
+  }
+  function closeLb(){
+    lb.classList.remove("on"); lb.hidden = true;
+    document.body.style.overflow = "";
+    lbImg.src = "assets/cover.webp"; lbImg.alt = "Product page preview";
+    if (lastFocus) lastFocus.focus();
+  }
+  document.querySelectorAll(".pg").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      openLb(btn.getAttribute("data-full"), btn.getAttribute("data-cap"));
+    });
+  });
+  lbClose.addEventListener("click", closeLb);
+  lb.addEventListener("click", function(e){ if (e.target === lb) closeLb(); });
+  document.addEventListener("keydown", function(e){
+    if (!lb.classList.contains("on")) return;
+    if (e.key === "Escape") closeLb();
+    if (e.key === "Tab"){
+      e.preventDefault();
+      lbClose.focus();
+    }
+  });
+
+  /* ---------- FAQ open tracking ---------- */
+  document.querySelectorAll(".faq details").forEach(function(d){
+    d.addEventListener("toggle", function(){
+      if (d.open) track("faq_open", {question: d.querySelector("summary").textContent.trim()});
+    });
+  });
+
+  /* ---------- sticky CTA: appears past hero, never covers a buying section ---------- */
+  var sticky = document.getElementById("sticky"),
+      pricing = document.getElementById("pricing"),
+      hero = document.querySelector(".hero"),
+      finalCta = document.getElementById("final-cta"),
+      footer = document.querySelector(".ftr"),
+      stickyQueued = false;
+
+  function isVisible(el){
+    var rect = el.getBoundingClientRect();
+    return rect.top < window.innerHeight && rect.bottom > 0;
+  }
+
+  function updateSticky(){
+    var heroPassed = hero.getBoundingClientRect().bottom <= 120,
+        blocked = isVisible(pricing) || isVisible(finalCta) || isVisible(footer);
+    sticky.classList.toggle("on", heroPassed && !blocked);
+  }
+
+  function queueStickyUpdate(){
+    if (stickyQueued) return;
+    stickyQueued = true;
+    requestAnimationFrame(function(){
+      stickyQueued = false;
+      updateSticky();
+    });
+  }
+
+  window.addEventListener("scroll", queueStickyUpdate, {passive:true});
+  window.addEventListener("resize", queueStickyUpdate);
+  updateSticky();
+
+  if ("IntersectionObserver" in window){
+    var seenPricing = false;
+    new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting && !seenPricing){
+          seenPricing = true;
+          track("pricing_view", attribution());
+        }
+      });
+    }, {threshold: 0.15}).observe(pricing);
+  }
+})();
+</script>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {
+      "@type":"Organization",
+      "@id":"https://finders-book-v34.vercel.app/#organization",
+      "name":"The Family Clarity Co.",
+      "url":"https://finders-book-v34.vercel.app/",
+      "email":"warrenjrmd@gmail.com"
+    },
+    {
+      "@type":"Brand",
+      "@id":"https://finders-book-v34.vercel.app/#brand",
+      "name":"The Family Clarity System"
+    },
+    {
+      "@type":"WebSite",
+      "@id":"https://finders-book-v34.vercel.app/#website",
+      "url":"https://finders-book-v34.vercel.app/",
+      "name":"The Family Clarity Co.",
+      "publisher":{"@id":"https://finders-book-v34.vercel.app/#organization"},
+      "inLanguage":"en-US"
+    },
+    {
+      "@type":"WebPage",
+      "@id":"https://finders-book-v34.vercel.app/#webpage",
+      "url":"https://finders-book-v34.vercel.app/",
+      "name":"Family Emergency Binder and Legacy Organizer | Finder's Book",
+      "description":"A 49-page fillable and printable family emergency binder that helps trusted people find the right contact, record, or secure system.",
+      "isPartOf":{"@id":"https://finders-book-v34.vercel.app/#website"},
+      "about":{"@id":"https://finders-book-v34.vercel.app/#product"},
+      "author":[
+        {"@type":"Person","name":"Joanne Godfrey"},
+        {"@type":"Person","name":"Michael David"}
+      ],
+      "primaryImageOfPage":{
+        "@type":"ImageObject",
+        "url":"https://finders-book-v34.vercel.app/assets/og-finders-book.jpg",
+        "width":1200,
+        "height":630
+      },
+      "inLanguage":"en-US"
+    },
+    {
+      "@type":"Product",
+      "@id":"https://finders-book-v34.vercel.app/#product",
+      "name":"The Finder's Book",
+      "alternateName":"The Family Clarity System",
+      "description":"A 49-page fillable and printable family emergency binder and legacy organizer. It records who to call and where important documents live without storing passwords, PINs, recovery codes, or full account numbers. The Ultimate edition includes matched fillable and print PDFs plus five implementation tools.",
+      "image":[
+        "https://finders-book-v34.vercel.app/assets/og-finders-book.jpg",
+        "https://finders-book-v34.vercel.app/assets/cover.webp"
+      ],
+      "url":"https://finders-book-v34.vercel.app/",
+      "category":"Family emergency binder and legacy organizer",
+      "brand":{"@id":"https://finders-book-v34.vercel.app/#brand"},
+      "additionalProperty":[
+        {"@type":"PropertyValue","name":"Pages","value":"49"},
+        {"@type":"PropertyValue","name":"Formats","value":"Fillable PDF and print PDF"},
+        {"@type":"PropertyValue","name":"Delivery","value":"Digital download"}
+      ],
+      "offers":{
+        "@type":"AggregateOffer",
+        "priceCurrency":"USD",
+        "lowPrice":"29.00",
+        "highPrice":"89.00",
+        "offerCount":3,
+        "availability":"https://schema.org/InStock",
+        "offers":[
+          {
+            "@type":"Offer",
+            "name":"Essentials",
+            "price":"29.00",
+            "priceCurrency":"USD",
+            "availability":"https://schema.org/InStock",
+            "itemCondition":"https://schema.org/NewCondition",
+            "url":"https://payhip.com/b/eHcPG",
+            "seller":{"@id":"https://finders-book-v34.vercel.app/#organization"}
+          },
+          {
+            "@type":"Offer",
+            "name":"Ultimate",
+            "price":"49.00",
+            "priceCurrency":"USD",
+            "availability":"https://schema.org/InStock",
+            "itemCondition":"https://schema.org/NewCondition",
+            "url":"https://payhip.com/b/Y1O7B",
+            "seller":{"@id":"https://finders-book-v34.vercel.app/#organization"}
+          },
+          {
+            "@type":"Offer",
+            "name":"Family Bundle",
+            "price":"89.00",
+            "priceCurrency":"USD",
+            "availability":"https://schema.org/InStock",
+            "itemCondition":"https://schema.org/NewCondition",
+            "url":"https://payhip.com/b/xPuv4",
+            "seller":{"@id":"https://finders-book-v34.vercel.app/#organization"}
+          }
+        ]
+      }
+    },
+    {
+      "@type":"FAQPage",
+      "@id":"https://finders-book-v34.vercel.app/#faq",
+      "url":"https://finders-book-v34.vercel.app/#faq",
+      "isPartOf":{"@id":"https://finders-book-v34.vercel.app/#webpage"},
+      "mainEntity":[
+        {"@type":"Question","name":"Is this a will, or does it replace one?","acceptedAnswer":{"@type":"Answer","text":"No. The Finder's Book is a personal record, not a legal instrument. It is not a will, trust, contract, power of attorney, or advance directive, and it gives nobody authority over your accounts or medical decisions. It records where those signed originals are kept and who is named in them."}},
+        {"@type":"Question","name":"Isn't putting all of this in one place dangerous?","acceptedAnswer":{"@type":"Answer","text":"Any completed organizer should be treated as private personal information. The Finder's Book reduces exposure by excluding passwords, PINs, recovery codes, safe combinations, and full account or Social Security numbers. It points to a separate secure system for credentials."}},
+        {"@type":"Question","name":"Do I have to complete all 49 pages for it to help?","acceptedAnswer":{"@type":"Answer","text":"No. Begin with the Continuity Snapshot, two trusted people, your document locations, and a pointer to your secure system. Set a 15-minute timer for the first pass, then return after major life events or during an annual review."}},
+        {"@type":"Question","name":"Will the fillable PDF work on my computer?","acceptedAnswer":{"@type":"Answer","text":"It uses standard AcroForm fields and works in Adobe Acrobat Reader and other AcroForm-compatible readers on Windows and macOS. Desktop or laptop is recommended, as some mobile PDF apps do not preserve saved entries. A matching print edition is included."}},
+        {"@type":"Question","name":"How is this different from a free checklist or a cheap printable?","acceptedAnswer":{"@type":"Answer","text":"It uses pointers rather than credentials, includes first-hour handoff guidance, and provides matched fillable and print editions with aligned page references. The Ultimate edition also includes five implementation tools."}},
+        {"@type":"Question","name":"My parent does not want to talk about this. What do I do?","acceptedAnswer":{"@type":"Answer","text":"Start with one practical question: who should be called first? Then ask where the signed documents are kept. You can frame the task as reducing guesswork for the people they trust."}},
+        {"@type":"Question","name":"Is this only an end-of-life planner?","acceptedAnswer":{"@type":"Answer","text":"No. It can support end-of-life organization, but it is also designed for hospitalization, incapacity, caregiving transitions, household handoffs, and living alone. It does not replace legal, medical, or financial documents."}},
+        {"@type":"Question","name":"What exactly do I receive, and when?","acceptedAnswer":{"@type":"Answer","text":"Immediately after purchase you receive a download containing the 49-page fillable PDF, the 49-page print PDF, a Start Here orientation page, license and printing terms, file checksums, and, with the Ultimate and Family editions, all five bonus PDFs. There is no app or subscription."}},
+        {"@type":"Question","name":"Can I use this with my clients?","acceptedAnswer":{"@type":"Answer","text":"Not under the consumer license. Attorney, advisor, coach, employer, nonprofit, institutional, commercial, co-branding, sublicensing, and white-label uses require a separate written license."}}
+      ]
+    }
+  ]
+}
+</script>
+
+
+<script>
+/* ============================================================
+   THE FINDER'S BOOK — v3.2 ELEVATION SCRIPT
+   Runs after the existing v3.1 script. Touches nothing it owns.
+   Two jobs: (1) motion choreography, (2) Gap Check lead capture.
+   ============================================================ */
+(function(){
+  "use strict";
+
+  /* ------------------------------------------------------------
+     CONFIGURE THIS ONE OBJECT. Nothing else in this file changes.
+     ------------------------------------------------------------
+     mode: "api"   -> POST to your own /api/subscribe route.
+                      Use this on the Sites/Worker deployment.
+                      The MailerLite key stays server-side. Preferred.
+
+     mode: "jsonp" -> POST straight to MailerLite's public embedded-form
+                      endpoint. Use this on the standalone-static build,
+                      which has no server.
+                      Your account id is 2202141, so the URL is:
+                      https://assets.mailerlite.com/jsonp/2202141/forms/FORM_ID/subscribe
+                      Get FORM_ID from MailerLite > Forms > Embedded forms.
+
+     Until the chosen mode is configured the form stays visible but tells
+     the visitor to email instead of silently swallowing their address.
+     ------------------------------------------------------------ */
+  var FB_LEAD = {
+    mode: "api",                     // "api" | "jsonp"  <- server-side; key never reaches the browser
+    apiEndpoint: "/api/subscribe",   // used when mode === "api"
+    leadEndpoint: "https://assets.mailerlite.com/jsonp/2202141/forms/194226651000735158/subscribe",
+    supportEmail: "warrenjrmd@gmail.com"
+  };
+
+  var reduced = false;
+  try{ reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+  var animate = document.documentElement.classList.contains("fx") && !reduced;
+
+  /* Reuse the page's existing analytics bus if it is present. */
+  function track(name, params){
+    var p = Object.assign({page_variant:"v3.2"}, params || {});
+    try{
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(Object.assign({event:name}, p));
+      if (typeof window.gtag === "function") window.gtag("event", name, p);
+      if (typeof window.plausible === "function") window.plausible(name, {props:p});
+      if (typeof window.fbq === "function" && name === "lead_submit") window.fbq("track","Lead",p);
+    }catch(e){}
+  }
+  function attribution(){
+    try{ return JSON.parse(sessionStorage.getItem("fb_utm") || "{}"); }catch(e){ return {}; }
+  }
+
+  /* ============================================================
+     1. MOTION
+     ============================================================ */
+  function stagger(nodes, step, base){
+    Array.prototype.forEach.call(nodes, function(el, i){
+      el.style.setProperty("--fx-d", ((base||0) + i*step) + "ms");
+    });
+  }
+
+  if (animate){
+    /* ---- Hero: one orchestrated wave, resolved by 620ms ----
+       The primary CTA sits in the 180ms slot. It is never the last
+       thing to arrive and it is clickable the entire time. */
+    var hero = document.querySelector(".hero");
+    if (hero){
+      var wave = [
+        [".eyebrow",   0],
+        ["h1",        70],
+        [".lede",    140],
+        [".btn-row", 180],
+        [".btn-note",260]
+      ];
+      wave.forEach(function(pair){
+        var el = hero.querySelector(pair[0]);
+        if (el){ el.classList.add("fx-up"); el.style.setProperty("--fx-d", pair[1]+"ms"); }
+      });
+
+      /* The snapshot panel, then its four ruled fields filling in
+         left to right the way a hand would fill them. */
+      var snap = hero.querySelector(".snap");
+      if (snap){ snap.classList.add("fx-up"); snap.style.setProperty("--fx-d","150ms"); }
+      var fields = hero.querySelectorAll(".rfield");
+      stagger(fields, 90, 380);
+      Array.prototype.forEach.call(fields, function(el){
+        el.classList.add("fx-on"); // hero fields animate via transition on load
+      });
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          Array.prototype.forEach.call(fields, function(el){ el.classList.add("fx-on"); });
+        });
+      });
+    }
+
+    /* ---- Scroll reveals ---- */
+    var io = null;
+    if ("IntersectionObserver" in window){
+      io = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("fx-on");
+          io.unobserve(entry.target);
+        });
+      }, {rootMargin:"0px 0px -12% 0px", threshold:0.08});
+    }
+
+    function reveal(el, delay){
+      if (!el) return;
+      if (delay) el.style.setProperty("--fx-d", delay+"ms");
+      el.classList.add("fx-up");
+      if (io) io.observe(el); else el.classList.add("fx-on");
+    }
+
+    /* Section headers outside the hero */
+    document.querySelectorAll(".band .head-block").forEach(function(hb){
+      if (hero && hero.contains(hb)) return;
+      Array.prototype.forEach.call(hb.children, function(child, i){
+        reveal(child, i*70);
+      });
+      var eb = hb.querySelector(".eyebrow");
+      if (eb && io) io.observe(eb); // draws its own gold rule
+    });
+
+    /* Repeating card grids, staggered by position within the grid */
+    [".gallery .pg", ".tiers .tier", ".bonus-grid .card", ".aud"].forEach(function(sel){
+      var nodes = document.querySelectorAll(sel);
+      Array.prototype.forEach.call(nodes, function(el, i){
+        reveal(el, (i % 3) * 80);
+      });
+    });
+  }
+
+  /* ============================================================
+     2. GAP CHECK LEAD CAPTURE
+     ============================================================ */
+  var form = document.getElementById("gapForm");
+  if (form){
+    var msg    = document.getElementById("gapMsg");
+    var submit = document.getElementById("gapSubmit");
+    var busy   = false;
+
+    function say(state, text){
+      if (!msg) return;
+      msg.hidden = false;
+      msg.setAttribute("data-state", state);
+      msg.textContent = text;
+    }
+
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      if (busy) return;
+
+      /* Honeypot: a real person never fills this. */
+      var hp = form.querySelector('input[name="company_website"]');
+      if (hp && hp.value) return;
+
+      var emailEl = form.querySelector('input[name="fields[email]"]');
+      var nameEl  = form.querySelector('input[name="fields[name]"]');
+      var email   = (emailEl && emailEl.value || "").trim();
+
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)){
+        say("err", "Please enter an email address we can send the checklist to.");
+        if (emailEl) emailEl.focus();
+        return;
+      }
+
+      var useApi = FB_LEAD.mode === "api";
+      var endpoint = useApi ? FB_LEAD.apiEndpoint : FB_LEAD.leadEndpoint;
+
+      if (!endpoint){
+        say("err", "The signup form is not connected yet. Email " + FB_LEAD.supportEmail + " and we will send the Gap Check directly.");
+        track("lead_submit_unconfigured", {offer:"gap-check", mode:FB_LEAD.mode});
+        return;
+      }
+
+      busy = true;
+      if (submit){ submit.disabled = true; submit.textContent = "Sending\u2026"; }
+      say("ok", "Sending your checklist\u2026");
+
+      var req;
+      if (useApi){
+        req = fetch(endpoint, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            email: email,
+            name: (nameEl && nameEl.value.trim()) || "",
+            company_website: (hp && hp.value) || ""
+          })
+        });
+      } else {
+        var body = new URLSearchParams();
+        body.set("fields[email]", email);
+        if (nameEl && nameEl.value.trim()) body.set("fields[name]", nameEl.value.trim());
+        body.set("ml-submit", "1");
+        body.set("anticsrf", "true");
+        req = fetch(endpoint, {
+          method: "POST",
+          headers: {"Content-Type":"application/x-www-form-urlencoded"},
+          body: body.toString()
+        });
+      }
+
+      req
+      .then(function(r){
+        return r.json().catch(function(){ return {ok:r.ok, success:r.ok}; });
+      })
+      .then(function(data){
+        var good = data && (data.ok || data.success);
+        if (good){
+          say("ok", "Check your inbox for a confirmation link. Your Gap Check arrives right after you confirm.");
+          track("lead_submit", Object.assign({offer:"gap-check", value:0, currency:"USD"}, attribution()));
+          form.querySelectorAll("input").forEach(function(i){ i.value = ""; });
+        } else {
+          say("err", (data && data.message) || ("That did not go through. Email " + FB_LEAD.supportEmail + " and we will send it to you directly."));
+          track("lead_submit_error", {offer:"gap-check", reason:(data && data.error) || "rejected"});
+        }
+      })
+      .catch(function(){
+        say("err", "That did not go through. Email " + FB_LEAD.supportEmail + " and we will send it to you directly.");
+        track("lead_submit_error", {offer:"gap-check", reason:"network"});
+      })
+      .finally(function(){
+        busy = false;
+        if (submit){ submit.disabled = false; submit.textContent = "Send me the Gap Check"; }
+      });
+    });
+
+    /* Fire once when the section is actually seen, for funnel maths. */
+    if ("IntersectionObserver" in window){
+      var seen = false;
+      var gio = new IntersectionObserver(function(en){
+        en.forEach(function(e){
+          if (e.isIntersecting && !seen){
+            seen = true;
+            track("lead_form_view", {offer:"gap-check"});
+            gio.disconnect();
+          }
+        });
+      }, {threshold:0.35});
+      var gapSection = document.getElementById("gap-check");
+      if (gapSection) gio.observe(gapSection);
+    }
+  }
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Privacy Policy | The Finder's Book</title>
+<meta name="description" content="What The Finder's Book collects, who processes it, how long it is kept, and your rights under GDPR and CCPA.">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#14372D">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-normal.woff2" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Newsreader Local";font-style:normal;font-display:swap;font-weight:200 800;
+  src:url("assets/fonts/newsreader-latin-variable-normal.woff2") format("woff2-variations")}
+@font-face{font-family:"Newsreader Local";font-style:italic;font-display:swap;font-weight:200 800;
+  src:url("assets/fonts/newsreader-latin-variable-italic.woff2") format("woff2-variations")}
+@font-face{font-family:"Archivo Local";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("assets/fonts/archivo-latin-variable-normal.woff2") format("woff2-variations")}
+:root{
+  --pine-900:#0B1F19;--pine:#14372D;--pine-700:#1D4A3C;
+  --paper:#FAF4E8;--paper-hi:#FDFAF1;--sage:#DCE6E0;
+  --gold:#B8923D;--gold-hi:#DFC99D;--gold-ink:#7A5E22;
+  --mute:#4A5D55;--hair:rgba(20,55,45,.16);
+  --serif:"Newsreader Local",Georgia,serif;
+  --sans:"Archivo Local",system-ui,-apple-system,sans-serif;
+  --r:3px;--wrap:1180px;--ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--pine);
+  font-family:var(--serif);font-size:1.0625rem;line-height:1.7;
+  font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+a{color:var(--gold-ink);text-underline-offset:2px}
+h1,h2,h3{margin:0;font-weight:400;line-height:1.15;letter-spacing:-.012em}
+p{margin:0 0 1.05rem}
+:focus-visible{outline:3px solid var(--pine);outline-offset:2px;border-radius:2px}
+.wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 clamp(1.15rem,4vw,2.5rem)}
+.skip{position:absolute;left:-9999px;background:var(--pine);color:var(--paper);padding:.85rem 1.25rem;z-index:200;font-family:var(--sans);font-size:.85rem}
+.skip:focus{left:.5rem;top:.5rem}
+.mast{background:var(--pine);color:var(--paper);padding:1.15rem 0}
+.mast a{color:var(--paper);text-decoration:none;font-family:var(--sans);
+  font-size:.78rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:.6rem;min-height:44px}
+.mast a:hover{text-decoration:underline;text-underline-offset:4px}
+.doc{max-width:74ch;margin:0 auto;padding:clamp(3rem,8vw,5.5rem) 0 clamp(4rem,9vw,7rem)}
+.eyebrow{font-family:var(--sans);font-size:.7rem;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold-ink);display:flex;align-items:center;
+  gap:.85rem;margin:0 0 1.4rem}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--gold);opacity:.55;max-width:190px}
+.doc h1{font-size:clamp(2rem,5.4vw,3rem);margin-bottom:.7rem}
+.doc-meta{font-family:var(--sans);font-size:.74rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mute);margin-bottom:2.6rem}
+.doc h2{font-size:clamp(1.22rem,2.6vw,1.5rem);margin:2.7rem 0 .85rem;
+  padding-top:1.7rem;border-top:1px solid var(--hair)}
+.doc h3{font-size:.98rem;margin:1.7rem 0 .5rem;font-weight:600;font-family:var(--sans);
+  letter-spacing:.01em}
+.doc p,.doc li{color:var(--mute)}
+.doc strong{color:var(--pine);font-weight:600}
+.doc ul,.doc ol{padding-left:1.3rem;margin:0 0 1.15rem}
+.doc li{margin-bottom:.55rem}
+.lede{font-size:1.16rem;color:var(--pine);margin-bottom:1.6rem}
+.callout{background:var(--sage);border-left:2px solid var(--gold);
+  padding:1.15rem 1.35rem;margin:1.6rem 0;border-radius:0 var(--r) var(--r) 0}
+.callout p:last-child{margin-bottom:0}
+.callout p{color:var(--pine)}
+table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.9rem;font-size:.95rem}
+th,td{text-align:left;padding:.72rem .8rem;border-bottom:1px solid var(--hair);
+  vertical-align:top;color:var(--mute)}
+th{font-family:var(--sans);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold-ink);font-weight:600}
+.ftr{background:var(--pine-900);color:var(--paper);padding:3rem 0;font-size:.88rem}
+.ftr p{color:rgba(250,244,232,.72);max-width:80ch}
+.ftr a{color:var(--gold-hi)}
+@media (max-width:640px){table,thead,tbody,th,td,tr{display:block}
+  thead{position:absolute;left:-9999px}
+  td{border-bottom:none;padding:.25rem 0}
+  tr{border-bottom:1px solid var(--hair);padding:.8rem 0;display:block}
+  td::before{content:attr(data-l);display:block;font-family:var(--sans);font-size:.64rem;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.15rem}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="mast"><div class="wrap"><a href="/">&larr; The Finder's Book</a></div></header>
+<main id="main"><div class="wrap"><article class="doc">
+<p class="eyebrow">How we handle your data</p>
+<h1>Privacy Policy</h1>
+<p class="doc-meta">Last updated 28 July 2026</p>
+
+<p class="lede">Short version: we collect an email address if you give us one, we use standard tools to
+run a checkout and see whether the page works, and we do not sell anything about you to anyone. The
+long version is below, because "trust us" is not a privacy policy.</p>
+
+<div class="callout">
+<p><strong>What we never see:</strong> nothing you write inside The Finder's Book. The PDFs are files on
+your device. They do not sync, phone home, or transmit anything. We have no access to your entries,
+and there is no server where they could be stored.</p>
+</div>
+
+<h2>Who we are</h2>
+<p>Joanne Godfrey and Michael David Warren Jr., publishers of The Finder's Book &mdash; The Family Clarity System&trade;.
+Contact: <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a>. We are the data controller for the
+information described here.</p>
+
+<h2>What we collect, and why</h2>
+<table>
+  <thead><tr><th>Data</th><th>When</th><th>Why</th><th>Legal basis</th></tr></thead>
+  <tbody>
+    <tr>
+      <td data-l="Data"><strong>Email address</strong>, optional first name</td>
+      <td data-l="When">When you request the Family Readiness Gap Check or subscribe</td>
+      <td data-l="Why">To send the checklist and occasional notes about the book</td>
+      <td data-l="Legal basis">Consent</td>
+    </tr>
+    <tr>
+      <td data-l="Data"><strong>Order details</strong> &mdash; email, purchase amount, product, country for tax</td>
+      <td data-l="When">At checkout</td>
+      <td data-l="Why">To deliver your files, provide support, and meet tax obligations</td>
+      <td data-l="Legal basis">Contract &amp; legal obligation</td>
+    </tr>
+    <tr>
+      <td data-l="Data"><strong>Usage data</strong> &mdash; pages viewed, buttons clicked, referring source, approximate region, device type</td>
+      <td data-l="When">While browsing the site</td>
+      <td data-l="Why">To understand which parts of the page help and which confuse</td>
+      <td data-l="Legal basis">Consent or legitimate interest, depending on your region</td>
+    </tr>
+    <tr>
+      <td data-l="Data"><strong>Support correspondence</strong></td>
+      <td data-l="When">When you email us</td>
+      <td data-l="Why">To answer you and keep a record of the issue</td>
+      <td data-l="Legal basis">Legitimate interest</td>
+    </tr>
+  </tbody>
+</table>
+<p>We do not ask for, want, or store: passwords, PINs, recovery codes, full account numbers, Social
+Security numbers, or medical records. If you email any of those to us by accident, we will delete the
+message and tell you we did.</p>
+
+<h2>Payment information</h2>
+<p><strong>We never see your card number.</strong> Checkout is handled by Payhip and its payment
+processors. Your card details go directly to them and are never transmitted to or stored by us. We
+receive only the order confirmation: what was bought, for how much, and the email to deliver it to.</p>
+
+<h2>Who processes data on our behalf</h2>
+<table>
+  <thead><tr><th>Processor</th><th>Role</th><th>Data involved</th></tr></thead>
+  <tbody>
+    <tr><td data-l="Processor"><strong>Payhip</strong></td><td data-l="Role">Checkout, payment, file delivery</td><td data-l="Data">Email, order and payment details</td></tr>
+    <tr><td data-l="Processor"><strong>MailerLite</strong></td><td data-l="Role">Email delivery and list management</td><td data-l="Data">Email, optional first name, engagement</td></tr>
+    <tr><td data-l="Processor"><strong>Google Analytics</strong></td><td data-l="Role">Aggregate site measurement</td><td data-l="Data">Usage data, truncated IP</td></tr>
+    <tr><td data-l="Processor"><strong>Meta Pixel</strong></td><td data-l="Role">Advertising measurement, where enabled</td><td data-l="Data">Usage and conversion events</td></tr>
+    <tr><td data-l="Processor"><strong>Our hosting provider</strong></td><td data-l="Role">Serving the website</td><td data-l="Data">Standard server logs</td></tr>
+  </tbody>
+</table>
+<p>Each operates under its own privacy terms and processes data on our instructions. If a tool listed
+above is not currently active on the site, no data flows to it.</p>
+
+<h2>What we do not do</h2>
+<ul>
+  <li>We do not sell personal information. We never have.</li>
+  <li>We do not share your email with other companies or publishers.</li>
+  <li>We do not build advertising profiles about individuals.</li>
+  <li>We do not send email to people who did not ask for it.</li>
+</ul>
+
+<h2>Cookies and similar technologies</h2>
+<p>The site uses a small number of cookies and browser-storage entries:</p>
+<ul>
+  <li><strong>Session storage</strong> holds campaign parameters (such as <code>utm_source</code>) for the
+  length of your visit, so we can tell which channel sent you. It is cleared when you close the tab.</li>
+  <li><strong>Analytics cookies</strong> are set by Google Analytics where it is enabled.</li>
+  <li><strong>Advertising cookies</strong> are set by Meta where the Pixel is enabled.</li>
+</ul>
+<p>You can block or delete cookies in your browser settings. The site works without them; only the
+measurement stops.</p>
+
+<h2>How long we keep things</h2>
+<ul>
+  <li><strong>Email subscribers:</strong> until you unsubscribe, then removed within 30 days.</li>
+  <li><strong>Order records:</strong> as long as tax and accounting law requires, typically 7 years.</li>
+  <li><strong>Analytics:</strong> in aggregate, per the provider's retention settings.</li>
+  <li><strong>Support email:</strong> up to 24 months, then deleted.</li>
+</ul>
+
+<h2>Your rights</h2>
+<p>Wherever you live, you may ask us to:</p>
+<ul>
+  <li>Tell you what personal information we hold about you</li>
+  <li>Correct anything inaccurate</li>
+  <li>Delete it</li>
+  <li>Send you a copy in a portable format</li>
+  <li>Stop using it for a particular purpose</li>
+  <li>Withdraw consent at any time</li>
+</ul>
+<p>Email <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a>. We respond within 30 days and we do not
+charge for this.</p>
+
+<h3>California residents (CCPA/CPRA)</h3>
+<p>You have the right to know what we collect, to delete it, to correct it, and to opt out of sale or
+sharing. <strong>We do not sell or share personal information as those terms are defined by the CCPA</strong>,
+so there is no "Do Not Sell" mechanism to operate &mdash; there is nothing to opt out of. We will never
+discriminate against you for exercising any of these rights.</p>
+
+<h3>UK and EU residents (UK GDPR / GDPR)</h3>
+<p>You have the rights listed above, plus the right to lodge a complaint with your supervisory
+authority &mdash; the ICO in the UK, or your national data protection authority in the EU. Where we rely
+on consent, you may withdraw it at any time without affecting processing already carried out.</p>
+
+<h2>Email you receive from us</h2>
+<p>Every email has a one-click unsubscribe link in the footer. It works immediately. Transactional
+messages &mdash; your receipt and your download link &mdash; are sent because you bought something, and are
+not marketing.</p>
+
+<h2>International transfers</h2>
+<p>Our processors may store data in the United States and elsewhere. Where data leaves the UK or EEA,
+transfers rely on the safeguards our processors maintain, such as Standard Contractual Clauses or an
+adequacy decision.</p>
+
+<h2>Children</h2>
+<p>This site and product are intended for adults. We do not knowingly collect information from anyone
+under 16. If you believe a child has given us their details, email us and we will delete them.</p>
+
+<h2>Security</h2>
+<p>The site is served over HTTPS. Payment data never touches our systems. Access to the email list is
+limited to the two of us. No system is perfectly secure, and we will not claim otherwise &mdash; but we
+have deliberately designed this so that the sensitive material stays on your device rather than ours.</p>
+
+<h2>Changes</h2>
+<p>If we change this policy we update the date at the top. Material changes affecting how we use your
+information will be emailed to subscribers before they take effect.</p>
+
+<h2>Contact</h2>
+<p>Joanne Godfrey and Michael David Warren Jr.<br>
+Email: <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a><br>
+We answer privacy requests within 30 days.</p>
+
+</article></div></main>
+<footer class="ftr"><div class="wrap">
+<p><strong style="color:var(--gold-hi)">This is not legal advice.</strong> The Finder's Book is a structured template for
+personal record-keeping. It is not a will, trust, contract, power of attorney, or advance directive.</p>
+<p style="margin-top:1rem">Questions: <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a> &middot;
+<a href="/refund-policy.html">Refund policy</a> &middot;
+<a href="/privacy-policy.html">Privacy policy</a></p>
+<p style="margin-top:1rem">Copyright &copy; 2026 Joanne Godfrey and Michael David Warren Jr.. All rights reserved.
+The Family Clarity System&trade; is a trademark of Joanne Godfrey and Michael David Warren Jr..</p>
+</div></footer>
+</body>
+</html>

@@ -18,10 +18,11 @@ It intentionally does **not** contain paid customer deliverables distributed thr
 ## Local verification
 
 ```bash
+npm run hydrate
 npm run validate
 ```
 
-That command checks for accidentally committed secrets, broken local file references, and Payhip-to-MailerLite webhook routing behavior.
+`npm run hydrate` restores any missing public binary assets from the verified production source and checks their SHA-256 hashes. `npm run validate` checks for accidentally committed secrets, broken local file references, and Payhip-to-MailerLite webhook routing behavior.
 
 ## Environment variables
 

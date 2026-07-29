@@ -1,0 +1,17 @@
+{
+  "name": "finders-book-site",
+  "version": "3.4.1",
+  "private": true,
+  "type": "module",
+  "description": "The Finder's Book static landing page with Payhip and MailerLite Vercel serverless routes",
+  "scripts": {
+    "test": "node tests/test-webhook.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:refs": "node scripts/check-local-references.mjs",
+    "validate": "npm run check:secrets && npm run check:refs && npm test",
+    "hydrate": "node scripts/hydrate-assets.mjs"
+  },
+  "engines": {
+    "node": ">=20 <25"
+  }
+}
