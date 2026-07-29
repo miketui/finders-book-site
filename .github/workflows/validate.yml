@@ -1,0 +1,55 @@
+name: Validate Finder's Book site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Expand one-time repository bootstrap
+        shell: bash
+        run: |
+          if compgen -G '.bootstrap/repo-text.tar.gz.b64.part-*' > /dev/null; then
+            cat .bootstrap/repo-text.tar.gz.b64.part-* | base64 --decode > /tmp/repo-text.tar.gz
+            tar -xzf /tmp/repo-text.tar.gz -C .
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Download and verify public binary assets
+        run: node scripts/hydrate-assets.mjs
+
+      - name: Install project metadata
+        run: npm install --ignore-scripts
+
+      - name: Run repository validation
+        run: npm run validate
+
+      - name: Commit hydrated repository files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          rm -rf .bootstrap
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Repository already hydrated; no commit required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Hydrate verified Finder’s Book repository files'
+          git push
