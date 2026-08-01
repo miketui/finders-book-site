@@ -36,6 +36,7 @@
     function(context){
       var conditions = context.conditions;
       var animate = conditions.animate && document.documentElement.classList.contains("fx");
+      var compactMotion = window.matchMedia("(max-width: 860px)").matches || window.matchMedia("(pointer:coarse)").matches;
 
       /* ===========================================================
          LENIS SMOOTH SCROLL
@@ -44,7 +45,7 @@
          ScrollTrigger compatibility.
          =========================================================== */
       var lenis = null;
-      if (animate && typeof Lenis !== "undefined"){
+      if (animate && !compactMotion && typeof Lenis !== "undefined"){
         lenis = new Lenis({
           lerp: 0.09,
           duration: 1.2,
@@ -105,15 +106,16 @@
           var h1El = hero.querySelector("h1");
           if (h1El){
             SplitText.create(h1El, {
-              type: "words, chars",
+              type: compactMotion ? "words" : "words, chars",
               autoSplit: true,
               onSplit: function(self){
-                return gsap.from(self.chars, {
+                var units = self.chars && self.chars.length ? self.chars : self.words;
+                return gsap.from(units, {
                   opacity: 0,
-                  y: 24,
-                  rotateX: -40,
-                  stagger: 0.018,
-                  duration: 0.55,
+                  y: compactMotion ? 14 : 24,
+                  rotateX: compactMotion ? 0 : -40,
+                  stagger: compactMotion ? 0.03 : 0.018,
+                  duration: compactMotion ? 0.45 : 0.55,
                   ease: "back.out(1.4)",
                   delay: 0.15
                 });
@@ -218,6 +220,18 @@
           }
         });
       }
+      var journeyLinks = document.querySelectorAll(".journey-links a");
+      if (journeyLinks.length){
+        gsap.from(journeyLinks, {
+          y: 14, opacity: 0, stagger: 0.05, duration: 0.45,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: ".journey-strip",
+            start: "top 88%",
+            toggleActions: "play none none none"
+          }
+        });
+      }
 
       /* ===========================================================
          3. PARALLAX + SCROLL-SCRUB EFFECTS
@@ -227,7 +241,7 @@
       /* Hero: subtle upward parallax as user scrolls past */
       if (hero){
         gsap.to(".hero", {
-          yPercent: -8,
+          yPercent: compactMotion ? -3 : -8,
           ease: "none",
           scrollTrigger: {
             trigger: ".hero",
@@ -254,32 +268,36 @@
       }
 
       /* Section band backgrounds: subtle parallax depth */
-      document.querySelectorAll(".band-pine, .band-deep, .band-sage, .band-hi").forEach(function(band){
-        gsap.from(band, {
-          backgroundPositionY: "20%",
-          ease: "none",
-          scrollTrigger: {
-            trigger: band,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true
-          }
+      if (!compactMotion){
+        document.querySelectorAll(".band-pine, .band-deep, .band-sage, .band-hi").forEach(function(band){
+          gsap.from(band, {
+            backgroundPositionY: "20%",
+            ease: "none",
+            scrollTrigger: {
+              trigger: band,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true
+            }
+          });
         });
-      });
+      }
 
       /* Bonus images: gentle float on scroll */
-      document.querySelectorAll(".bonus img").forEach(function(img){
-        gsap.to(img, {
-          y: -8, rotation: -0.5,
-          ease: "none",
-          scrollTrigger: {
-            trigger: img,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 2
-          }
+      if (!compactMotion){
+        document.querySelectorAll(".bonus img").forEach(function(img){
+          gsap.to(img, {
+            y: -8, rotation: -0.5,
+            ease: "none",
+            scrollTrigger: {
+              trigger: img,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 2
+            }
+          });
         });
-      });
+      }
 
       /* FAQ: details items reveal with micro-stagger */
       var faqDetails = document.querySelectorAll(".faq details");
@@ -339,9 +357,11 @@
          =========================================================== */
       document.querySelectorAll(".tier").forEach(function(tier){
         tier.addEventListener("mouseenter", function(){
+          if (compactMotion) return;
           gsap.to(tier, { y: -6, scale: 1.015, duration: 0.3, ease: "power2.out" });
         });
         tier.addEventListener("mouseleave", function(){
+          if (compactMotion) return;
           gsap.to(tier, { y: 0, scale: 1, duration: 0.4, ease: "power2.out" });
         });
       });
@@ -548,4 +568,3 @@
     });
   }
 })();
-
