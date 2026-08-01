@@ -112,7 +112,11 @@
 
   function openLb(src, cap){
     lastFocus = document.activeElement;
-    lbImg.src = src; lbImg.alt = cap; lbCap.textContent = cap;
+    /* Only allow relative asset paths — block javascript: and data: URIs */
+    if (/^(assets\/|\.?\/)/.test(src) && !/^javascript:/i.test(src)){
+      lbImg.src = src;
+    }
+    lbImg.alt = cap; lbCap.textContent = cap;
     lb.hidden = false; lb.classList.add("on");
     document.body.style.overflow = "hidden";
     lbClose.focus();
