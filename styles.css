@@ -1,3 +1,25 @@
+/* ============================================================
+   WEBFONTS — shared by every page.
+   These were previously declared INLINE IN index.html ONLY, which
+   meant about/order/contact preloaded the font files, never declared
+   them, and silently rendered in system fallback faces. That also
+   produced the "preloaded but not used" console warning and a
+   font-swap layout shift (home CLS measured 0.128 when the swap
+   landed late). Declaring them here fixes all three at once.
+   ============================================================ */
+@font-face{
+  font-family:"Newsreader Local";font-style:normal;font-display:swap;font-weight:200 800;
+  src:url("assets/fonts/newsreader-latin-variable-normal.woff2") format("woff2-variations");
+}
+@font-face{
+  font-family:"Newsreader Local";font-style:italic;font-display:swap;font-weight:200 800;
+  src:url("assets/fonts/newsreader-latin-variable-italic.woff2") format("woff2-variations");
+}
+@font-face{
+  font-family:"Archivo Local";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("assets/fonts/archivo-latin-variable-normal.woff2") format("woff2-variations");
+}
+
 
 /* ============================================================
    THE FINDER'S BOOK: design tokens

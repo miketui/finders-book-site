@@ -1,6 +1,7 @@
 /* ============================================================
    THE FINDER'S BOOK — MOTION & INTERACTIONS (v4.0 GSAP ELEVATION)
-   Powered by GSAP ScrollTrigger + SplitText + Lenis.
+   Powered by GSAP ScrollTrigger + SplitText + Lenis WHERE AVAILABLE,
+   with a vanilla IntersectionObserver reveal fallback everywhere else.
    Progressive enhancement: animates only when html.fx is set
    and prefers-reduced-motion is not active.
    Depends on analytics.js exposing window.fbTrack / window.fbAttribution.
@@ -17,8 +18,59 @@
     return {};
   }
 
+  /* ---------- Reveal fallback (runs when GSAP is absent) ----------
+     GSAP is loaded from a CDN on index.html only. about/order/contact
+     share this same file without it. The previous `return` here killed
+     the ENTIRE module on those pages -- not just the animations, but the
+     lightbox, sticky bar and form handlers 200 lines below -- leaving
+     every .fx-up / .fx-scale element stuck at opacity 0 (they are set to
+     opacity:0 by styles.css and only made visible by adding .fx-on).
+     This restores the original vanilla IntersectionObserver reveal so the
+     page is fully readable with or without GSAP, and with or without a
+     working CDN. */
+  function vanillaReveal(){
+    var els = document.querySelectorAll(".fx-up, .fx-fade, .fx-scale, .fx-in, .fx-rule, .rfield, .eyebrow");
+    if (!els.length) return;
+
+    var reduced = false;
+    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+    /* No IntersectionObserver, or motion is unwanted: show everything now. */
+    if (reduced || !("IntersectionObserver" in window)){
+      Array.prototype.forEach.call(els, function(el){ el.classList.add("fx-on"); });
+      return;
+    }
+
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("fx-on");
+        io.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -10% 0px", threshold: 0.01 });
+
+    Array.prototype.forEach.call(els, function(el, i){
+      /* Anything already above the fold reveals immediately rather than
+         waiting for a scroll that may never come. */
+      var r = el.getBoundingClientRect();
+      if (r.top < (window.innerHeight || 0)){
+        el.style.setProperty("--fx-d", Math.min(i * 60, 360) + "ms");
+        el.classList.add("fx-on");
+      } else {
+        io.observe(el);
+      }
+    });
+  }
+
   /* ---------- GSAP setup ---------- */
-  if (typeof gsap === "undefined") return; // graceful fallback if CDN fails
+  var hasGSAP = (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined");
+
+  if (!hasGSAP){
+    /* No GSAP on this page (or the CDN failed). Reveal content the plain
+       way, then fall through -- the lightbox, sticky bar and form handlers
+       below are not GSAP-dependent and must still run. */
+    vanillaReveal();
+  } else {
   gsap.registerPlugin(ScrollTrigger);
   if (typeof SplitText !== "undefined") gsap.registerPlugin(SplitText);
 
@@ -372,9 +424,12 @@
       };
     }
   );
+  } /* end if (hasGSAP) */
 
   /* ============================================================
      5. LIGHTBOX (unchanged — not scroll-dependent)
+     Deliberately OUTSIDE the GSAP branch: this and everything
+     below it works without GSAP and must run on every page.
      ============================================================ */
   var lb = document.getElementById("lb"),
       lbImg = document.getElementById("lbImg"),
@@ -557,14 +612,35 @@
       });
     });
 
-    /* Fire once when the section is actually seen, for funnel maths. */
-    ScrollTrigger.create({
-      trigger: "#gap-check",
-      start: "top 65%",
-      once: true,
-      onEnter: function(){
-        track("lead_form_view", {offer:"gap-check"});
+    /* Fire once when the section is actually seen, for funnel maths.
+       Uses ScrollTrigger when GSAP is present, and a plain
+       IntersectionObserver otherwise, so the lead_form_view event is
+       never silently lost just because the CDN did not load. */
+    (function(){
+      var gapEl = document.getElementById("gap-check");
+      if (!gapEl) return;
+
+      function fireOnce(){ track("lead_form_view", {offer:"gap-check"}); }
+
+      if (hasGSAP && typeof ScrollTrigger !== "undefined"){
+        ScrollTrigger.create({
+          trigger: "#gap-check",
+          start: "top 65%",
+          once: true,
+          onEnter: fireOnce
+        });
+      } else if ("IntersectionObserver" in window){
+        var gio = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if (!entry.isIntersecting) return;
+            fireOnce();
+            gio.disconnect();
+          });
+        }, { threshold: 0.35 });
+        gio.observe(gapEl);
+      } else {
+        fireOnce();
       }
-    });
+    })();
   }
 })();
