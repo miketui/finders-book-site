@@ -4,7 +4,7 @@ Production website and serverless integration layer for **The Finder's Book — 
 
 ## Production
 
-- Website: `https://finders-book-v34.vercel.app`
+- Website: `https://www.familyfindersbook.com`
 - Checkout: Payhip
 - Marketing email and automations: MailerLite
 - Hosting and serverless functions: Vercel
