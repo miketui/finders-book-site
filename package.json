@@ -8,13 +8,23 @@
     "test": "node tests/test-webhook.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:refs": "node scripts/check-local-references.mjs",
-    "validate": "npm run check:secrets && npm run check:refs && npm test",
-    "hydrate": "node scripts/hydrate-assets.mjs"
+    "validate": "npm run check:secrets && npm run check:refs && npm run check:chrome && npm test",
+    "hydrate": "node scripts/hydrate-assets.mjs",
+    "check:chrome": "node scripts/check-chrome-drift.mjs",
+    "test:render": "node tests/smoke-render.mjs"
   },
   "engines": {
     "node": ">=20 <25"
   },
   "dependencies": {
-    "@vercel/analytics": "^2.0.1"
+    "@vercel/analytics": "^2.0.1",
+    "playwright": "^1.62.1"
+  },
+  "main": "analytics.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "playwright": "^1.49.0"
   }
 }
