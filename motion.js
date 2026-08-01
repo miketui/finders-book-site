@@ -112,9 +112,11 @@
 
   function openLb(src, cap){
     lastFocus = document.activeElement;
-    /* Only allow relative asset paths — block javascript: and data: URIs */
-    if (/^(assets\/|\.?\/)/.test(src) && !/^javascript:/i.test(src)){
-      lbImg.src = src;
+    /* Sanitize: only relative asset paths are allowed as image sources.
+       Blocks javascript:, data:, and absolute URLs to prevent DOM XSS. */
+    var safeSrc = String(src || "");
+    if (safeSrc.indexOf("assets/") === 0) {
+      lbImg.setAttribute("src", safeSrc);
     }
     lbImg.alt = cap; lbCap.textContent = cap;
     lb.hidden = false; lb.classList.add("on");
