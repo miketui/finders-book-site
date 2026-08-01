@@ -133,7 +133,14 @@ p{margin:0 0 1rem}
 .hero{background:var(--pine);color:var(--paper);position:relative;overflow:hidden;padding:clamp(3.5rem,7vw,6rem) 0 clamp(4rem,8vw,6.5rem)}
 .hero::before{
   content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(115% 80% at 82% 8%,rgba(184,146,61,.20),transparent 62%);
+  background:
+    radial-gradient(115% 80% at 82% 8%,rgba(184,146,61,.24),transparent 62%),
+    radial-gradient(80% 55% at 8% 100%,rgba(250,244,232,.10),transparent 72%);
+}
+.hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.4;
+  background-image:linear-gradient(120deg,rgba(250,244,232,.08) 0 1px,transparent 1px 100%);
+  background-size:36px 36px;
 }
 .hero-grid{position:relative;display:grid;grid-template-columns:1.06fr .94fr;gap:clamp(2.5rem,5vw,4.5rem);align-items:center}
 @media (max-width:960px){.hero-grid{grid-template-columns:1fr;gap:3rem}}
@@ -147,6 +154,8 @@ p{margin:0 0 1rem}
 .hero .btn-primary:hover{background:var(--paper-hi);border-color:var(--paper-hi)}
 .hero .btn-ghost{color:var(--paper);border-color:var(--hair-lt)}
 .hero .btn-ghost:hover{color:var(--paper);border-color:var(--paper);background:rgba(250,244,232,.08)}
+.hero .btn-note a,.final-note a{color:var(--paper);text-decoration-color:rgba(250,244,232,.5);text-underline-offset:.16em}
+.hero .btn-note a:hover,.final-note a:hover{color:var(--paper-hi);text-decoration-color:var(--paper-hi)}
 
 /* hero snapshot card: the product's page 2, rendered live */
 .snap{
@@ -195,6 +204,19 @@ p{margin:0 0 1rem}
   .proof-list li:nth-child(2){border-right:0}
   .proof-list li:nth-child(-n+2){border-bottom:1px solid var(--hair)}
 }
+
+.journey-strip{background:var(--paper);border-bottom:1px solid var(--hair)}
+.journey-links{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;
+  font-family:var(--sans);font-size:.78rem;font-weight:600;letter-spacing:.04em;
+}
+.journey-links a{
+  padding:1rem .9rem;color:var(--pine);text-decoration:none;
+  border-right:1px solid var(--hair);text-align:center;white-space:nowrap;
+  transition:background-color .22s var(--ease),color .22s var(--ease);
+}
+.journey-links a:last-child{border-right:0}
+.journey-links a:hover{background:var(--paper-hi);color:var(--pine-700)}
 
 /* ---------- generic layout helpers ---------- */
 .head-block{max-width:64ch;margin-bottom:clamp(2.5rem,4.5vw,3.75rem)}
@@ -361,6 +383,13 @@ p{margin:0 0 1rem}
 .sticky-txt b{display:block;color:var(--paper);font-size:.9rem;font-weight:600}
 .sticky .btn{padding:.8rem 1.15rem;font-size:.85rem;white-space:nowrap;min-height:46px}
 @media (max-width:860px){.sticky{display:flex}body{padding-bottom:74px}}
+@media (max-width:860px){
+  .sticky{padding:.75rem 1rem;padding-bottom:calc(.75rem + env(safe-area-inset-bottom));gap:.75rem}
+  .sticky-txt{font-size:.72rem}
+  .sticky-txt b{font-size:.85rem}
+  .sticky .btn{padding:.85rem 1rem;min-height:48px}
+  body{padding-bottom:80px}
+}
 
 /* ---------- footer ---------- */
 .ftr{background:var(--pine-900);color:var(--mute-pine);padding:clamp(3rem,5vw,4.5rem) 0 2.5rem;font-family:var(--sans);font-size:.85rem}
@@ -518,6 +547,13 @@ html.fx .lb.on img{transform:scale(1);opacity:1}
 .gap-msg[data-state="err"]{border-color:#9B3B2E;background:rgba(155,59,46,.07);color:#7A2C22}
 .gap-msg[hidden]{display:none}
 
+#final-cta{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(80% 90% at 50% 0%,rgba(184,146,61,.18),transparent 62%),
+    var(--pine-900);
+}
+
 /* ---------- 7. Legal document pages ---------- */
 .doc{max-width:74ch;margin:0 auto;padding:clamp(3rem,8vw,6rem) 0}
 .doc h1{font-size:clamp(2rem,5vw,2.9rem);margin-bottom:.6rem}
@@ -562,3 +598,13 @@ html.fx .lb.on img{transform:scale(1);opacity:1}
   html.fx .pg,html.fx .tier,html.fx .btn{transition:none}
 }
 
+@media (max-width:900px){
+  .journey-links{
+    display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .journey-links a{
+    scroll-snap-align:start;flex:0 0 auto;min-width:58%;
+    border-right:1px solid var(--hair);
+  }
+}
