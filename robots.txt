@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://finders-book-v34.vercel.app/sitemap.xml
+Sitemap: https://www.familyfindersbook.com/sitemap.xml
