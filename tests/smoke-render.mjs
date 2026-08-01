@@ -54,6 +54,8 @@ const OPTIONAL_404 = [
   '/assets/models/book.glb',
   '/assets/book-poster.webp',
   '/assets/vendor/model-viewer.min.js',
+  // Vercel injects this at the edge; it is absent in local/CI static serving.
+  '/_vercel/insights/script.js',
 ];
 
 const MIME = {
