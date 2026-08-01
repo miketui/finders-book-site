@@ -1,7 +1,8 @@
 /* ============================================================
-   THE FINDER'S BOOK — MOTION & INTERACTIONS
-   Scroll reveals, hero choreography, lightbox, sticky CTA,
-   and Gap Check lead capture form.
+   THE FINDER'S BOOK — MOTION & INTERACTIONS (v4.0 GSAP ELEVATION)
+   Powered by GSAP ScrollTrigger + SplitText + Lenis.
+   Progressive enhancement: animates only when html.fx is set
+   and prefers-reduced-motion is not active.
    Depends on analytics.js exposing window.fbTrack / window.fbAttribution.
    ============================================================ */
 (function(){
@@ -16,93 +17,344 @@
     return {};
   }
 
-  var reduced = false;
-  try{ reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
-  var animate = document.documentElement.classList.contains("fx") && !reduced;
+  /* ---------- GSAP setup ---------- */
+  if (typeof gsap === "undefined") return; // graceful fallback if CDN fails
+  gsap.registerPlugin(ScrollTrigger);
+  if (typeof SplitText !== "undefined") gsap.registerPlugin(SplitText);
 
-  /* ============================================================
-     1. MOTION CHOREOGRAPHY
-     ============================================================ */
-  function stagger(nodes, step, base){
-    Array.prototype.forEach.call(nodes, function(el, i){
-      el.style.setProperty("--fx-d", ((base||0) + i*step) + "ms");
-    });
-  }
+  /* ---------- Progressive enhancement + reduced-motion ----------
+     Uses gsap.matchMedia() per SKILL.md best practice.
+     All animations live inside the matchMedia handler so they
+     are automatically reverted if conditions change. */
+  var mm = gsap.matchMedia();
 
-  if (animate){
-    /* ---- Hero: one orchestrated wave, resolved by 620ms ----
-       The primary CTA sits in the 180ms slot. It is never the last
-       thing to arrive and it is clickable the entire time. */
-    var hero = document.querySelector(".hero");
-    if (hero){
-      var wave = [
-        [".eyebrow",   0],
-        ["h1",        70],
-        [".lede",    140],
-        [".btn-row", 180],
-        [".btn-note",260]
+  mm.add(
+    {
+      animate: "(prefers-reduced-motion: no-preference)",
+      reduce:  "(prefers-reduced-motion: reduce)"
+    },
+    function(context){
+      var conditions = context.conditions;
+      var animate = conditions.animate && document.documentElement.classList.contains("fx");
+
+      /* ===========================================================
+         LENIS SMOOTH SCROLL
+         Butter-smooth inertia scrolling that elevates the entire
+         page feel. Synced with GSAP's ticker for perfect
+         ScrollTrigger compatibility.
+         =========================================================== */
+      var lenis = null;
+      if (animate && typeof Lenis !== "undefined"){
+        lenis = new Lenis({
+          lerp: 0.09,
+          duration: 1.2,
+          smoothWheel: true,
+          wheelMultiplier: 1,
+          touchMultiplier: 1.5
+        });
+
+        /* Sync Lenis with GSAP ticker — per Lenis README integration pattern */
+        lenis.on("scroll", ScrollTrigger.update);
+        gsap.ticker.add(function(time){
+          lenis.raf(time * 1000);
+        });
+        gsap.ticker.lagSmoothing(0);
+      }
+
+      if (!animate){
+        /* Reduced motion: ensure all elements are visible, no animation */
+        gsap.set(".hero .eyebrow, .hero h1, .hero .lede, .hero .btn-row, .hero .btn-note, .hero .snap", {
+          clearProps: "all"
+        });
+        return; // exit — no animations created
+      }
+
+      /* ===========================================================
+         1. HERO CHOREOGRAPHY — GSAP TIMELINE
+         One orchestrated wave, resolved by ~700ms.
+         The CTA is never the last thing to arrive.
+         =========================================================== */
+      var hero = document.querySelector(".hero");
+      if (hero){
+        var heroTl = gsap.timeline({
+          defaults: { ease: "power3.out", duration: 0.7 }
+        });
+
+        /* Staggered entrance of hero text elements */
+        heroTl
+          .from(".hero .eyebrow", {
+            y: 20, opacity: 0, duration: 0.5
+          })
+          .from(".hero h1", {
+            y: 30, opacity: 0, duration: 0.8
+          }, "-=0.35")
+          .from(".hero .lede", {
+            y: 20, opacity: 0, duration: 0.6
+          }, "-=0.45")
+          .from(".hero .btn-row", {
+            y: 16, opacity: 0, duration: 0.5
+          }, "-=0.35")
+          .from(".hero .btn-note", {
+            y: 12, opacity: 0, duration: 0.4
+          }, "-=0.25");
+
+        /* SplitText: hero h1 character-by-character reveal
+           Adds cinematic text animation per GSAP SplitText SKILL.md.
+           Uses autoSplit + onSplit for font-load resilience. */
+        if (typeof SplitText !== "undefined"){
+          var h1El = hero.querySelector("h1");
+          if (h1El){
+            SplitText.create(h1El, {
+              type: "words, chars",
+              autoSplit: true,
+              onSplit: function(self){
+                return gsap.from(self.chars, {
+                  opacity: 0,
+                  y: 24,
+                  rotateX: -40,
+                  stagger: 0.018,
+                  duration: 0.55,
+                  ease: "back.out(1.4)",
+                  delay: 0.15
+                });
+              }
+            });
+          }
+        }
+
+        /* Snapshot card entrance with ruled fields filling in */
+        var snap = hero.querySelector(".snap");
+        if (snap){
+          heroTl.from(snap, {
+            y: 40, opacity: 0, scale: 0.97, duration: 0.8,
+            ease: "power2.out"
+          }, "-=0.5");
+
+          var fields = hero.querySelectorAll(".rfield");
+          if (fields.length){
+            heroTl.from(fields, {
+              y: 12, opacity: 0, stagger: 0.09, duration: 0.45,
+              ease: "power2.out"
+            }, "-=0.3");
+          }
+        }
+
+        /* Eyebrow gold rule draws itself */
+        var eyebrowAfter = hero.querySelector(".eyebrow");
+        if (eyebrowAfter){
+          gsap.from(eyebrowAfter, {
+            "--rule-scale": 0,
+            duration: 0.8,
+            ease: "power2.out",
+            delay: 0.1
+          });
+        }
+      }
+
+      /* ===========================================================
+         2. SCROLL-TRIGGERED SECTION REVEALS (replaces IntersectionObserver)
+         Uses ScrollTrigger.batch() per SKILL.md — the GSAP
+         replacement for IntersectionObserver with stagger support.
+         =========================================================== */
+
+      /* Section headers: staggered children reveal */
+      var headBlocks = document.querySelectorAll(".band .head-block");
+      headBlocks.forEach(function(hb){
+        if (hero && hero.contains(hb)) return;
+        var children = hb.children;
+        if (children.length){
+          gsap.from(children, {
+            y: 28, opacity: 0, stagger: 0.08, duration: 0.65,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: hb,
+              start: "top 85%",
+              toggleActions: "play none none none"
+            }
+          });
+        }
+      });
+
+      /* Card grids: staggered batch reveal */
+      var batchSelectors = [
+        ".gallery .pg",
+        ".tiers .tier",
+        ".bonus-grid .bonus",
+        ".aud",
+        ".steps .step",
+        ".doctrine .doc-panel",
+        ".fmt .card"
       ];
-      wave.forEach(function(pair){
-        var el = hero.querySelector(pair[0]);
-        if (el){ el.classList.add("fx-up"); el.style.setProperty("--fx-d", pair[1]+"ms"); }
-      });
 
-      /* The snapshot panel, then its four ruled fields filling in
-         left to right the way a hand would fill them. */
-      var snap = hero.querySelector(".snap");
-      if (snap){ snap.classList.add("fx-up"); snap.style.setProperty("--fx-d","150ms"); }
-      var fields = hero.querySelectorAll(".rfield");
-      stagger(fields, 90, 380);
-      Array.prototype.forEach.call(fields, function(el){
-        el.classList.add("fx-on"); // hero fields animate via transition on load
-      });
-      requestAnimationFrame(function(){
-        requestAnimationFrame(function(){
-          Array.prototype.forEach.call(fields, function(el){ el.classList.add("fx-on"); });
+      batchSelectors.forEach(function(sel){
+        var nodes = document.querySelectorAll(sel);
+        if (!nodes.length) return;
+
+        ScrollTrigger.batch(nodes, {
+          start: "top 88%",
+          onEnter: function(batch){
+            gsap.from(batch, {
+              y: 30,
+              opacity: 0,
+              stagger: 0.08,
+              duration: 0.6,
+              ease: "power3.out",
+              overwrite: true
+            });
+          }
         });
       });
-    }
 
-    /* ---- Scroll reveals ---- */
-    var io = null;
-    if ("IntersectionObserver" in window){
-      io = new IntersectionObserver(function(entries){
-        entries.forEach(function(entry){
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("fx-on");
-          io.unobserve(entry.target);
+      /* Proof strip: items slide up with stagger */
+      var proofItems = document.querySelectorAll(".proof-list li");
+      if (proofItems.length){
+        gsap.from(proofItems, {
+          y: 20, opacity: 0, stagger: 0.1, duration: 0.5,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: ".proof-strip",
+            start: "top 85%",
+            toggleActions: "play none none none"
+          }
         });
-      }, {rootMargin:"0px 0px -12% 0px", threshold:0.08});
-    }
+      }
 
-    function reveal(el, delay){
-      if (!el) return;
-      if (delay) el.style.setProperty("--fx-d", delay+"ms");
-      el.classList.add("fx-up");
-      if (io) io.observe(el); else el.classList.add("fx-on");
-    }
+      /* ===========================================================
+         3. PARALLAX + SCROLL-SCRUB EFFECTS
+         Adds depth and cinematic feel per ScrollTrigger patterns.
+         =========================================================== */
 
-    /* Section headers outside the hero */
-    document.querySelectorAll(".band .head-block").forEach(function(hb){
-      if (hero && hero.contains(hb)) return;
-      Array.prototype.forEach.call(hb.children, function(child, i){
-        reveal(child, i*70);
+      /* Hero: subtle upward parallax as user scrolls past */
+      if (hero){
+        gsap.to(".hero", {
+          yPercent: -8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: true
+          }
+        });
+
+        /* Hero cover image: slow float */
+        var heroCover = hero.querySelector(".hero-cover");
+        if (heroCover){
+          gsap.to(heroCover, {
+            y: -15, rotation: 0.5,
+            ease: "none",
+            scrollTrigger: {
+              trigger: ".hero",
+              start: "top top",
+              end: "bottom top",
+              scrub: 1.5
+            }
+          });
+        }
+      }
+
+      /* Section band backgrounds: subtle parallax depth */
+      document.querySelectorAll(".band-pine, .band-deep, .band-sage, .band-hi").forEach(function(band){
+        gsap.from(band, {
+          backgroundPositionY: "20%",
+          ease: "none",
+          scrollTrigger: {
+            trigger: band,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true
+          }
+        });
       });
-      var eb = hb.querySelector(".eyebrow");
-      if (eb && io) io.observe(eb); // draws its own gold rule
-    });
 
-    /* Repeating card grids, staggered by position within the grid */
-    [".gallery .pg", ".tiers .tier", ".bonus-grid .card", ".aud"].forEach(function(sel){
-      var nodes = document.querySelectorAll(sel);
-      Array.prototype.forEach.call(nodes, function(el, i){
-        reveal(el, (i % 3) * 80);
+      /* Bonus images: gentle float on scroll */
+      document.querySelectorAll(".bonus img").forEach(function(img){
+        gsap.to(img, {
+          y: -8, rotation: -0.5,
+          ease: "none",
+          scrollTrigger: {
+            trigger: img,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 2
+          }
+        });
       });
-    });
-  }
+
+      /* FAQ: details items reveal with micro-stagger */
+      var faqDetails = document.querySelectorAll(".faq details");
+      if (faqDetails.length){
+        gsap.from(faqDetails, {
+          y: 16, opacity: 0, stagger: 0.06, duration: 0.5,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: ".faq",
+            start: "top 80%",
+            toggleActions: "play none none none"
+          }
+        });
+      }
+
+      /* Final CTA: scale-up entrance with emotional weight */
+      var finalCta = document.getElementById("final-cta");
+      if (finalCta){
+        gsap.from("#final-cta .h-lg", {
+          scale: 0.92, opacity: 0, y: 30, duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: finalCta,
+            start: "top 75%",
+            toggleActions: "play none none none"
+          }
+        });
+        gsap.from("#final-cta .btn", {
+          y: 20, opacity: 0, duration: 0.6,
+          ease: "back.out(1.4)",
+          delay: 0.2,
+          scrollTrigger: {
+            trigger: finalCta,
+            start: "top 75%",
+            toggleActions: "play none none none"
+          }
+        });
+      }
+
+      /* Gap Check section: card slides in */
+      var gapSection = document.getElementById("gap-check");
+      if (gapSection){
+        gsap.from(".gap-card", {
+          x: 40, opacity: 0, duration: 0.7,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: gapSection,
+            start: "top 75%",
+            toggleActions: "play none none none"
+          }
+        });
+      }
+
+      /* ===========================================================
+         4. PRICING TIER HOVER ELEVATION
+         Interactive micro-animation on hover via GSAP.
+         =========================================================== */
+      document.querySelectorAll(".tier").forEach(function(tier){
+        tier.addEventListener("mouseenter", function(){
+          gsap.to(tier, { y: -6, scale: 1.015, duration: 0.3, ease: "power2.out" });
+        });
+        tier.addEventListener("mouseleave", function(){
+          gsap.to(tier, { y: 0, scale: 1, duration: 0.4, ease: "power2.out" });
+        });
+      });
+
+      /* Cleanup function — called when matchMedia conditions change */
+      return function(){
+        if (lenis){ lenis.destroy(); lenis = null; }
+      };
+    }
+  );
 
   /* ============================================================
-     2. LIGHTBOX
+     5. LIGHTBOX (unchanged — not scroll-dependent)
      ============================================================ */
   var lb = document.getElementById("lb"),
       lbImg = document.getElementById("lbImg"),
@@ -147,12 +399,12 @@
   });
 
   /* ============================================================
-     3. STICKY MOBILE CTA
+     6. STICKY MOBILE CTA (unchanged — uses rAF efficiently)
      ============================================================ */
   var sticky = document.getElementById("sticky"),
       pricing = document.getElementById("pricing"),
       heroEl = document.querySelector(".hero"),
-      finalCta = document.getElementById("final-cta"),
+      finalCtaEl = document.getElementById("final-cta"),
       footer = document.querySelector(".ftr"),
       stickyQueued = false;
 
@@ -165,7 +417,7 @@
   function updateSticky(){
     if (!heroEl || !sticky) return;
     var heroPassed = heroEl.getBoundingClientRect().bottom <= 120,
-        blocked = isVisible(pricing) || isVisible(finalCta) || isVisible(footer);
+        blocked = isVisible(pricing) || isVisible(finalCtaEl) || isVisible(footer);
     sticky.classList.toggle("on", heroPassed && !blocked);
   }
 
@@ -183,7 +435,7 @@
   updateSticky();
 
   /* ============================================================
-     4. GAP CHECK LEAD CAPTURE
+     7. GAP CHECK LEAD CAPTURE (unchanged)
      ============================================================ */
   var FB_LEAD = {
     mode: "api",
@@ -286,19 +538,14 @@
     });
 
     /* Fire once when the section is actually seen, for funnel maths. */
-    if ("IntersectionObserver" in window){
-      var seen = false;
-      var gio = new IntersectionObserver(function(en){
-        en.forEach(function(e){
-          if (e.isIntersecting && !seen){
-            seen = true;
-            track("lead_form_view", {offer:"gap-check"});
-            gio.disconnect();
-          }
-        });
-      }, {threshold:0.35});
-      var gapSection = document.getElementById("gap-check");
-      if (gapSection) gio.observe(gapSection);
-    }
+    ScrollTrigger.create({
+      trigger: "#gap-check",
+      start: "top 65%",
+      once: true,
+      onEnter: function(){
+        track("lead_form_view", {offer:"gap-check"});
+      }
+    });
   }
 })();
+
