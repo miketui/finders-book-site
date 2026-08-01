@@ -514,7 +514,7 @@
      ============================================================ */
   var FB_LEAD = {
     mode: "api",
-    apiEndpoint: "/api/subscribe",
+    apiEndpoint: "/api/gap-check-subscribe",
     leadEndpoint: "https://assets.mailerlite.com/jsonp/2202141/forms/194226651000735158/subscribe",
     supportEmail: "warrenjrmd@gmail.com"
   };
@@ -594,9 +594,26 @@
       .then(function(data){
         var good = data && (data.ok || data.success);
         if (good){
-          say("ok", "Check your inbox for a confirmation link. Your Gap Check arrives right after you confirm.");
           track("lead_submit", Object.assign({offer:"gap-check", value:0, currency:"USD"}, attribution()));
           form.querySelectorAll("input").forEach(function(i){ i.value = ""; });
+
+          if (data.token){
+            /* Token-gated download: show an immediate download link. */
+            var dl = document.createElement("a");
+            dl.href = "/api/gap-check-download?token=" + encodeURIComponent(data.token);
+            dl.className = "btn btn-primary gap-download-btn";
+            dl.textContent = "Download your Gap Check (PDF)";
+            dl.setAttribute("download", "Family-Readiness-Gap-Check.pdf");
+            if (msg){
+              msg.hidden = false;
+              msg.setAttribute("data-state", "ok");
+              msg.textContent = "";
+              msg.appendChild(dl);
+              msg.appendChild(document.createTextNode("\u00a0Check your inbox — a confirmation link is also on its way."));
+            }
+          } else {
+            say("ok", "Check your inbox for a confirmation link. Your Gap Check arrives right after you confirm.");
+          }
         } else {
           say("err", (data && data.message) || ("That did not go through. Email " + FB_LEAD.supportEmail + " and we will send it to you directly."));
           track("lead_submit_error", {offer:"gap-check", reason:(data && data.error) || "rejected"});
