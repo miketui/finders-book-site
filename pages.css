@@ -1,0 +1,187 @@
+/* ============================================================
+   THE FINDER'S BOOK — PAGE COMPONENTS
+   Order, contact, and about layouts. Loads after chrome.css.
+   Uses only tokens defined in styles.css and chrome.css.
+   ============================================================ */
+
+/* ============================================================
+   1. ORDER — hero
+   ============================================================ */
+.order-hero{
+  display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  gap:clamp(1.6rem,4vw,3.5rem); align-items:center;
+}
+@media (max-width:900px){ .order-hero{ grid-template-columns:1fr } }
+
+.order-hero-txt h2{ margin:.3em 0 .5em }
+.order-hero-txt .ticks{ margin:1.2rem 0 }
+
+/* ============================================================
+   2. TICK LISTS
+   ============================================================ */
+.ticks{ list-style:none; margin:0; padding:0 }
+.ticks li{
+  position:relative; padding-left:1.6rem; margin:.5rem 0;
+  font-family:var(--sans); font-size:.95rem; line-height:1.55;
+}
+.ticks li::before{
+  content:""; position:absolute; left:0; top:.52em;
+  width:.62rem; height:.34rem;
+  border-left:2px solid var(--gold); border-bottom:2px solid var(--gold);
+  transform:rotate(-45deg);
+}
+.band-pine .ticks li::before,
+.band-deep .ticks li::before{ border-color:var(--gold-hi) }
+
+/* ============================================================
+   3. TIER CARDS
+   ============================================================ */
+.tiers{
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:clamp(1rem,2.4vw,1.8rem); align-items:start;
+}
+@media (max-width:900px){ .tiers{ grid-template-columns:1fr; max-width:34rem; margin-inline:auto } }
+
+.tier{
+  background:var(--paper-hi); border:1px solid var(--hair);
+  border-radius:var(--r); padding:clamp(1.3rem,2.4vw,1.9rem);
+  display:flex; flex-direction:column; height:100%;
+}
+html.fx .tier{ transition:transform var(--dur-3) var(--ease),box-shadow var(--dur-3) var(--ease) }
+@media (hover:hover){
+  html.fx .tier:hover{ transform:translateY(-4px); box-shadow:var(--shadow-sm) }
+}
+
+.tier-rec{
+  border-color:var(--gold); border-width:2px;
+  box-shadow:var(--shadow-sm); position:relative;
+}
+.tier-flag{
+  position:absolute; top:0; left:50%; transform:translate(-50%,-50%);
+  background:var(--gold); color:var(--pine-900);
+  font-family:var(--sans); font-size:.68rem; font-weight:600;
+  letter-spacing:.12em; text-transform:uppercase;
+  padding:.3rem .8rem; border-radius:999px; margin:0; white-space:nowrap;
+}
+.tier h3{ margin:.2em 0 .1em; font-size:1.35rem }
+.tier-price{ margin:.1em 0 .4em; font-size:2.4rem; line-height:1; color:var(--pine) }
+.tier-price span{ font-variant-numeric:lining-nums tabular-nums }
+.tier-for{
+  font-family:var(--sans); font-size:.88rem; color:var(--mute);
+  margin:0 0 1rem; min-height:2.6em;
+}
+.tier .ticks{ flex:1 }
+.tier .btn{ margin-top:1.2rem; width:100%; justify-content:center }
+.tier .btn-note{ margin-top:.7rem }
+
+/* ============================================================
+   4. QUESTIONS / ACCORDION
+   ============================================================ */
+.q{
+  border-top:1px solid var(--hair); padding:1.1rem 0;
+  max-width:74ch;
+}
+.q:last-of-type{ border-bottom:1px solid var(--hair) }
+.q summary{
+  cursor:pointer; list-style:none;
+  font-family:var(--sans); font-weight:600; font-size:1.02rem;
+  display:flex; align-items:flex-start; gap:.8rem;
+  padding-right:1.5rem; position:relative;
+}
+.q summary::-webkit-details-marker{ display:none }
+.q summary::after{
+  content:""; position:absolute; right:0; top:.42em;
+  width:.6rem; height:.6rem;
+  border-right:2px solid var(--gold-ink); border-bottom:2px solid var(--gold-ink);
+  transform:rotate(45deg); transform-origin:center;
+}
+html.fx .q summary::after{ transition:transform var(--dur-2) var(--ease) }
+.q[open] summary::after{ transform:rotate(-135deg) }
+.q p{ margin:.85rem 0 0; max-width:70ch }
+
+/* ============================================================
+   5. CONTACT
+   ============================================================ */
+.contact-grid{
+  display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+  gap:clamp(1.6rem,4vw,3.5rem); align-items:start;
+}
+@media (max-width:900px){ .contact-grid{ grid-template-columns:1fr } }
+
+.cf-kind{ border:0; margin:0 0 1.6rem; padding:0 }
+.cf-kind legend{
+  font-family:var(--sans); font-size:.78rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--gold-ink); padding:0; margin-bottom:.7rem;
+}
+.cf-radio{
+  display:flex; gap:.8rem; align-items:flex-start;
+  border:1px solid var(--hair); border-radius:var(--r);
+  padding:.85rem 1rem; margin-bottom:.6rem; cursor:pointer;
+  background:var(--paper-hi);
+}
+html.fx .cf-radio{ transition:border-color var(--dur-1) var(--ease),background var(--dur-1) var(--ease) }
+.cf-radio:hover{ border-color:var(--gold) }
+.cf-radio input{ margin-top:.3rem; accent-color:var(--pine); flex:0 0 auto }
+.cf-radio input:checked ~ span strong{ color:var(--gold-ink) }
+.cf-radio:has(input:checked){ border-color:var(--gold); background:var(--paper) }
+.cf-radio span{ display:block }
+.cf-radio strong{ display:block; font-family:var(--sans); font-size:.95rem }
+.cf-radio em{
+  display:block; font-style:normal; font-family:var(--sans);
+  font-size:.82rem; color:var(--mute); margin-top:.15rem;
+}
+
+.cf-row{ margin-bottom:1.1rem }
+.cf-row label{
+  display:block; font-family:var(--sans); font-size:.82rem;
+  letter-spacing:.04em; color:var(--mute); margin-bottom:.35rem;
+}
+.cf-row input,
+.cf-row textarea{
+  width:100%; box-sizing:border-box;
+  font-family:var(--sans); font-size:1rem; color:var(--pine);
+  background:var(--paper-hi);
+  border:1px solid var(--hair); border-radius:var(--r);
+  padding:.7rem .85rem;
+}
+html.fx .cf-row input,
+html.fx .cf-row textarea{ transition:border-color var(--dur-1) var(--ease) }
+.cf-row input:hover,.cf-row textarea:hover{ border-color:var(--gold) }
+.cf-row textarea{ resize:vertical; min-height:8rem; line-height:1.6 }
+.cf-row [aria-invalid="true"]{ border-color:var(--err) }
+
+.cf-hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden }
+
+.cf-msg{
+  margin:1rem 0 0; padding:.75rem .9rem; border-radius:var(--r);
+  font-family:var(--sans); font-size:.9rem;
+  border:1px solid var(--hair); background:var(--paper-hi);
+}
+.cf-msg[data-state="ok"]{ border-color:var(--ok); color:var(--ok) }
+.cf-msg[data-state="err"]{ border-color:var(--err); color:var(--err) }
+
+.contact-side .card{ margin-bottom:1rem }
+.contact-side .card h3{ margin:0 0 .4em; font-size:1.08rem }
+.contact-side .card p{ margin:0 0 .6em; font-size:.94rem }
+.contact-side .card p:last-child{ margin-bottom:0 }
+
+/* ============================================================
+   6. ABOUT
+   ============================================================ */
+.aud{
+  border-top:2px solid var(--gold); padding-top:1.1rem;
+  margin:1.8rem 0 0; max-width:70ch;
+}
+.aud h3{ margin:0 0 .4em; font-size:1.2rem }
+.aud p{ margin:0 }
+
+/* ============================================================
+   7. REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion:reduce){
+  html.fx .tier,html.fx .q summary::after,
+  html.fx .cf-radio,html.fx .cf-row input,html.fx .cf-row textarea{
+    transition:none!important;
+  }
+  html.fx .tier:hover{ transform:none!important }
+}
