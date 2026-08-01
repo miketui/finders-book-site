@@ -1,0 +1,268 @@
+/* ============================================================
+   THE FINDER'S BOOK — CHROME
+   Site navigation, mobile drawer, footer, page shell.
+   Loads AFTER styles.css. Purely additive: it does not
+   redefine any existing token, class, or rule.
+
+   BREAKPOINT SCALE (consolidated — see docs/BREAKPOINTS.md)
+     sm  440   single column, compressed type
+     md  560   stacked grids
+     lg  720   drawer <-> horizontal nav boundary
+     xl  900   full multi-column layouts
+   Existing ad-hoc queries in styles.css are unchanged; new
+   work uses this scale only.
+   ============================================================ */
+
+:root{
+  /* ---- extended tokens (additive; nothing above is redefined) ---- */
+  --focus:#7A5E22;                       /* 5.55 AA on cream, matches --gold-ink */
+  --focus-lt:#DFC99D;                    /* 8.04 AA on pine, matches --gold-hi  */
+  --scrim:rgba(11,31,25,.62);
+  --ok:#1D4A3C;
+  --err:#8A2F22;                         /* 5.91 on cream */
+
+  --s-1:.5rem;  --s-2:.75rem; --s-3:1rem;
+  --s-4:1.5rem; --s-5:2rem;   --s-6:3rem; --s-7:4.5rem;
+
+  --z-hdr:60; --z-drawer:70; --z-scrim:65; --z-lb:90; --z-sticky:55;
+
+  --hdr-h:64px;
+  --dur-1:.18s; --dur-2:.28s; --dur-3:.44s;
+}
+
+/* ============================================================
+   1. FOCUS — one visible ring everywhere, 3:1 minimum
+   ============================================================ */
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{
+  outline:2px solid var(--focus);
+  outline-offset:3px;
+  border-radius:var(--r);
+}
+.band-pine :where(a,button,input,summary):focus-visible,
+.band-deep :where(a,button,input,summary):focus-visible,
+.hdr.solid .nav a:focus-visible,
+.ftr :where(a,button):focus-visible{ outline-color:var(--focus-lt) }
+
+/* ============================================================
+   2. HEADER
+   Static markup in every page. Behaviour lives in chrome.js.
+   Transparent over a pine hero, solid once scrolled.
+   ============================================================ */
+.hdr{
+  position:sticky; top:0; z-index:var(--z-hdr);
+  background:var(--paper-hi);
+  border-bottom:1px solid var(--hair);
+}
+.hdr-in{
+  display:flex; align-items:center; gap:var(--s-4);
+  min-height:var(--hdr-h);
+}
+.brand{ margin-right:auto }
+
+/* -- over-hero mode: only on pages that opt in with .hdr-over -- */
+.hdr-over .hdr{
+  position:fixed; left:0; right:0;
+  background:transparent; border-bottom-color:transparent;
+  transition:background var(--dur-2) var(--ease),
+             border-color var(--dur-2) var(--ease),
+             box-shadow var(--dur-2) var(--ease);
+}
+.hdr-over{ --hdr-offset:0px }
+.hdr-over .hdr .brand,
+.hdr-over .hdr .nav a{ color:var(--paper) }
+.hdr-over .hdr .brand em{ color:var(--gold-hi) }
+
+.hdr.solid{
+  background:var(--paper-hi);
+  border-bottom-color:var(--hair);
+  box-shadow:var(--shadow-sm);
+}
+.hdr-over .hdr.solid .brand,
+.hdr-over .hdr.solid .nav a{ color:var(--pine) }
+.hdr-over .hdr.solid .brand em{ color:var(--gold-ink) }
+
+/* -- hide on scroll down, return on scroll up -- */
+html.fx .hdr{ transition:transform var(--dur-2) var(--ease) }
+html.fx .hdr.tuck{ transform:translate3d(0,-100%,0) }
+
+/* -- active page + active section -- */
+.nav a{ position:relative }
+.nav a::after{
+  content:""; position:absolute; left:0; right:0; bottom:-4px; height:2px;
+  background:var(--gold); transform:scaleX(0); transform-origin:left center;
+}
+html.fx .nav a::after{ transition:transform var(--dur-2) var(--ease) }
+.nav a:hover::after,
+.nav a[aria-current]::after{ transform:scaleX(1) }
+
+/* ============================================================
+   3. MOBILE DRAWER
+   ============================================================ */
+.nav-toggle{
+  display:none;
+  width:44px; height:44px; flex:0 0 44px;
+  align-items:center; justify-content:center;
+  background:none; border:1px solid var(--hair); border-radius:var(--r);
+  color:inherit; cursor:pointer;
+}
+.hdr-over .nav-toggle{ border-color:var(--hair-lt) }
+.hdr-over .hdr.solid .nav-toggle{ border-color:var(--hair) }
+.nav-toggle span{
+  display:block; width:20px; height:2px; background:currentColor;
+  position:relative;
+}
+.nav-toggle span::before,
+.nav-toggle span::after{
+  content:""; position:absolute; left:0; width:20px; height:2px; background:currentColor;
+}
+.nav-toggle span::before{ top:-6px } .nav-toggle span::after{ top:6px }
+html.fx .nav-toggle span,
+html.fx .nav-toggle span::before,
+html.fx .nav-toggle span::after{ transition:transform var(--dur-1) var(--ease),opacity var(--dur-1) }
+.nav-toggle[aria-expanded="true"] span{ transform:rotate(45deg) }
+.nav-toggle[aria-expanded="true"] span::before{ transform:translateY(6px) rotate(-90deg) }
+.nav-toggle[aria-expanded="true"] span::after{ opacity:0 }
+
+.scrim{
+  position:fixed; inset:0; z-index:var(--z-scrim);
+  background:var(--scrim); opacity:0; pointer-events:none;
+}
+html.fx .scrim{ transition:opacity var(--dur-2) var(--ease) }
+.scrim.on{ opacity:1; pointer-events:auto }
+
+@media (max-width:720px){
+  .nav-toggle{ display:flex }
+  .hdr .hdr-cta{ display:none }
+
+  .nav{
+    position:fixed; top:0; right:0; bottom:0; z-index:var(--z-drawer);
+    width:min(88vw,360px);
+    background:var(--pine); color:var(--paper);
+    display:flex; flex-direction:column; gap:0;
+    padding:calc(var(--hdr-h) + var(--s-4)) var(--s-4) var(--s-4);
+    overflow-y:auto; overscroll-behavior:contain;
+    transform:translate3d(100%,0,0); visibility:hidden;
+  }
+  html.fx .nav{
+    transition:transform var(--dur-3) var(--ease),
+               visibility 0s linear var(--dur-3);
+  }
+  .nav.on{ transform:translate3d(0,0,0); visibility:visible }
+  html.fx .nav.on{ transition:transform var(--dur-3) var(--ease),visibility 0s }
+
+  .hdr-over .nav a,
+  .hdr-over .hdr.solid .nav a,
+  .nav a{
+    color:var(--paper); font-family:var(--sans);
+    font-size:1.05rem; letter-spacing:.01em;
+    padding:var(--s-3) 0; border-bottom:1px solid var(--hair-lt);
+  }
+  .nav a::after{ display:none }
+  .nav a[aria-current]{ color:var(--gold-hi) }
+  .nav .drawer-cta{
+    margin-top:var(--s-4); border-bottom:0;
+    display:inline-flex; justify-content:center;
+  }
+  .nav .drawer-note{
+    margin-top:var(--s-3); color:var(--mute-pine);
+    font-family:var(--sans); font-size:.8rem; line-height:1.5;
+  }
+}
+@media (min-width:721px){
+  .nav .drawer-cta,.nav .drawer-note{ display:none }
+  .nav{ display:flex; align-items:center; gap:var(--s-4) }
+}
+
+/* ============================================================
+   4. PAGE SHELL — sub-pages (about / order / contact)
+   ============================================================ */
+.page-head{
+  background:var(--pine); color:var(--paper);
+  padding:calc(var(--hdr-h) + var(--s-6)) 0 var(--s-6);
+}
+.page-head .eyebrow{ color:var(--gold-hi) }
+.page-head h1{ margin:.35em 0 .25em; max-width:19ch }
+.page-head .lede{ color:var(--mute-pine); max-width:56ch }
+
+.crumbs{
+  font-family:var(--sans); font-size:.78rem; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--mute-pine);
+}
+.crumbs ol{ list-style:none; display:flex; flex-wrap:wrap; gap:.5rem; margin:0; padding:0 }
+.crumbs li+li::before{ content:"/"; margin-right:.5rem; color:var(--gold) }
+.crumbs a{ color:var(--mute-pine) }
+.crumbs a:hover{ color:var(--gold-hi) }
+.crumbs [aria-current]{ color:var(--paper) }
+
+/* ============================================================
+   5. FOOTER additions
+   ============================================================ */
+.ftr-nav-note{
+  font-family:var(--sans); font-size:.8rem; color:var(--mute-pine);
+  margin:.4rem 0 0;
+}
+
+/* ============================================================
+   6. NEW MOTION PRIMITIVES
+   All gated behind html.fx. All neutralised in section 8.
+   ============================================================ */
+html.fx .fx-scale{ opacity:0; transform:scale(.972) }
+html.fx .fx-scale.fx-on{
+  opacity:1; transform:none;
+  transition:opacity .6s var(--ease),transform .6s var(--ease);
+  transition-delay:var(--fx-d,0ms);
+}
+html.fx .fx-in{ opacity:0; transform:translate3d(-14px,0,0) }
+html.fx .fx-in.fx-on{
+  opacity:1; transform:none;
+  transition:opacity .55s var(--ease),transform .55s var(--ease);
+  transition-delay:var(--fx-d,0ms);
+}
+
+/* ============================================================
+   7. 3D BOOK — poster first, canvas second, never blocking
+   ============================================================ */
+.book3d{
+  position:relative; display:block;
+  aspect-ratio:3/4; width:100%;
+  background:var(--paper-sh); border-radius:var(--r);
+  overflow:hidden;
+}
+.book3d img.book-poster{
+  width:100%; height:100%; object-fit:contain;
+  position:relative; z-index:1;
+}
+html.fx .book3d img.book-poster{ transition:opacity var(--dur-3) var(--ease) }
+.book3d.live img.book-poster{ opacity:0; pointer-events:none }
+.book3d model-viewer{
+  position:absolute; inset:0; z-index:2;
+  width:100%; height:100%;
+  --poster-color:transparent;
+  opacity:0;
+}
+html.fx .book3d model-viewer{ transition:opacity var(--dur-3) var(--ease) }
+.book3d.live model-viewer{ opacity:1 }
+.book3d-hint{
+  position:absolute; left:50%; bottom:var(--s-2); z-index:3;
+  transform:translateX(-50%);
+  font-family:var(--sans); font-size:.72rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--mute-pine);
+  background:rgba(11,31,25,.55); padding:.35rem .7rem; border-radius:999px;
+  opacity:0; pointer-events:none;
+}
+html.fx .book3d-hint{ transition:opacity var(--dur-2) var(--ease) }
+.book3d.live .book3d-hint{ opacity:1 }
+.book3d.live.touched .book3d-hint{ opacity:0 }
+
+/* ============================================================
+   8. REDUCED MOTION
+   Mirrors the block in styles.css for every primitive added here.
+   ============================================================ */
+@media (prefers-reduced-motion:reduce){
+  html.fx .fx-scale,html.fx .fx-in{ opacity:1!important; transform:none!important; animation:none!important }
+  html.fx .hdr,html.fx .nav,html.fx .scrim,
+  html.fx .nav-toggle span,html.fx .nav-toggle span::before,html.fx .nav-toggle span::after,
+  html.fx .nav a::after,html.fx .book3d img.book-poster,
+  html.fx .book3d model-viewer,html.fx .book3d-hint{ transition:none!important }
+  html.fx .hdr.tuck{ transform:none!important }
+}

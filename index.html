@@ -36,6 +36,8 @@
 <link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-italic.woff2" type="font/woff2" crossorigin>
 
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="chrome.css">
+<link rel="stylesheet" href="pages.css">
 
 <style>
 /* Critical @font-face declarations kept inline to avoid FOIT */
@@ -75,19 +77,26 @@
 
 <a class="skip" href="#main">Skip to content</a>
 
+<!-- CHROME:NAV:START — identical in every page. Guarded by scripts/check-chrome-drift.mjs -->
 <header class="hdr">
   <div class="wrap hdr-in">
-    <a class="brand" href="#top" aria-label="The Family Clarity Co.">Family <em>Clarity</em> Co.</a>
-    <nav class="nav" aria-label="Section">
-      <a href="#security">Security</a>
-      <a href="#inside">What's inside</a>
-      <a href="#start">15-minute start</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
+    <a class="brand" href="/" aria-label="The Family Clarity Co. home">Family <em>Clarity</em> Co.</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="sitenav" aria-label="Open menu">
+      <span></span>
+    </button>
+    <nav class="nav" id="sitenav" aria-label="Main">
+      <a href="/">Home</a>
+      <a href="/about.html">About</a>
+      <a href="/order.html">Order</a>
+      <a href="/contact.html">Contact</a>
+      <a class="btn btn-primary drawer-cta" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="drawer" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
+      <p class="drawer-note">Instant download. One-time purchase, no subscription. <a href="/order.html">Compare all three editions</a>.</p>
     </nav>
-    <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="header" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
+    <a class="btn btn-primary hdr-cta" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="header" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
   </div>
 </header>
+<div class="scrim" aria-hidden="true"></div>
+<!-- CHROME:NAV:END -->
 
 <main id="main">
 <span id="top"></span>
@@ -600,30 +609,32 @@
 
 </main>
 
+<!-- CHROME:FOOTER:START — identical in every page. Guarded by scripts/check-chrome-drift.mjs -->
 <footer class="ftr">
   <div class="wrap">
     <div class="ftr-grid">
       <div>
         <h2>The Finder's Book</h2>
         <p class="footer-summary">The Family Clarity System™: a 49-page family emergency and legacy organizer by Joanne Godfrey and Michael David.</p>
+        <p class="ftr-nav-note">A pointer, not a vault. No passwords stored, ever.</p>
       </div>
       <div>
-        <h2>Product</h2>
+        <h2>Site</h2>
         <ul>
-          <li><a href="#inside">What's inside</a></li>
-          <li><a href="#security">Security approach</a></li>
-          <li><a href="#pricing">Editions &amp; pricing</a></li>
-          <li><a href="#faq">Questions</a></li>
-          <li><a href="#gap-check">Free Gap Check</a></li>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="/order.html">Editions &amp; pricing</a></li>
+          <li><a href="/contact.html">Contact &amp; feedback</a></li>
+          <li><a href="/#gap-check">Free Gap Check</a></li>
         </ul>
       </div>
       <div>
         <h2>Support</h2>
         <ul>
-          <li><a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a></li>
+          <li><a href="/contact.html">Ask a question</a></li>
           <li><a href="/refund-policy.html">Refund policy</a></li>
           <li><a href="/privacy-policy.html">Privacy policy</a></li>
-          <li><a href="mailto:warrenjrmd@gmail.com">Professional licensing</a></li>
+          <li><a href="/contact.html">Professional licensing</a></li>
         </ul>
       </div>
     </div>
@@ -633,6 +644,7 @@
     </div>
   </div>
 </footer>
+<!-- CHROME:FOOTER:END -->
 
 <!-- sticky mobile CTA -->
 <aside class="sticky" id="sticky" aria-label="Purchase The Finder's Book">
@@ -648,6 +660,7 @@
 </div>
 
 <script src="analytics.js"></script>
+<script src="chrome.js" defer></script>
 <script src="motion.js"></script>
 
 <script type="application/ld+json">
