@@ -11,6 +11,8 @@ for (const file of htmlFiles) {
   const refs = [...html.matchAll(/(?:src|href)=["']([^"'#?]+)["']/g)].map((m) => m[1]);
   for (const ref of refs) {
     if (/^(?:https?:|mailto:|tel:|data:|javascript:)/i.test(ref)) continue;
+    // Skip Vercel-provided resources that only exist after deployment
+    if (ref.startsWith('/_vercel/')) continue;
     const target = ref.startsWith('/') ? resolve(root, `.${ref}`) : resolve(dirname(abs), ref);
     try {
       await access(target);

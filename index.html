@@ -616,6 +616,12 @@ html.fx .lb.on img{transform:scale(1);opacity:1}
 
 <!-- v3.2 ELEVATION: motion opt-in, runs before first paint -->
 <script>(function(){try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.className+=" fx";}}catch(e){}})();</script>
+
+<!-- Vercel Web Analytics -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
