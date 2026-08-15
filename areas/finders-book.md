@@ -120,8 +120,9 @@ paid + consented
 
 full refund
 -> Refunded
--> remove All Customers
--> remove all tier groups
+-> remove only the refunded product tier(s)
+-> preserve unrelated buyer tiers
+-> retain All Customers as historical customer status
 -> remove Review Requested
 -> remove Leads
 ```
@@ -132,8 +133,9 @@ receipt and file delivery.
 
 ## MailerLite
 
-Connected account: account `2202141`; authentication email
-`warrenjrmd@gmail.com`. That login is not the public support/reply-to address.
+Connected account: account `2202141`. Authentication identities are intentionally
+not recorded in this public repository. The public support/reply-to address is
+`info@michaeldavidjr.beauty`.
 
 ### Groups
 
@@ -203,8 +205,9 @@ again. Use the MailerLite editor or a capability that can preserve/apply HTML.
 - GA4 measurement ID: `G-ZXX0M4VYT5`
 - Repository events: `lead_submit`, `checkout_click`
 - Purchase occurs on Payhip; no verified GA4 `Purchase` handoff exists yet.
-- All public pages load GA4 and Vercel Web Analytics after the launch repair.
-- `analytics.js` fans eligible events into GA4/dataLayer and Vercel Analytics.
+- All public pages offer an equal allow/decline choice before optional analytics load.
+- `consent.js` loads GA4 and Vercel Web Analytics only after explicit consent;
+  `analytics.js` drops site events until that consent is granted.
 
 Live PageSpeed baseline on 2026-08-15 before the local contrast repair:
 
@@ -232,9 +235,10 @@ then mark genuine conversions as Key Events.
 - GitHub Actions at the starting SHA failed because `package.json` and
   `package-lock.json` disagreed on Playwright versions. Vercel deployment was
   healthy despite that CI failure.
-- Draft PR #12 (`codex/launch-readiness-repair`) contains the launch repair.
-  Its Vercel preview `dpl_AsnDZpQyFeNnMnoejdEkmPzmSTYB` built successfully at
-  SHA `49b5d847`, but Actions run `31878427877` did not start either job because
+- PR #12 (`codex/launch-readiness-repair`) is open and ready for review. Its
+  latest Vercel preview before the automated-review repair
+  (`dpl_Hta4eLv2RYCAyzx1Q8RJQ6GAwS3w`) built successfully at SHA `f777e1f`,
+  but Actions run `31878732327` did not start either job because
   GitHub annotated the account as locked due to a billing issue.
 
 ## Security and troubleshooting

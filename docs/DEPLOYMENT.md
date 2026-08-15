@@ -58,7 +58,7 @@ Do not create a second Zapier, Composio, or native Payhip-to-MailerLite path for
 The webhook owns lifecycle membership:
 
 - paid: add `All Customers` plus the matching tier; remove `Finder's Book — Leads` and `Refunded`
-- full refund: add `Refunded`; remove `All Customers`, every tier, `Review Requested`, and Leads
+- full refund: add `Refunded`; remove only the refunded product tier(s), `Review Requested`, and Leads; retain `All Customers` as historical customer status and preserve unrelated tiers
 - partial refund: no group change unless `REFUND_ON_PARTIAL=true`
 - buyer declined marketing email: do not add marketing groups
 

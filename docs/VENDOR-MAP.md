@@ -8,7 +8,7 @@ Website visitor
     |      -> MailerLite Leads group
     |      -> MailerLite double opt-in
     |      -> signed /api/gap-check-download link
-    |      -> Gap Check Lead Nurture after confirmation
+    |      -> Gap Check Lead Nurture after confirmation (disabled; designs and suppression pending)
     |
     +-- Paid checkout button
            -> Payhip product checkout
@@ -16,7 +16,7 @@ Website visitor
            -> /api/payhip-webhook
            -> All Customers + matching buyer group
            -> remove Leads / Refunded on purchase
-           -> refund suppression and buyer-group cleanup
+           -> item-scoped refund suppression and buyer-group cleanup
            -> MailerLite onboarding/review automation when approved
 ```
 
