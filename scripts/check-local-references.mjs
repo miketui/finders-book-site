@@ -2,7 +2,16 @@ import { access, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 const root = resolve(new URL('../', import.meta.url).pathname);
-const htmlFiles = ['index.html', 'privacy-policy.html', 'refund-policy.html'];
+const htmlFiles = [
+  'index.html',
+  'about.html',
+  'order.html',
+  'contact.html',
+  'privacy-policy.html',
+  'refund-policy.html',
+  'terms.html',
+  '404.html',
+];
 const missing = [];
 const publicHost = 'https://www.familyfindersbook.com';
 const retiredHost = 'https://finders-book-v34.vercel.app';
@@ -15,7 +24,7 @@ for (const file of htmlFiles) {
     missing.push(`${file} -> retired production host remains in public metadata`);
   }
 
-  if (!html.includes(`<link rel="canonical" href="${publicHost}${file === 'index.html' ? '/' : `/${file}`}">`)) {
+  if (file !== '404.html' && !html.includes(`<link rel="canonical" href="${publicHost}${file === 'index.html' ? '/' : `/${file}`}">`)) {
     missing.push(`${file} -> missing canonical URL for ${publicHost}`);
   }
 

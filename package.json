@@ -5,10 +5,12 @@
   "type": "module",
   "description": "The Finder's Book static landing page with Payhip and MailerLite Vercel serverless routes",
   "scripts": {
-    "test": "node tests/test-webhook.mjs && node tests/test-contact.mjs",
+    "test": "node tests/test-webhook.mjs && node tests/test-contact.mjs && node tests/test-gap-check.mjs && node tests/test-health.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:refs": "node scripts/check-local-references.mjs",
-    "validate": "npm run check:secrets && npm run check:refs && npm run check:chrome && npm test",
+    "check:csp": "node scripts/check-csp.mjs",
+    "check:html": "node scripts/check-html.mjs",
+    "validate": "npm run check:secrets && npm run check:refs && npm run check:chrome && npm run check:csp && npm run check:html && npm test",
     "hydrate": "node scripts/hydrate-assets.mjs",
     "manifests": "node scripts/regen-manifests.mjs",
     "check:chrome": "node scripts/check-chrome-drift.mjs",
@@ -18,14 +20,13 @@
     "node": ">=20 <25"
   },
   "dependencies": {
-    "@vercel/analytics": "^2.0.1",
-    "playwright": "^1.62.1"
+    "@vercel/analytics": "^2.0.1"
   },
   "main": "analytics.js",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "playwright": "^1.49.0"
+    "playwright": "^1.62.1"
   }
 }

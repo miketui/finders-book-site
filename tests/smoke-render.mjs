@@ -37,24 +37,18 @@ const PAGES = [
   { path: '/about.html',   must: ['h1', '.lede', '.eyebrow'] },
   { path: '/order.html',   must: ['h1', '.lede', '.eyebrow', '.book3d', '.tier'] },
   { path: '/contact.html', must: ['h1', '.lede', '.eyebrow', '.cf-radio'] },
+  { path: '/404.html',     must: ['h1', '.lede', '.eyebrow'] },
+  { path: '/terms.html',   must: ['h1', '.lede', '.eyebrow'] },
+];
+const VIEWPORTS = [
+  { name: 'desktop', width: 1280, height: 900 },
+  { name: 'mobile', width: 390, height: 844 },
 ];
 
 /**
- * Paths that are allowed to 404 without failing the build.
- *
- * The 3D book is progressive enhancement: book3d.js is written to fall back
- * silently to the poster, and the poster slot itself degrades to empty space
- * with no layout shift. These assets are pending generation. Everything NOT
- * on this list is treated as a genuine regression.
- *
- * Remove entries from this list as the assets land -- an empty list is the
- * goal state.
+ * Vercel injects Analytics at the edge; it is absent in local static serving.
  */
 const OPTIONAL_404 = [
-  '/assets/models/book.glb',
-  '/assets/book-poster.webp',
-  '/assets/vendor/model-viewer.min.js',
-  // Vercel injects this at the edge; it is absent in local/CI static serving.
   '/_vercel/insights/script.js',
 ];
 
@@ -102,9 +96,10 @@ console.log(`\nsmoke-render  ->  ${BASE}\n`);
 const browser = await chromium.launch();
 let failures = 0;
 
+for (const viewport of VIEWPORTS) {
 for (const { path, must } of PAGES) {
   const context = await browser.newContext({
-    viewport: { width: 1280, height: 900 },
+    viewport: { width: viewport.width, height: viewport.height },
     // CI sandboxes and corporate proxies commonly re-sign TLS; this test is
     // about rendering, not certificate validation.
     ignoreHTTPSErrors: true,
@@ -135,7 +130,7 @@ for (const { path, must } of PAGES) {
     } catch {}
   });
 
-  console.log(`  ${path}`);
+  console.log(`  ${viewport.name.padEnd(7)} ${path}`);
   try {
     await page.goto(BASE + path, { waitUntil: 'load', timeout: 30000 });
   } catch (e) {
@@ -204,10 +199,55 @@ for (const { path, must } of PAGES) {
     console.log(`    ok    CLS ${cls.toFixed(4)}`);
   }
 
+  const overflow = await page.evaluate(() =>
+    Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  );
+  if (overflow > 1) {
+    console.log(`    FAIL  horizontal overflow ${overflow}px`);
+    failures++;
+  } else {
+    console.log('    ok    no horizontal overflow');
+  }
+
+  await context.close();
+}
+}
+
+// --- 5. mobile navigation opens, exposes links, and closes with Escape ---
+console.log('\n  mobile navigation');
+{
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
+  const toggle = page.locator('.nav-toggle');
+  const box = await toggle.boundingBox();
+  if (!box || box.width < 44 || box.height < 44) {
+    console.log(`    FAIL  nav toggle touch target is ${box ? `${box.width}x${box.height}` : 'missing'}`);
+    failures++;
+  } else {
+    console.log(`    ok    nav toggle touch target ${box.width}x${box.height}`);
+  }
+  await toggle.click();
+  const navOpen = await page.locator('#sitenav').isVisible();
+  const expanded = await toggle.getAttribute('aria-expanded');
+  if (!navOpen || expanded !== 'true') {
+    console.log(`    FAIL  mobile navigation did not open (visible=${navOpen}, expanded=${expanded})`);
+    failures++;
+  } else {
+    console.log('    ok    mobile navigation opens with aria-expanded=true');
+  }
+  await page.keyboard.press('Escape');
+  const expandedAfter = await toggle.getAttribute('aria-expanded');
+  if (expandedAfter !== 'false') {
+    console.log(`    FAIL  Escape did not close mobile navigation (expanded=${expandedAfter})`);
+    failures++;
+  } else {
+    console.log('    ok    Escape closes mobile navigation');
+  }
   await context.close();
 }
 
-// --- 5. the specific regression: sub-pages must survive without GSAP ---
+// --- 6. the specific regression: sub-pages must survive without GSAP ---
 console.log('\n  no-GSAP resilience (blocks the CDN, simulates failure)');
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, ignoreHTTPSErrors: true });
