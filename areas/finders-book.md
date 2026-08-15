@@ -9,7 +9,7 @@ Last verified: 2026-08-15
 - Canonical site: `https://www.familyfindersbook.com`
 - Apex redirect: `https://familyfindersbook.com` -> `https://www.familyfindersbook.com`
 - Vercel project: `finders-book-v34` in team `mikes-projects-1e9a868e`
-- Support address: `info@michaeldavidjr.beauty`
+- Support address: `info@familyfindersbook.com`
 - Product: The Finder's Book — The Family Clarity System™
 
 Do not merge, trigger a production deployment, activate MailerLite automations,
@@ -135,7 +135,16 @@ receipt and file delivery.
 
 Connected account: account `2202141`. Authentication identities are intentionally
 not recorded in this public repository. The public support/reply-to address is
-`info@michaeldavidjr.beauty`.
+`info@familyfindersbook.com`.
+
+Sending domain `familyfindersbook.com` was shown as **Authenticated** in the
+MailerLite dashboard on 2026-08-15. Account defaults, all 27 automation email
+steps, and both placeholder campaign drafts use From name `Joanne and Michael`
+and From/Reply-to `info@familyfindersbook.com`. A custom Reply-to override is not
+enabled on any automation step, so Reply-to inherits the verified From address.
+Exactly one Contact Acknowledgement test (`We have your message`) was queued to
+the support inbox. This test did not activate a workflow; all nine automations
+remain disabled.
 
 ### Groups
 
@@ -160,26 +169,26 @@ without sending email, but disabled is not equivalent to launch-ready.
 | Automation | ID | Current state | Decision before activation |
 |---|---|---|---|
 | Refund Handling | `194226711638836895` | disabled | Keep only if refund email is desired; webhook now performs cleanup |
-| Essentials Onboarding | `194226713836651864` | disabled | Candidate after sender/reply-to/plaintext QA |
+| Essentials Onboarding | `194226713836651864` | disabled | Candidate after plaintext/preheader and refund-exit QA |
 | Readiness Lead Nurture | `194226719223186795` | disabled | Supersede with the three-email Gap Check flow |
-| Ultimate Onboarding | `194226725902616321` | disabled | Candidate after sender/reply-to/plaintext QA |
-| Family Onboarding | `194226731545004025` | disabled | Candidate after sender/reply-to/plaintext QA |
+| Ultimate Onboarding | `194226725902616321` | disabled | Candidate after plaintext/preheader and refund-exit QA |
+| Family Onboarding | `194226731545004025` | disabled | Candidate after plaintext/preheader and refund-exit QA |
 | Review Request | `194226737309025696` | disabled | Add exit/condition for Refunded before activation |
-| Gap Check Lead Nurture | `195847295840814845` | disabled/incomplete | Restore three designs, then add buyer/refund suppression |
+| Gap Check Lead Nurture | `195847295840814845` | disabled/editor warnings | Clear step-completion warnings and add buyer/refund suppression |
 | Buyer Onboarding | `195847299585279235` | disabled | Do not activate beside tier-specific onboarding; lacks refund exclusion |
-| Contact Acknowledgement | `195847302637684408` | disabled | Candidate after sender/reply-to/plaintext QA |
+| Contact Acknowledgement | `195847302637684408` | disabled; one approved test queued | Confirm test receipt/content and internal alert ownership |
 
 Preferred sender: `Joanne and Michael`.
-Preferred reply-to: `info@michaeldavidjr.beauty`.
+Preferred From and reply-to: `info@familyfindersbook.com`.
 
 Before any activation:
 
 1. Choose one lead nurture path and one onboarding model; do not activate both generations.
-2. Make the three Gap Check subjects/designs match their intended order.
+2. Clear the three Gap Check editor-completion warnings and confirm subject/design order.
 3. Add All Customers and Refunded suppression/exit behavior to lead nurture.
 4. Add Refunded exit/conditions to review and onboarding paths.
 5. Replace generic MailerLite plaintext fallbacks and verify preheaders.
-6. Standardize sender and reply-to.
+6. Confirm the already-standardized sender and Reply-to still show the authenticated domain.
 7. Use one controlled test subscriber and confirm no real group members can enter.
 8. Obtain Michael's explicit activation approval.
 
@@ -188,8 +197,11 @@ Before any activation:
 The connector's subject-update action did not edit the existing automation
 email records in place. It replaced all three designed records with new,
 undesigned records. The workflow stayed disabled, no subscriber was entered,
-and no email was sent. The subjects now match the workflow order, but the HTML
-designs must be restored in the dashboard before testing.
+and no live automation email was sent. The records were subsequently repaired
+through the MailerLite editor. The current dry run reports all three designs
+present, though the API still warns that the steps are not marked complete; the
+workflow must remain disabled until those warnings and its suppression rules are
+resolved.
 
 Retained MailerLite screenshots of the prior designs:
 

@@ -6,21 +6,21 @@ Last updated: 2026-08-15
 
 **NOT READY FOR LAUNCH**
 
-The repaired code is merged and deployed, and GitHub's static plus rendered
-desktop/mobile jobs are green. Production is still not launch-ready because
-Payhip's live webhook/file settings cannot be read through the available
-connector, GA4 purchase attribution and Search Console submission are
-unverified, and the disabled MailerLite Gap Check workflow needs its three
-designs restored plus suppression and exit logic before a controlled email test.
+The repaired code through PR #14 is merged and deployed, and PR #15's static
+plus rendered desktop/mobile jobs are green. Production is still not
+launch-ready because Payhip's live webhook/file settings cannot be read through
+the available connector, GA4 purchase attribution and Search Console submission
+are unverified, and MailerLite lifecycle suppression/exit rules plus overlapping
+workflow generations must be reconciled before any automation is activated.
 
 ## 2. Tool & Skill Usage
 
 | Tool / skill | Available | Connected | Read | Write | Relevance | Planned or completed use | Result |
 |---|---|---|---|---|---|---|---|
-| GitHub app / GitHub skill | yes | yes (`miketui`) | yes | yes | required | Repository identity, branches, PRs, runs, automated review, remote publishing after gate | PR #12 and PR #13 merged; CI green |
+| GitHub app / GitHub skill | yes | yes (`miketui`) | yes | yes | required | Repository identity, branches, PRs, runs, automated review, remote publishing after gate | PRs #12-#14 merged; PR #15 green and approved |
 | Local files and shell | yes | yes | yes | local branch | required | Forensics, edits, tests, clean install, commits | complete |
 | Composio | yes | yes | yes | limited | required | Confirm historical GitHub path and inspect Payhip toolkit | GitHub/Payhip connections active |
-| MailerLite app | yes | yes (account `2202141`) | yes | yes, limited | required | Groups, forms, automation configuration and dry runs | Live inventory complete; no sends or activation |
+| MailerLite app and authenticated browser | yes | yes (account `2202141`) | yes | yes | required | Domain, sender, groups, campaigns, automation configuration, dry runs and one approved test | Domain authenticated; 27 email steps standardized; one test queued; all workflows disabled |
 | Vercel app / verification skill | yes | yes | yes | deploy-capable | required | Project, domains, deployment, runtime errors, route responses | final `main` deployment READY and route-verified |
 | Payhip through Composio | yes | yes (`payhip_hafter-rosoli`) | payload/coupon only | limited | required | Discover actual capability | Cannot read products, files, or webhook settings |
 | Cloud browser | yes | yes | public pages | safe interactions | required | Production UI, Payhip pages/policy, PageSpeed | Public routes and products verified |
@@ -40,12 +40,12 @@ designs restored plus suppression and exit logic before a controlled email test.
 | FB-003 | P1 | Funnel | Purchase did not add All Customers or remove Leads | Webhook delegated lifecycle rules to disabled automations | FIXED locally |
 | FB-004 | P1 | Refunds | Full refund only added Refunded; buyer/review groups remained | Cleanup existed only in a disabled workflow | FIXED locally |
 | FB-005 | P1 | Analytics | About/order/contact did not load GA4 or Vercel page analytics | Telemetry head block existed only on home/policy pages | FIXED locally |
-| FB-006 | P1 | Trust | Website support email differed from Payhip | Two historical support identities | FIXED on site; MailerLite reply-to remains manual |
+| FB-006 | P1 | Trust | Website and email sender identities differed | Historical support/login identities leaked into public copy and reply-to settings | FIXED in site, 27 automation steps, two campaign drafts, and account defaults |
 | FB-007 | P1 | Accessibility | Header and featured tier failed contrast | Later CSS rules overrode intended dark backgrounds/colors | FIXED locally |
 | FB-008 | P1 | Legal | No Terms page or footer link | Legal surface was incomplete | FIXED locally; professional review recommended |
 | FB-009 | P2 | UX | Production used Vercel's generic 404 | No `404.html` | FIXED locally |
-| FB-010 | P1 | MailerLite | Gap Check subjects were cyclically attached to the wrong designs | Workflow email metadata was created out of order | Subjects aligned; designs now require restoration |
-| FB-011 | P1 | MailerLite | Subject-update connector replaced three designed records with undesigned records | Connector action recreated email records rather than editing metadata in place | FAIL / manual restoration required; workflow remains disabled |
+| FB-010 | P1 | MailerLite | Gap Check subjects were cyclically attached to the wrong designs | Workflow email metadata was created out of order | FIXED; dry run reports all three designs present, but MailerLite still flags the steps for editor completion review |
+| FB-011 | P1 | MailerLite | Subject-update connector replaced three designed records with undesigned records | Connector action recreated email records rather than editing metadata in place | FIXED through the MailerLite editor; retained as an operational warning |
 | FB-012 | P1 | MailerLite | Lead workflow has no buyer/refund exclusions and no exit-on-removal | New workflow trigger is Leads only | FAIL / manual configuration required |
 | FB-013 | P1 | MailerLite | Old and new onboarding/nurture generations overlap | New simplified workflows were created without retiring old drafts | FAIL / reconciliation required |
 | FB-014 | P1 | MailerLite | Every automation is disabled | GO/activation intentionally remained off | BLOCKED until configuration and controlled test |
@@ -70,6 +70,7 @@ designs restored plus suppression and exit logic before a controlled email test.
 | FB-033 | P2 | Accessibility | Mobile 404 menu icon inherited pine on a pine hero | Over-hero toggle set only border, not foreground | FIXED locally for transparent and solid header states |
 | FB-034 | P1 | Mobile QA | Closed drawer created 343px document overflow on home and terms | Transformed off-canvas fixed drawer contributed to root scroll width | FIXED / PR #13 render CI PASS / deployed |
 | FB-035 | P2 | Render QA | 404 test required a mobile-only toggle on desktop | Viewport-specific assertion was not scoped | FIXED / PR #13 render CI PASS |
+| FB-036 | P1 | Identity | Public support address and MailerLite sender/reply-to were inconsistent | Legacy addresses remained across repository and two drafts | FIXED / regression guard, API verification, and MailerLite dry runs pass |
 
 ## 4. Changes Made
 
@@ -160,25 +161,55 @@ Verification: static guards pass; PR #13 workflow `31880730311` passed both
 Static validation and Rendered-page smoke test. Final production deployment is
 READY and serves the merged CSS overflow repair.
 
+### Support and sender identity
+
+File/config: public HTML/JavaScript, `.env.example`, MailerLite account defaults,
+all 27 automation email steps, and both draft campaigns
+
+Before: three legacy or misspelled addresses could appear in public copy or
+email settings; MailerLite draft campaigns replied to the historical login.
+
+After: the public support address, From address, and Reply-to are
+`info@familyfindersbook.com`; the From name is `Joanne and Michael`; the sending
+domain is authenticated. The two placeholder campaigns remain unscheduled and
+undesigned. All nine automations remain disabled.
+
+Reason: establish one monitored, domain-authenticated customer identity without
+starting live campaigns.
+
+Verification: repository regression guard rejects all legacy/typo variants;
+MailerLite dry runs report all 27 steps with the canonical From identity; every
+step's custom Reply-to override is off; both campaigns return the canonical
+From and Reply-to through the API. Exactly one Contact Acknowledgement test,
+subject `We have your message`, was queued to the support inbox on 2026-08-15.
+
 ## 5. Git
 
 ```text
 Repository: miketui/finders-book-site
 Starting SHA: 3501434a75da221420c7c570d97af8dc90c85211
-Working branches: codex/launch-readiness-repair; agent/fix-rendered-page-ci
+PR #15 base SHA: 50ce4aba01257b38a6b346f1cc0f3eadfac8085a
+Working branch: agent/update-support-email
 PR #11: merged; CURRENT
 PR #12: merged
 PR #13: merged after rendered-page CI repair
+PR #14: merged; final launch-readiness runbook
+PR #15: approved; support/sender identity and final operating instructions
 Branches reviewed: all remote branches
 Merge candidates: none remaining
 agent/launch-audit-fixes: SUPERSEDED / DO NOT MERGE
-Final main SHA: f7149bfb24bf87e58529a5571ab8efb00d794b05
-CI: PR #13 workflow 31880730311 PASS — static validation and rendered desktop/mobile smoke tests
+Pre-PR #15 main SHA: 50ce4aba01257b38a6b346f1cc0f3eadfac8085a
+CI: PR #15 workflow 31885939317 PASS before the runbook-only follow-up; final rerun required before merge
 ```
 
 ## 6. MailerLite
 
-All workflows are disabled. No live email was sent and no automation was activated.
+Sending domain `familyfindersbook.com` is authenticated. The account default and
+all 27 automation email steps use `Joanne and Michael` with From/Reply-to
+`info@familyfindersbook.com`. Both placeholder campaigns use the same identity
+and remain drafts with no content. Exactly one approved Contact Acknowledgement
+test was queued to the support inbox; no automation was activated. All nine
+workflows remain disabled.
 
 ### Finder's Book — Gap Check Lead Nurture (`195847295840814845`)
 
@@ -190,9 +221,9 @@ Sender: Joanne and Michael
 Suppression: none (must add All Customers and Refunded)
 Refund logic: none
 Review logic: not applicable
-Current state: disabled, incomplete
-Test result: dry run traverses five steps; live GET shows three undesigned records
-Required action: restore designs, plaintext, preheaders, reply-to, exclusions, and exit logic
+Current state: disabled; all three designs reported present, but editor-completion warnings remain
+Test result: dry run traverses five steps; 3 designed / 0 undesigned; canonical sender verified
+Required action: clear completion warnings, verify plaintext/preheaders, and add exclusions/exit logic
 ```
 
 ### Essentials Onboarding (`194226713836651864`)
@@ -200,13 +231,13 @@ Required action: restore designs, plaintext, preheaders, reply-to, exclusions, a
 ```text
 Trigger: joins Essentials Buyers
 Steps: add All Customers; four emails with 2/5/14-day delays
-Sender: Michael and Joanne
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: no verified Refunded exit
 Refund logic: webhook now removes trigger/customer groups
 Review logic: final onboarding only
 Current state: disabled; designed; historical sends exist
 Test result: dry simulation passed
-Required action: sender/reply-to/plaintext/refund-exit QA before controlled test
+Required action: plaintext/preheader/refund-exit QA before controlled test
 ```
 
 ### Ultimate Onboarding (`194226725902616321`)
@@ -214,13 +245,13 @@ Required action: sender/reply-to/plaintext/refund-exit QA before controlled test
 ```text
 Trigger: joins Ultimate Buyers
 Steps: add All Customers; four emails with 2/5/14-day delays
-Sender: Michael and Joanne
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: no verified Refunded exit
 Refund logic: webhook now removes trigger/customer groups
 Review logic: final onboarding only
 Current state: disabled; designed
 Test result: dry simulation passed
-Required action: sender/reply-to/plaintext/refund-exit QA before controlled test
+Required action: plaintext/preheader/refund-exit QA before controlled test
 ```
 
 ### Family Onboarding (`194226731545004025`)
@@ -228,13 +259,13 @@ Required action: sender/reply-to/plaintext/refund-exit QA before controlled test
 ```text
 Trigger: joins Family Bundle Buyers
 Steps: add All Customers; four emails with 3/5/13-day delays
-Sender: Michael and Joanne
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: no verified Refunded exit
 Refund logic: webhook now removes trigger/customer groups
 Review logic: final onboarding only
 Current state: disabled; designed
 Test result: dry simulation passed
-Required action: sender/reply-to/plaintext/refund-exit QA before controlled test
+Required action: plaintext/preheader/refund-exit QA before controlled test
 ```
 
 ### Buyer Onboarding (`195847299585279235`)
@@ -242,7 +273,7 @@ Required action: sender/reply-to/plaintext/refund-exit QA before controlled test
 ```text
 Trigger: joins any tier group
 Steps: three generic emails, immediate/5 days/9 days
-Sender: Joanne and Michael
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: no refund exclusion
 Refund logic: none in workflow
 Review logic: none
@@ -256,7 +287,7 @@ Required action: DO NOT activate beside tier-specific onboarding; choose one mod
 ```text
 Trigger: joins Refunded
 Steps: removes All Customers, tier groups, Review Requested; sends one email
-Sender: Michael and Joanne
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: cleanup is present but now duplicated by webhook
 Refund logic: explicit
 Review logic: removes Review Requested
@@ -270,7 +301,7 @@ Required action: decide whether a refund email is desired; do not rely on it for
 ```text
 Trigger: joins All Customers, excluding Refunded at entry
 Steps: 18 days -> email -> add Review Requested -> 14 days -> email
-Sender: Michael and Joanne
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: entry exclusion only; exit_when_no_longer_matches=false
 Refund logic: webhook removes All Customers and Review Requested
 Review logic: two-stage request, completion marker
@@ -284,7 +315,7 @@ Required action: add an in-workflow Refunded condition/exit before each send
 ```text
 Trigger: joins Leads, excluding All Customers
 Steps: five emails, 2/3/3/4-day delays, condition before final sales email
-Sender: Michael and Joanne
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: All Customers at entry plus one later condition
 Refund logic: no explicit Refunded exclusion
 Review logic: not applicable
@@ -298,13 +329,13 @@ Required action: supersede after the three-email Gap Check workflow is restored
 ```text
 Trigger: joins any contact group
 Steps: one acknowledgement email
-Sender: Joanne and Michael
+Sender: Joanne and Michael <info@familyfindersbook.com>
 Suppression: contact-only groups; no Leads
 Refund logic: not applicable
 Review logic: not applicable
 Current state: disabled; designed
-Test result: dry simulation passed
-Required action: reply-to/plaintext QA and a separate internal support-alert process
+Test result: dry simulation passed; exactly one test email queued to info@familyfindersbook.com
+Required action: confirm inbox delivery/content and add a separate internal support-alert process
 ```
 
 ## 7. Payhip
@@ -392,21 +423,23 @@ Vercel Web Analytics: loaded by consent.js only after explicit allow
 
 ## 11. Remaining Manual Actions
 
-### MAILERLITE — restore and reconcile the Gap Check workflow
+### MAILERLITE — finish and reconcile the Gap Check workflow
 
 `MailerLite -> Automations -> Finder's Book — Gap Check Lead Nurture -> Edit`
 
-1. Restore the three HTML designs using the retained screenshots/brand template.
+1. Open each email and clear MailerLite's “step not marked complete” warning;
+   all three records currently report designed, so do not recreate them.
 2. Confirm order: Gap Check delivery -> 3 days -> completion objection -> 4 days -> gap/offer message.
-3. Set sender `Joanne and Michael` and reply-to `info@michaeldavidjr.beauty`.
+3. Confirm the already-saved sender is `Joanne and Michael` and From/Reply-to is
+   `info@familyfindersbook.com`; the custom Reply-to checkbox should remain off.
 4. Add useful preheaders and real plaintext versions.
 5. Exclude All Customers and Refunded and exit when a subscriber leaves Leads,
    or insert equivalent conditions before Emails 2 and 3.
 6. Keep GO off.
 
-Expected result: automation is complete, unbroken, three emails designed, no
-buyer/refunded subscriber qualifies. Verify with a dry run, then request the
-controlled-test activation gate.
+Expected result: automation is complete and unbroken, all three emails are
+designed, and no buyer/refunded subscriber qualifies. Verify with a dry run,
+then request the controlled-test activation gate.
 
 ### MAILERLITE — API double opt-in
 
@@ -426,6 +459,34 @@ Choose the three-email Gap Check flow over the old five-email Readiness flow;
 choose tier-specific onboarding over generic Buyer Onboarding. Keep the
 superseded workflows disabled. Add Refunded exit conditions to onboarding and
 review flows. Expected result: one trigger path per lifecycle stage.
+
+### MAILERLITE — recommended activation order after all checks pass
+
+Do not activate all nine workflows. The recommended live set is:
+
+1. `Contact Acknowledgement` (`195847302637684408`) after the queued test is
+   received and its content/reply behavior is approved.
+2. `Gap Check Lead Nurture` (`195847295840814845`) after API double opt-in,
+   All Customers/Refunded exclusions, leave-Leads exit behavior, completion
+   warnings, links, plaintext, and preheaders pass.
+3. `Essentials Onboarding` (`194226713836651864`), `Ultimate Onboarding`
+   (`194226725902616321`), and `Family Bundle Onboarding`
+   (`194226731545004025`) only after controlled purchase payloads put the test
+   buyer into exactly one tier plus All Customers and refund exits are present.
+4. `Review Request` (`194226737309025696`) only after a Refunded condition is
+   checked immediately before each email and duplicate Review Requested entry is
+   prevented.
+5. `Refund Handling` (`194226711638836895`) only if a customer-facing refund
+   message is desired; keep group cleanup in the tested webhook, not dependent on
+   this workflow.
+
+Keep `Readiness Lead Nurture` (`194226719223186795`) disabled because the
+three-email Gap Check flow supersedes it. Keep generic `Buyer Onboarding`
+(`195847299585279235`) disabled because the tier-specific onboarding workflows
+supersede it. Activate one workflow at a time, add only the approved test address
+to its trigger group, verify expected mail/activity, remove the test address,
+then wait for a separate explicit production-activation approval before exposing
+real subscribers.
 
 ### PAYHIP — products and webhook
 
@@ -466,32 +527,84 @@ In Firewall, add route-specific rate limits for `/api/contact` and
 `/api/gap-check-subscribe` if the plan supports them. Expected result: health
 reports all four required variables present without exposing values.
 
+Exact Vercel procedure:
+
+1. Open `Vercel -> finders-book-v34 -> Settings -> Environment Variables`.
+2. Add each of the four required names separately. Paste values from the named
+   service; never paste them into repository files, tickets, or chat.
+3. Generate `PAYHIP_WEBHOOK_TOKEN` and `GAP_CHECK_TOKEN_SECRET` independently
+   with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+4. Check **Production** for all four. Check **Preview** only when preview tests
+   are intentionally allowed to write to the connected service accounts.
+5. Leave sender email/name out of Vercel: those are MailerLite account/email
+   settings, not application environment variables.
+6. Save, redeploy the current `main` commit, then request
+   `/api/health?t=<PAYHIP_WEBHOOK_TOKEN>` with GET. Confirm HTTP 200 and all four
+   required flags `true`; the response must not contain any secret value.
+7. In Vercel Deployment details, confirm the production deployment's Git SHA
+   equals GitHub `main` before testing forms or webhooks.
+
 ### GOOGLE SEARCH CONSOLE — property and sitemap
 
 `Google Search Console -> Add property -> Domain`
 
-Add `familyfindersbook.com`, copy the TXT verification record into the DNS
-provider, verify the property, then submit
-`https://www.familyfindersbook.com/sitemap.xml` under Indexing -> Sitemaps.
-Inspect `/`, `/order.html`, `/about.html`, and `/contact.html`, then request
-indexing only after the live inspection reports the canonical URL as
-`https://www.familyfindersbook.com/...`. Expected result: sitemap status
-Success with seven discoverable canonical pages and no accidental Vercel alias
-selected as canonical.
+1. Sign into the Google account that will permanently own the property.
+2. Click **Add property**, select **Domain**, and enter only
+   `familyfindersbook.com` (no protocol or path).
+3. Copy Google's `google-site-verification=...` TXT value. At the DNS provider,
+   add a TXT record at host/name `@`; do not remove existing SPF, DKIM, DMARC, or
+   MailerLite records. Wait for DNS propagation, then click **Verify**.
+4. In `Indexing -> Sitemaps`, enter `sitemap.xml` (the resulting URL must be
+   `https://www.familyfindersbook.com/sitemap.xml`) and click **Submit**.
+5. Confirm status **Success**, HTTP 200, and seven discoverable canonical pages.
+6. Use **URL inspection** for `/`, `/order.html`, `/about.html`,
+   `/contact.html`, `/privacy-policy.html`, `/refund-policy.html`, and
+   `/terms.html`. Run **Test live URL** first; request indexing only when the
+   user-declared and Google-selected canonical use `https://www.familyfindersbook.com/...`.
+7. In `Pages`, review Not indexed reasons after Google recrawls. Vercel preview
+   aliases and 404s must not become indexed; do not request indexing for them.
+8. Recheck the sitemap after 48–72 hours and weekly until all intended pages are
+   discovered. Expected result: verified Domain property, sitemap Success, no
+   canonical split between apex/www/Vercel aliases, and no blocked intended page.
 
 ### GA4 — events and attribution
 
 `GA4 -> Admin -> DebugView / Events / Key Events` and `Payhip -> Marketing/Analytics`
 
-Verify one controlled `lead_submit`, one `checkout_click`, and a non-live/test
-purchase path where Payhip supports it. Prevent duplicate Purchase events, add
-campaign parameters, and mark genuine conversions as Key Events. Expected
-result: source/medium/campaign persists from landing through purchase.
+1. In `Admin -> Data collection and modification -> Data streams`, open the Web
+   stream for `https://www.familyfindersbook.com` and confirm Measurement ID
+   `G-ZXX0M4VYT5`.
+2. In a private browser window, open the production site, decline analytics,
+   and confirm no GA request/event appears. Withdraw/reload once more to verify
+   consent persists.
+3. Open a fresh private window, accept analytics, then open GA4 **DebugView**.
+   Use one clearly labeled test identity and append UTMs such as
+   `?utm_source=manual_qa&utm_medium=test&utm_campaign=launch_validation`.
+4. Submit the Gap Check with a controlled address. Confirm exactly one
+   `lead_submit` event and verify page/location plus campaign parameters; do not
+   treat a validation error as a conversion.
+5. Click each Essentials, Ultimate, and Family Bundle CTA once. Confirm exactly
+   one `checkout_click` per click with the expected product/tier and destination.
+6. In Payhip's analytics/integration settings, connect the same GA4 property if
+   its current interface offers a native GA4 field. Use Payhip's supported test
+   or 100%-discount transaction when available; do not charge a live card solely
+   for QA. Confirm one GA4 recommended `purchase` event with transaction ID,
+   value, currency, and item;
+   repeat delivery of the same webhook/confirmation must not duplicate it.
+7. In `Admin -> Events`, wait for processed events, then mark `lead_submit`,
+   `checkout_click`, and `purchase` as Key Events only after the payload and
+   deduplication checks pass. Event names are case-sensitive: do not create a
+   second custom `Purchase` event beside the standard lowercase `purchase`.
+8. In `Reports -> Acquisition`, verify the manual QA UTM source/medium/campaign
+   survives from landing through the available checkout/purchase handoff.
+9. Remove/exclude internal QA traffic from business reporting after validation.
+   Expected result: consent-respecting, single-fire lead/checkout events and one
+   attributable Purchase per transaction.
 
 ### CONTACT — operational alert
 
 Choose a support inbox/transactional provider or a monitored MailerLite queue
-that alerts `info@michaeldavidjr.beauty` when a contact group receives a new
+that alerts `info@familyfindersbook.com` when a contact group receives a new
 message. Expected result: a controlled contact receives acknowledgement and an
 internal owner sees the message without polling the subscriber list.
 
@@ -505,18 +618,19 @@ billing action is required for this launch checklist.
 
 ### APPROVAL GATE — MERGE TO MAIN
 
-APPROVED and executed on 2026-08-15. PR #12 and the focused PR #13 CI repair
-were merged to `main`; final production deployment is READY at the recorded
-final main SHA.
+APPROVED on 2026-08-15. PRs #13 and #14 are merged. PR #15 standardizes the
+support/sender identity and includes this updated runbook; it passed static and
+rendered-page CI and is authorized for merge and Vercel production verification.
 
 ### APPROVAL GATE — MAILERLITE ACTIVATION
 
-Not ready to request. Designs, suppression, exit logic, sender/reply-to,
-plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass first.
+Not ready to request. Sender/domain/reply-to and one Contact test are complete,
+but suppression, exit logic, overlapping workflow reconciliation, plaintext,
+preheaders, DOI, and the test-subscriber isolation plan must pass first.
 
 ## 13. Launch Blockers
 
-- P1: the Gap Check automation's three designs are incomplete and suppression/exit logic is absent.
+- P1: the Gap Check automation still reports editor-completion warnings and suppression/exit logic is absent.
 - P1: overlapping MailerLite nurture/onboarding workflows are not reconciled.
 - P1: production Payhip webhook configuration and attached files are not verified.
 - P1: GA4 Purchase attribution and Key Events are not verified.
@@ -532,7 +646,8 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 - [x] branch/PR inventory complete
 - [x] PR #11 reviewed
 - [x] merge plan prepared
-- [x] PR #12 and PR #13 merged
+- [x] PR #12, PR #13, and PR #14 merged
+- [x] PR #15 approved after green static and rendered-page CI
 - [x] GitHub billing restored and remote CI pass
 - [x] merge approved by Michael on 2026-08-15
 - [x] final main SHA verified
@@ -557,7 +672,11 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 - [x] purchase/refund lifecycle tests
 - [x] Payhip public products/prices/policy
 - [x] MailerLite groups and all nine workflows inventoried
-- [ ] Gap Check designs restored
+- [x] MailerLite domain authenticated and all 27 From/Reply-to identities standardized
+- [x] both campaign drafts standardized and left unscheduled/undesigned
+- [x] exactly one Contact Acknowledgement test queued; all nine workflows remain disabled
+- [ ] queued Contact test receipt/content confirmed in the support inbox
+- [ ] Gap Check completion warnings cleared
 - [ ] buyer/refund exits configured
 - [ ] one onboarding/nurture generation chosen
 - [ ] Payhip webhook dashboard verified

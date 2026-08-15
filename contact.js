@@ -29,7 +29,7 @@
 
   /* ---- configuration ---- */
   var ENDPOINT = "/api/contact";
-  var SUPPORT  = "info@michaeldavidjr.beauty";
+  var SUPPORT  = "info@familyfindersbook.com";
 
   var out    = document.getElementById("cfMsgOut");
   var submit = document.getElementById("cfSubmit");

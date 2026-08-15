@@ -516,7 +516,7 @@
     mode: "api",
     apiEndpoint: "/api/gap-check-subscribe",
     leadEndpoint: "https://assets.mailerlite.com/jsonp/2202141/forms/194226651000735158/subscribe",
-    supportEmail: "info@michaeldavidjr.beauty"
+    supportEmail: "info@familyfindersbook.com"
   };
 
   var form = document.getElementById("gapForm");
