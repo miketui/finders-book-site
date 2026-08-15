@@ -37,7 +37,11 @@ const PAGES = [
   { path: '/about.html',   must: ['h1', '.lede', '.eyebrow'] },
   { path: '/order.html',   must: ['h1', '.lede', '.eyebrow', '.book3d', '.tier'] },
   { path: '/contact.html', must: ['h1', '.lede', '.eyebrow', '.cf-radio'] },
-  { path: '/missing/nested-route', must: ['h1', '.lede', '.eyebrow', '.nav-toggle'] },
+  {
+    path: '/missing/nested-route',
+    must: ['h1', '.lede', '.eyebrow'],
+    mobileMust: ['.nav-toggle'],
+  },
   { path: '/terms.html',   must: ['h1', '.lede', '.eyebrow'] },
 ];
 const VIEWPORTS = [
@@ -97,7 +101,7 @@ const browser = await chromium.launch();
 let failures = 0;
 
 for (const viewport of VIEWPORTS) {
-for (const { path, must } of PAGES) {
+for (const { path, must, mobileMust = [] } of PAGES) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
     // CI sandboxes and corporate proxies commonly re-sign TLS; this test is
@@ -145,7 +149,8 @@ for (const { path, must } of PAGES) {
   await page.waitForTimeout(1500);
 
   // --- 1. visibility ---
-  for (const sel of must) {
+  const requiredSelectors = viewport.name === 'mobile' ? [...must, ...mobileMust] : must;
+  for (const sel of requiredSelectors) {
     const result = await page.evaluate((s) => {
       const el = document.querySelector(s);
       if (!el) return { found: false };
