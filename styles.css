@@ -52,12 +52,12 @@
 }
 
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;overflow-x:clip}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 body{
   margin:0;background:var(--paper);color:var(--pine);
   font-family:var(--serif);font-size:1.0625rem;line-height:1.65;
-  font-optical-sizing:auto;-webkit-font-smoothing:antialiased;
+  font-optical-sizing:auto;-webkit-font-smoothing:antialiased;overflow-x:clip;
 }
 img{max-width:100%;height:auto;display:block}
 a{color:inherit}
