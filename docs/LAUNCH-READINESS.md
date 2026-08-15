@@ -6,22 +6,24 @@ Last updated: 2026-08-15
 
 **NOT READY FOR LAUNCH**
 
-The repaired branch is ready for a preview/CI checkpoint, but production is not
-ready. The current `main` CI run is red, the repairs are not deployed, the
-Payhip production webhook settings cannot be read through the available
-connector, GA4 purchase attribution is unverified, and the disabled MailerLite
-Gap Check workflow needs its three designs restored plus suppression and exit
-logic before any controlled email test.
+The repaired branch is published in draft PR #12 and its Vercel preview built
+successfully, but production is not ready. GitHub did not start either Actions
+job because the account is locked for a billing issue; the protected preview
+also redirects the generated share token to Vercel login. Payhip production
+webhook settings cannot be read through the available connector, GA4 purchase
+attribution is unverified, and the disabled MailerLite Gap Check workflow needs
+its three designs restored plus suppression and exit logic before any
+controlled email test.
 
 ## 2. Tool & Skill Usage
 
 | Tool / skill | Available | Connected | Read | Write | Relevance | Planned or completed use | Result |
 |---|---|---|---|---|---|---|---|
-| GitHub app / GitHub skill | yes | yes (`miketui`) | yes | yes | required | Repository identity, branches, PRs, runs, remote publishing after gate | Direct app can write; terminal cannot push |
+| GitHub app / GitHub skill | yes | yes (`miketui`) | yes | yes | required | Repository identity, branches, PRs, runs, remote publishing after gate | Draft PR #12 published; terminal cannot push; Actions billing-locked |
 | Local files and shell | yes | yes | yes | local branch | required | Forensics, edits, tests, clean install, commits | working |
 | Composio | yes | yes | yes | limited | required | Confirm historical GitHub path and inspect Payhip toolkit | GitHub/Payhip connections active |
 | MailerLite app | yes | yes (account `2202141`) | yes | yes, limited | required | Groups, forms, automation configuration and dry runs | Live inventory complete; no sends or activation |
-| Vercel app / verification skill | yes | yes | yes | deploy-capable | required | Project, domains, deployment, runtime errors, route responses | Production topology verified; no deployment performed |
+| Vercel app / verification skill | yes | yes | yes | deploy-capable | required | Project, domains, deployment, runtime errors, route responses | Preview at PR SHA is READY; production unchanged |
 | Payhip through Composio | yes | yes (`payhip_hafter-rosoli`) | payload/coupon only | limited | required | Discover actual capability | Cannot read products, files, or webhook settings |
 | Cloud browser | yes | yes | public pages | safe interactions | required | Production UI, Payhip pages/policy, PageSpeed | Public routes and products verified |
 | Google PageSpeed / Lighthouse | public | n/a | yes | no | required | Mobile/desktop performance, accessibility, SEO | mobile 93/96/100/100; desktop 99/96/100/100 |
@@ -56,6 +58,8 @@ logic before any controlled email test.
 | FB-019 | P2 | Security | Webhook token was optional and health shape could become public | Configuration treated the second factor as recommended | FIXED locally / fail closed |
 | FB-020 | P2 | Dependencies | Local `npm audit` is blocked by workspace network policy | Audit command requires a network entitlement | Added production audit to CI; result pending |
 | FB-021 | P2 | QA | Local Chromium install is blocked | Browser binary download requires unavailable network approval | CI render job expanded; result pending |
+| FB-022 | P0 | CI | PR #12 Actions jobs never started | GitHub annotation: account locked due to a billing issue | BLOCKED BY EXTERNAL CONFIGURATION |
+| FB-023 | P1 | Preview QA | Authenticated browser cannot open the protected preview | Generated Vercel share token redirects to Vercel login | MANUAL VERIFICATION REQUIRED |
 
 ## 4. Changes Made
 
@@ -134,7 +138,8 @@ the operational runbook records live IDs and approval boundaries.
 
 Reason: make launch state repeatable and evidence-based.
 
-Verification: static guards pass; browser execution awaits CI/preview.
+Verification: static guards pass; Vercel preview build is READY. Browser
+execution remains blocked by GitHub billing and Vercel preview SSO.
 
 ## 5. Git
 
@@ -143,11 +148,13 @@ Repository: miketui/finders-book-site
 Starting SHA: 3501434a75da221420c7c570d97af8dc90c85211
 Working branch: codex/launch-readiness-repair
 PR #11: merged; CURRENT
+PR #12: open draft; 4 logical commits plus this evidence update
 Branches reviewed: all remote branches
 Merge candidates: this repair branch only
 agent/launch-audit-fixes: SUPERSEDED / DO NOT MERGE
 Final main SHA: not changed — approval required
-CI: current main run 31870600580 FAIL; repaired branch pending remote CI
+Remote branch SHA: 49b5d8476e0aa9ffe76d2cfc17f872d08c3fdc5e before evidence update
+CI: PR run 31878427877 FAIL — jobs not started; GitHub billing lock annotation
 ```
 
 ## 6. MailerLite
@@ -298,15 +305,20 @@ Required action: reply-to/plaintext QA and a separate internal support-alert pro
 Project: finders-book-v34 (prj_1LXLU5n3bvZSL3310dsGjwE3yuu0)
 Production branch: main
 Domain: https://www.familyfindersbook.com
-Deployment: dpl_DZeaArtRqNCWALSdcVYkD9fYaHAH — READY
-Commit: 3501434a75da221420c7c570d97af8dc90c85211
+Production deployment: dpl_DZeaArtRqNCWALSdcVYkD9fYaHAH — READY
+Production commit: 3501434a75da221420c7c570d97af8dc90c85211
+Preview deployment: dpl_AsnDZpQyFeNnMnoejdEkmPzmSTYB — READY
+Preview commit: 49b5d8476e0aa9ffe76d2cfc17f872d08c3fdc5e
 Environment: Production; secret names/values not exposed by connector
 Health: public site 200; apex/http redirects 308; private health without token 401
 ```
 
 Runtime errors in the last 30 days: a platform `url.parse()` deprecation warning
 and one historical deployment missing MailerLite/Payhip keys. No current Payhip
-processing error was returned in the 24-hour log window.
+processing error was returned in the 24-hour log window. The PR preview cloned
+the exact review SHA, installed dependencies, completed its Vercel build, and
+deployed without a build error. Route-level preview browsing remains unverified
+because Vercel SSO rejected the generated temporary share URL.
 
 ## 9. Analytics
 
@@ -324,8 +336,8 @@ Vercel Web Analytics: loader present on all repaired public pages
 | Test | Status | Evidence | Notes |
 |---|---|---|---|
 | Homepage | PASS | live 200 and browser inspection | current production SHA |
-| Mobile homepage | PASS | live PageSpeed mobile render, score 93 | repaired branch still needs preview rerun |
-| Navigation | MANUAL VERIFICATION REQUIRED | desktop live checked; mobile CI test added | execute on preview |
+| Mobile homepage | PASS | live PageSpeed mobile render, score 93 | repaired branch still needs protected-preview rerun |
+| Navigation | MANUAL VERIFICATION REQUIRED | desktop live checked; mobile CI test added | blocked by preview SSO/CI billing |
 | Lead form validation | PASS | 15 local Gap Check tests | mocked MailerLite |
 | Lead form submission | MANUAL VERIFICATION REQUIRED | local API path passes | real subscriber requires controlled approval |
 | MailerLite subscriber | MANUAL VERIFICATION REQUIRED | Leads contains active API subscribers | no new test subscriber created |
@@ -355,9 +367,9 @@ Vercel Web Analytics: loader present on all repaired public pages
 | Typecheck | NOT APPLICABLE | plain JavaScript project | all JS/MJS passes `node --check` |
 | Tests | PASS | 57 unit/integration assertions | mocked external mutations |
 | Production build | NOT APPLICABLE | static project, Vercel buildCommand null | clean install and validation are gate |
-| Render test | BLOCKED | Chromium download disallowed locally | expanded CI job pending |
-| CI | FAIL | main run `31870600580` | repaired branch not pushed yet |
-| Vercel deployment health | PASS | latest production READY at starting SHA | repaired deployment pending approval |
+| Render test | BLOCKED | local Chromium unavailable; remote job never started | GitHub account billing lock |
+| CI | BLOCKED | PR run `31878427877`, both annotations cite billing lock | no runner steps executed |
+| Vercel deployment health | PASS | production and PR preview deployments READY | preview route inspection blocked by SSO |
 
 ## 11. Remaining Manual Actions
 
@@ -431,12 +443,33 @@ that alerts `info@michaeldavidjr.beauty` when a contact group receives a new
 message. Expected result: a controlled contact receives acknowledgement and an
 internal owner sees the message without polling the subscriber list.
 
+### GITHUB — restore Actions execution
+
+`GitHub -> Settings -> Billing and licensing -> Payment information / Actions`
+
+Resolve the account billing lock, then re-run failed jobs for workflow run
+`31878427877`. Expected result: both `Static validation` and
+`Rendered-page smoke test` receive runners, execute steps, and finish green.
+Verify that the job pages contain normal step logs rather than the billing-lock
+annotation.
+
+### VERCEL — allow controlled preview verification
+
+`Vercel -> finders-book-v34 -> Settings -> Deployment Protection`
+
+Generate a working temporary share link for preview deployment
+`dpl_AsnDZpQyFeNnMnoejdEkmPzmSTYB`, or authenticate a browser session without
+weakening production protection. Expected result: the exact preview SHA can be
+checked at desktop/mobile widths without exposing the deployment publicly.
+
 ## 12. Approval Gates
 
 ### APPROVAL GATE — MERGE TO MAIN
 
-Pending after the repair branch is pushed, remote CI/render/audit pass, and the
-final diff is reviewed. Merging `main` is expected to trigger Vercel production.
+DO NOT MERGE yet. Draft PR #12 is published and the Vercel preview build is
+READY, but remote CI/render did not execute because of the GitHub billing lock.
+After billing is resolved, rerun workflow `31878427877` and review the protected
+preview. Merging `main` is expected to trigger Vercel production.
 
 ### APPROVAL GATE — MAILERLITE ACTIVATION
 
@@ -445,8 +478,8 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 
 ## 13. Launch Blockers
 
-- P0: current `main` GitHub Actions is red until the repaired lockfile/CI lands.
-- P1: repaired code has not passed remote render/audit or reached production.
+- P0: GitHub account billing lock prevents all Actions jobs from starting.
+- P1: repaired code has not passed remote rendered-page audit or reached production.
 - P1: the Gap Check automation's three designs are incomplete and suppression/exit logic is absent.
 - P1: overlapping MailerLite nurture/onboarding workflows are not reconciled.
 - P1: production Payhip webhook configuration and attached files are not verified.
@@ -463,7 +496,8 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 - [x] branch/PR inventory complete
 - [x] PR #11 reviewed
 - [x] merge plan prepared
-- [ ] remote repair branch and CI pass
+- [x] remote repair branch and draft PR #12
+- [ ] GitHub billing restored and remote CI pass
 - [ ] merge approved
 - [ ] final main SHA verified
 
@@ -477,7 +511,9 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 - [x] accessibility defects repaired locally
 - [x] performance baseline recorded
 - [ ] remote desktop/mobile render suite
-- [ ] repaired preview/production verification
+- [x] repaired Vercel preview build READY
+- [ ] protected preview route/mobile verification
+- [ ] production verification after approved merge
 
 ### Funnel and services
 
