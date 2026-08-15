@@ -58,6 +58,7 @@ finders-book-site/
     │   └── regen-manifests.mjs
     ├── tests/
     │   ├── smoke-render.mjs
+    │   ├── test-consent.mjs
     │   ├── test-contact.mjs
     │   ├── test-gap-check.mjs
     │   ├── test-health.mjs
@@ -72,6 +73,8 @@ finders-book-site/
     ├── book3d.js
     ├── chrome.css
     ├── chrome.js
+    ├── consent.css
+    ├── consent.js
     ├── contact.html
     ├── contact.js
     ├── Family-Readiness-Gap-Check.pdf

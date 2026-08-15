@@ -236,10 +236,11 @@ then mark genuine conversions as Key Events.
   `package-lock.json` disagreed on Playwright versions. Vercel deployment was
   healthy despite that CI failure.
 - PR #12 (`codex/launch-readiness-repair`) is open and ready for review. Its
-  latest Vercel preview before the automated-review repair
-  (`dpl_Hta4eLv2RYCAyzx1Q8RJQ6GAwS3w`) built successfully at SHA `f777e1f`,
-  but Actions run `31878732327` did not start either job because
+  preview built successfully at SHA `6719ce5`, but Actions run `31880081235`
+  did not start either job because
   GitHub annotated the account as locked due to a billing issue.
+- Michael explicitly approved publishing the remaining review repairs, merging
+  PR #12 to `main`, and the linked Vercel production deployment on 2026-08-15.
 
 ## Security and troubleshooting
 

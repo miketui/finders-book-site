@@ -67,6 +67,9 @@ controlled email test.
 | FB-028 | P2 | Documentation | Vendor map implied the Gap Check nurture was operating | Diagram omitted disabled/incomplete state | FIXED locally |
 | FB-029 | P2 | Security QA | CSP test did not assert `frame-ancestors 'self'` | Test focused on script hashes and telemetry only | FIXED locally |
 | FB-030 | P2 | Accessibility QA | Escape test checked ARIA state but not actual drawer visibility | Regression assertion stopped at `aria-expanded` | FIXED locally |
+| FB-031 | P2 | 404 | Nested missing routes resolved 404 assets relative to the missing path | Error-page assets used document-relative URLs | FIXED locally with root-relative assets and nested-route render coverage |
+| FB-032 | P1 | Accessibility | Featured Ultimate price and CTA blended into its pine card | Later `pages.css` rules overrode the dark-card contrast | FIXED locally with explicit featured-card overrides |
+| FB-033 | P2 | Accessibility | Mobile 404 menu icon inherited pine on a pine hero | Over-hero toggle set only border, not foreground | FIXED locally for transparent and solid header states |
 
 ## 4. Changes Made
 
@@ -128,8 +131,10 @@ recorded consent, contrast cascade errors, generic 404, no Terms page, and
 inconsistent support email.
 
 After: real cover asset; optional analytics gated behind equal allow/decline
-controls with withdrawal; corrected header/tier contrast; branded 404; Terms;
-one support address; modern frame-ancestor policy and a regression assertion.
+controls with withdrawal; corrected header/tier/CTA contrast; a branded 404
+whose assets work at nested missing URLs and whose mobile toggle remains
+visible; Terms; one support address; modern frame-ancestor policy and a
+regression assertion.
 
 Reason: remove conversion, accessibility, attribution, and commerce-trust defects.
 
@@ -161,13 +166,13 @@ Repository: miketui/finders-book-site
 Starting SHA: 3501434a75da221420c7c570d97af8dc90c85211
 Working branch: codex/launch-readiness-repair
 PR #11: merged; CURRENT
-PR #12: open, ready for review; automated review completed; repair commit pending publication
+PR #12: open, ready for review; Michael approved merge on 2026-08-15
 Branches reviewed: all remote branches
 Merge candidates: this repair branch only
 agent/launch-audit-fixes: SUPERSEDED / DO NOT MERGE
 Final main SHA: not changed — approval required
-Remote branch SHA: f777e1fab99b31e19dab963d416ffb5b8289a9f9 before automated-review repair
-CI: PR run 31878732327 FAIL — jobs not started; GitHub billing lock annotation
+Remote branch SHA before final 404/contrast repair: 6719ce53d33ed9713fb132dafc32503d6ce9c44c
+CI: PR run 31880081235 FAIL — jobs not started; GitHub billing lock annotation
 ```
 
 ## 6. MailerLite
@@ -374,7 +379,7 @@ Vercel Web Analytics: loaded by consent.js only after explicit allow
 | Privacy | FIXED | consent/static guards and updated local policy | deployment/browser verification pending |
 | Terms | FIXED | new local page and links | not deployed |
 | Refund policy | PASS | website and Payhip policy agree materially | support address repaired locally |
-| 404 | FIXED | custom local page | not deployed |
+| 404 | FIXED | root-relative assets and nested missing-route browser case | real-browser execution pending |
 | Sitemap | PASS | live 200; local includes Terms | deploy pending |
 | Robots | PASS | live 200, correct sitemap | — |
 | Structured data | PASS | JSON parse guard and Lighthouse SEO 100 | no fabricated ratings |
@@ -383,7 +388,7 @@ Vercel Web Analytics: loaded by consent.js only after explicit allow
 | Tests | PASS | 67 unit/integration/static assertions | mocked external mutations; consent providers not contacted |
 | Production build | NOT APPLICABLE | static project, Vercel buildCommand null | clean install and validation are gate |
 | Render test | BLOCKED | local Chromium unavailable; remote job never started | GitHub account billing lock |
-| CI | BLOCKED | PR run `31878732327`, both annotations cite billing lock | no runner steps executed |
+| CI | BLOCKED | PR run `31880081235`, both annotations cite billing lock | no runner steps executed |
 | Vercel deployment health | PASS | production and PR preview deployments READY | preview route inspection blocked by SSO |
 
 ## 11. Remaining Manual Actions
@@ -464,7 +469,7 @@ internal owner sees the message without polling the subscriber list.
 `GitHub -> Settings -> Billing and licensing -> Payment information / Actions`
 
 Resolve the account billing lock, then re-run failed jobs for workflow run
-`31878732327`. Expected result: both `Static validation` and
+`31880081235`. Expected result: both `Static validation` and
 `Rendered-page smoke test` receive runners, execute steps, and finish green.
 Verify that the job pages contain normal step logs rather than the billing-lock
 annotation.
@@ -482,10 +487,11 @@ checked at desktop/mobile widths without exposing the deployment publicly.
 
 ### APPROVAL GATE — MERGE TO MAIN
 
-DO NOT MERGE yet. PR #12 is ready for review and the Vercel preview build is
-READY, but remote CI/render did not execute because of the GitHub billing lock.
-After billing is resolved, rerun workflow `31878732327` and review the protected
-preview. Merging `main` is expected to trigger Vercel production.
+APPROVED by Michael on 2026-08-15. PR #12 is ready for review and its preview
+build is READY. Michael explicitly authorized pushing the remaining repairs,
+merging to `main`, and the resulting Vercel production deployment despite the
+disclosed GitHub billing lock. Production verification is required immediately
+after merge; the failed Actions run remains an unresolved external blocker.
 
 ### APPROVAL GATE — MAILERLITE ACTIVATION
 
@@ -514,7 +520,7 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 - [x] merge plan prepared
 - [x] remote repair branch and ready-for-review PR #12
 - [ ] GitHub billing restored and remote CI pass
-- [ ] merge approved
+- [x] merge approved by Michael on 2026-08-15
 - [ ] final main SHA verified
 
 ### Engineering and website
