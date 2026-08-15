@@ -6,24 +6,22 @@ Last updated: 2026-08-15
 
 **NOT READY FOR LAUNCH**
 
-The repaired branch is published in ready-for-review PR #12 and its Vercel preview built
-successfully, but production is not ready. GitHub did not start either Actions
-job because the account is locked for a billing issue; the protected preview
-also redirects the generated share token to Vercel login. Payhip production
-webhook settings cannot be read through the available connector, GA4 purchase
-attribution is unverified, and the disabled MailerLite Gap Check workflow needs
-its three designs restored plus suppression and exit logic before any
-controlled email test.
+The repaired code is merged and deployed, and GitHub's static plus rendered
+desktop/mobile jobs are green. Production is still not launch-ready because
+Payhip's live webhook/file settings cannot be read through the available
+connector, GA4 purchase attribution and Search Console submission are
+unverified, and the disabled MailerLite Gap Check workflow needs its three
+designs restored plus suppression and exit logic before a controlled email test.
 
 ## 2. Tool & Skill Usage
 
 | Tool / skill | Available | Connected | Read | Write | Relevance | Planned or completed use | Result |
 |---|---|---|---|---|---|---|---|
-| GitHub app / GitHub skill | yes | yes (`miketui`) | yes | yes | required | Repository identity, branches, PRs, runs, automated review, remote publishing after gate | PR #12 ready; review fixes prepared; terminal cannot push; Actions billing-locked |
-| Local files and shell | yes | yes | yes | local branch | required | Forensics, edits, tests, clean install, commits | working |
+| GitHub app / GitHub skill | yes | yes (`miketui`) | yes | yes | required | Repository identity, branches, PRs, runs, automated review, remote publishing after gate | PR #12 and PR #13 merged; CI green |
+| Local files and shell | yes | yes | yes | local branch | required | Forensics, edits, tests, clean install, commits | complete |
 | Composio | yes | yes | yes | limited | required | Confirm historical GitHub path and inspect Payhip toolkit | GitHub/Payhip connections active |
 | MailerLite app | yes | yes (account `2202141`) | yes | yes, limited | required | Groups, forms, automation configuration and dry runs | Live inventory complete; no sends or activation |
-| Vercel app / verification skill | yes | yes | yes | deploy-capable | required | Project, domains, deployment, runtime errors, route responses | Preview at PR SHA is READY; production unchanged |
+| Vercel app / verification skill | yes | yes | yes | deploy-capable | required | Project, domains, deployment, runtime errors, route responses | final `main` deployment READY and route-verified |
 | Payhip through Composio | yes | yes (`payhip_hafter-rosoli`) | payload/coupon only | limited | required | Discover actual capability | Cannot read products, files, or webhook settings |
 | Cloud browser | yes | yes | public pages | safe interactions | required | Production UI, Payhip pages/policy, PageSpeed | Public routes and products verified |
 | Google PageSpeed / Lighthouse | public | n/a | yes | no | required | Mobile/desktop performance, accessibility, SEO | mobile 93/96/100/100; desktop 99/96/100/100 |
@@ -37,7 +35,7 @@ controlled email test.
 
 | ID | Priority | Area | Issue | Root cause | Status |
 |---|---|---|---|---|---|
-| FB-001 | P0 | CI | `npm ci` failed on `main` | Playwright was duplicated at conflicting versions and missing from the lockfile | FIXED locally |
+| FB-001 | P0 | CI | `npm ci` failed on `main` | Playwright was duplicated at conflicting versions and missing from the lockfile | FIXED / CI PASS |
 | FB-002 | P1 | Conversion | Order page requested three nonexistent 3D/poster assets | Progressive enhancement shipped before its assets | FIXED locally with real cover asset |
 | FB-003 | P1 | Funnel | Purchase did not add All Customers or remove Leads | Webhook delegated lifecycle rules to disabled automations | FIXED locally |
 | FB-004 | P1 | Refunds | Full refund only added Refunded; buyer/review groups remained | Cleanup existed only in a disabled workflow | FIXED locally |
@@ -56,10 +54,10 @@ controlled email test.
 | FB-017 | P1 | Contact | Messages are stored in MailerLite but no verified internal support alert exists | No transactional email/queue notification provider | MANUAL VERIFICATION REQUIRED |
 | FB-018 | P2 | Security | Obsolete `/api/subscribe` duplicated the lead endpoint | Earlier endpoint was retained after signed delivery was added | FIXED / endpoint removed |
 | FB-019 | P2 | Security | Webhook token was optional and health shape could become public | Configuration treated the second factor as recommended | FIXED locally / fail closed |
-| FB-020 | P2 | Dependencies | Local `npm audit` is blocked by workspace network policy | Audit command requires a network entitlement | Added production audit to CI; result pending |
-| FB-021 | P2 | QA | Local Chromium install is blocked | Browser binary download requires unavailable network approval | CI render job expanded; result pending |
-| FB-022 | P0 | CI | PR #12 Actions jobs never started | GitHub annotation: account locked due to a billing issue | BLOCKED BY EXTERNAL CONFIGURATION |
-| FB-023 | P1 | Preview QA | Authenticated browser cannot open the protected preview | Generated Vercel share token redirects to Vercel login | MANUAL VERIFICATION REQUIRED |
+| FB-020 | P2 | Dependencies | Local `npm audit` is blocked by workspace network policy | Audit command requires a network entitlement | FIXED / production dependency audit PASS in CI |
+| FB-021 | P2 | QA | Local Chromium install is blocked | Browser binary download requires unavailable network approval | FIXED / GitHub Chromium render job PASS |
+| FB-022 | P0 | CI | PR #12 Actions jobs initially never started | GitHub account billing lock | RESOLVED; rerun executed normally |
+| FB-023 | P1 | Preview QA | Protected preview could not be opened in the available browser | Preview authentication boundary | RESOLVED by green PR render CI plus final public production verification |
 | FB-024 | P1 | Privacy | GA4 and Vercel Analytics loaded before any recorded consent | Telemetry was embedded directly in every page head | FIXED locally with equal allow/decline and withdrawal controls |
 | FB-025 | P1 | Webhook | Non-404 MailerLite group-removal errors still returned 200 | Removal helper logged failures instead of propagating them | FIXED locally; 5xx now returns retryable 500 |
 | FB-026 | P1 | Refunds | A refund removed unrelated product tiers and broad customer status | Handler broadcast cleanup to every buyer group | FIXED locally with item-scoped tier cleanup and retained historical customer state |
@@ -70,6 +68,8 @@ controlled email test.
 | FB-031 | P2 | 404 | Nested missing routes resolved 404 assets relative to the missing path | Error-page assets used document-relative URLs | FIXED locally with root-relative assets and nested-route render coverage |
 | FB-032 | P1 | Accessibility | Featured Ultimate price and CTA blended into its pine card | Later `pages.css` rules overrode the dark-card contrast | FIXED locally with explicit featured-card overrides |
 | FB-033 | P2 | Accessibility | Mobile 404 menu icon inherited pine on a pine hero | Over-hero toggle set only border, not foreground | FIXED locally for transparent and solid header states |
+| FB-034 | P1 | Mobile QA | Closed drawer created 343px document overflow on home and terms | Transformed off-canvas fixed drawer contributed to root scroll width | FIXED / PR #13 render CI PASS / deployed |
+| FB-035 | P2 | Render QA | 404 test required a mobile-only toggle on desktop | Viewport-specific assertion was not scoped | FIXED / PR #13 render CI PASS |
 
 ## 4. Changes Made
 
@@ -156,23 +156,24 @@ live IDs and approval boundaries without authentication identities.
 
 Reason: make launch state repeatable and evidence-based.
 
-Verification: static guards pass; Vercel preview build is READY. Browser
-execution remains blocked by GitHub billing and Vercel preview SSO.
+Verification: static guards pass; PR #13 workflow `31880730311` passed both
+Static validation and Rendered-page smoke test. Final production deployment is
+READY and serves the merged CSS overflow repair.
 
 ## 5. Git
 
 ```text
 Repository: miketui/finders-book-site
 Starting SHA: 3501434a75da221420c7c570d97af8dc90c85211
-Working branch: codex/launch-readiness-repair
+Working branches: codex/launch-readiness-repair; agent/fix-rendered-page-ci
 PR #11: merged; CURRENT
-PR #12: open, ready for review; Michael approved merge on 2026-08-15
+PR #12: merged
+PR #13: merged after rendered-page CI repair
 Branches reviewed: all remote branches
-Merge candidates: this repair branch only
+Merge candidates: none remaining
 agent/launch-audit-fixes: SUPERSEDED / DO NOT MERGE
-Final main SHA: not changed — approval required
-Remote branch SHA before final 404/contrast repair: 6719ce53d33ed9713fb132dafc32503d6ce9c44c
-CI: PR run 31880081235 FAIL — jobs not started; GitHub billing lock annotation
+Final main SHA: f7149bfb24bf87e58529a5571ab8efb00d794b05
+CI: PR #13 workflow 31880730311 PASS — static validation and rendered desktop/mobile smoke tests
 ```
 
 ## 6. MailerLite
@@ -323,20 +324,18 @@ Required action: reply-to/plaintext QA and a separate internal support-alert pro
 Project: finders-book-v34 (prj_1LXLU5n3bvZSL3310dsGjwE3yuu0)
 Production branch: main
 Domain: https://www.familyfindersbook.com
-Production deployment: dpl_DZeaArtRqNCWALSdcVYkD9fYaHAH — READY
-Production commit: 3501434a75da221420c7c570d97af8dc90c85211
-Preview deployment before automated-review repair: dpl_Hta4eLv2RYCAyzx1Q8RJQ6GAwS3w — READY
-Preview commit before automated-review repair: f777e1fab99b31e19dab963d416ffb5b8289a9f9
-Environment: Production; secret names/values not exposed by connector
+Production deployment: dpl_3kDXUFo6RNxCQCaWDX81crBTVg8t — READY
+Production commit: f7149bfb24bf87e58529a5571ab8efb00d794b05
+PR #13 preview deployment: dpl_J4mvsEFgJwrPLLWqWedahfKzcp9d — READY
+PR #13 preview commit: 98cb2ab2e6046d40917dd1097a3e61e653bb1175
+Environment: Production; connector does not expose secret names/values
 Health: public site 200; apex/http redirects 308; private health without token 401
 ```
 
-Runtime errors in the last 30 days: a platform `url.parse()` deprecation warning
-and one historical deployment missing MailerLite/Payhip keys. No current Payhip
-processing error was returned in the 24-hour log window. The PR preview cloned
-the exact review SHA, installed dependencies, completed its Vercel build, and
-deployed without a build error. Route-level preview browsing remains unverified
-because Vercel SSO rejected the generated temporary share URL.
+Runtime observation: Vercel reports a platform `url.parse()` deprecation warning
+on serverless requests; repository code does not call `url.parse()`. No current
+Payhip processing error was observed. Final production returned expected 200,
+401, 404, and 405 responses, and public routes carry HSTS and the intended CSP.
 
 ## 9. Analytics
 
@@ -355,9 +354,9 @@ Vercel Web Analytics: loaded by consent.js only after explicit allow
 | Test | Status | Evidence | Notes |
 |---|---|---|---|
 | Homepage | PASS | live 200 and browser inspection | current production SHA |
-| Mobile homepage | PASS | live PageSpeed mobile render, score 93 | repaired branch still needs protected-preview rerun |
-| Navigation | MANUAL VERIFICATION REQUIRED | desktop live checked; mobile CI test added | blocked by preview SSO/CI billing |
-| Analytics consent | FIXED | 6 static assertions; browser flow added | real-browser CI/deployment pending |
+| Mobile homepage | PASS | GitHub Chromium 390x844 render plus live PageSpeed mobile 93 | no horizontal overflow |
+| Navigation | PASS | desktop live plus mobile open/Escape-close CI | 44x44 touch target |
+| Analytics consent | PASS | 6 static assertions, browser allow/decline/withdraw, CI provider-request guard | no provider before consent |
 | Lead form validation | PASS | 15 local Gap Check tests | mocked MailerLite |
 | Lead form submission | MANUAL VERIFICATION REQUIRED | local API path passes | real subscriber requires controlled approval |
 | MailerLite subscriber | MANUAL VERIFICATION REQUIRED | Leads contains active API subscribers | no new test subscriber created |
@@ -376,20 +375,20 @@ Vercel Web Analytics: loaded by consent.js only after explicit allow
 | Refund simulation | PASS | full/partial tests | local mock |
 | Review suppression | FAIL | group cleanup fixed; workflow in-flight condition missing | configure MailerLite |
 | Contact form | PASS | 19 server routing/abuse tests; live route 405 on GET | internal alert remains manual |
-| Privacy | FIXED | consent/static guards and updated local policy | deployment/browser verification pending |
-| Terms | FIXED | new local page and links | not deployed |
+| Privacy | PASS | live 200, consent/static guards, CSP/HSTS | deployed |
+| Terms | PASS | live 200 and render CI | deployed |
 | Refund policy | PASS | website and Payhip policy agree materially | support address repaired locally |
-| 404 | FIXED | root-relative assets and nested missing-route browser case | real-browser execution pending |
-| Sitemap | PASS | live 200; local includes Terms | deploy pending |
+| 404 | PASS | live nested 404, root asset 200, desktop/mobile CI | deployed |
+| Sitemap | PASS | live 200 and includes all canonical routes | submit to Search Console manually |
 | Robots | PASS | live 200, correct sitemap | — |
 | Structured data | PASS | JSON parse guard and Lighthouse SEO 100 | no fabricated ratings |
 | Lint | NOT APPLICABLE | no linter configured | syntax/semantic guards used |
 | Typecheck | NOT APPLICABLE | plain JavaScript project | all JS/MJS passes `node --check` |
 | Tests | PASS | 67 unit/integration/static assertions | mocked external mutations; consent providers not contacted |
 | Production build | NOT APPLICABLE | static project, Vercel buildCommand null | clean install and validation are gate |
-| Render test | BLOCKED | local Chromium unavailable; remote job never started | GitHub account billing lock |
-| CI | BLOCKED | PR run `31880081235`, both annotations cite billing lock | no runner steps executed |
-| Vercel deployment health | PASS | production and PR preview deployments READY | preview route inspection blocked by SSO |
+| Render test | PASS | PR #13 workflow `31880730311` | desktop/mobile, nav, consent, CLS, JS/HTTP, overflow, no-GSAP |
+| CI | PASS | static and rendered jobs green | billing blocker resolved |
+| Vercel deployment health | PASS | production deployment READY at final main SHA | public routes reverified |
 
 ## 11. Remaining Manual Actions
 
@@ -443,10 +442,42 @@ review/lead membership while preserving unrelated tiers and All Customers.
 
 `Vercel -> finders-book-v34 -> Settings -> Environment Variables`
 
-Verify the four required names exist for Production, then redeploy the approved
-commit and call the private health URL. In Firewall, add route-specific rate
-limits for `/api/contact` and `/api/gap-check-subscribe` if the plan supports
-them. Expected result: health reports all four as present without exposing values.
+Required Production variables:
+
+| Name | Secret | Requirement |
+|---|---|---|
+| `MAILERLITE_API_KEY` | yes | required for lead, contact, purchase, and refund routing |
+| `PAYHIP_API_KEY` | yes | required to verify Payhip's static event signature |
+| `PAYHIP_WEBHOOK_TOKEN` | yes | required 32+ character second factor in webhook and private-health URLs |
+| `GAP_CHECK_TOKEN_SECRET` | yes | required; 32 random bytes encoded as 64 hex characters |
+
+Optional overrides should be left unset while the recorded live IDs remain
+current: `ML_GROUP_LEADS`, `ML_GROUP_ALL_CUSTOMERS`, `ML_GROUP_ESSENTIALS`,
+`ML_GROUP_ULTIMATE`, `ML_GROUP_FAMILY_BUNDLE`, `ML_GROUP_REFUNDED`,
+`ML_GROUP_REVIEW_REQUESTED`, `ML_GROUP_CONTACT_QUESTION`,
+`ML_GROUP_CONTACT_FEEDBACK`, `ML_GROUP_CONTACT_LICENSING`,
+`PAYHIP_PRODUCT_MAP`, `RESPECT_EMAIL_CONSENT`, `REFUND_ON_PARTIAL`, and
+`MAILERLITE_SUBSCRIBER_STATUS`. Never add `NEXT_PUBLIC_` to a secret name.
+
+Apply required values to Production. Apply them to Preview only if a controlled
+preview may safely touch the live MailerLite/Payhip account; otherwise use test
+service credentials. Redeploy after any change and call the private health URL.
+In Firewall, add route-specific rate limits for `/api/contact` and
+`/api/gap-check-subscribe` if the plan supports them. Expected result: health
+reports all four required variables present without exposing values.
+
+### GOOGLE SEARCH CONSOLE — property and sitemap
+
+`Google Search Console -> Add property -> Domain`
+
+Add `familyfindersbook.com`, copy the TXT verification record into the DNS
+provider, verify the property, then submit
+`https://www.familyfindersbook.com/sitemap.xml` under Indexing -> Sitemaps.
+Inspect `/`, `/order.html`, `/about.html`, and `/contact.html`, then request
+indexing only after the live inspection reports the canonical URL as
+`https://www.familyfindersbook.com/...`. Expected result: sitemap status
+Success with seven discoverable canonical pages and no accidental Vercel alias
+selected as canonical.
 
 ### GA4 — events and attribution
 
@@ -464,34 +495,19 @@ that alerts `info@michaeldavidjr.beauty` when a contact group receives a new
 message. Expected result: a controlled contact receives acknowledgement and an
 internal owner sees the message without polling the subscriber list.
 
-### GITHUB — restore Actions execution
+### GITHUB — completed CI recovery
 
-`GitHub -> Settings -> Billing and licensing -> Payment information / Actions`
-
-Resolve the account billing lock, then re-run failed jobs for workflow run
-`31880081235`. Expected result: both `Static validation` and
-`Rendered-page smoke test` receive runners, execute steps, and finish green.
-Verify that the job pages contain normal step logs rather than the billing-lock
-annotation.
-
-### VERCEL — allow controlled preview verification
-
-`Vercel -> finders-book-v34 -> Settings -> Deployment Protection`
-
-Generate a working temporary share link for preview deployment
-`dpl_Hta4eLv2RYCAyzx1Q8RJQ6GAwS3w`, or authenticate a browser session without
-weakening production protection. Expected result: the exact preview SHA can be
-checked at desktop/mobile widths without exposing the deployment publicly.
+The billing lock was resolved. Workflow `31880730311` executed normal runner
+steps and passed Static validation plus Rendered-page smoke test. No further
+billing action is required for this launch checklist.
 
 ## 12. Approval Gates
 
 ### APPROVAL GATE — MERGE TO MAIN
 
-APPROVED by Michael on 2026-08-15. PR #12 is ready for review and its preview
-build is READY. Michael explicitly authorized pushing the remaining repairs,
-merging to `main`, and the resulting Vercel production deployment despite the
-disclosed GitHub billing lock. Production verification is required immediately
-after merge; the failed Actions run remains an unresolved external blocker.
+APPROVED and executed on 2026-08-15. PR #12 and the focused PR #13 CI repair
+were merged to `main`; final production deployment is READY at the recorded
+final main SHA.
 
 ### APPROVAL GATE — MAILERLITE ACTIVATION
 
@@ -500,8 +516,6 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 
 ## 13. Launch Blockers
 
-- P0: GitHub account billing lock prevents all Actions jobs from starting.
-- P1: repaired code has not passed remote rendered-page audit or reached production.
 - P1: the Gap Check automation's three designs are incomplete and suppression/exit logic is absent.
 - P1: overlapping MailerLite nurture/onboarding workflows are not reconciled.
 - P1: production Payhip webhook configuration and attached files are not verified.
@@ -518,10 +532,10 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 - [x] branch/PR inventory complete
 - [x] PR #11 reviewed
 - [x] merge plan prepared
-- [x] remote repair branch and ready-for-review PR #12
-- [ ] GitHub billing restored and remote CI pass
+- [x] PR #12 and PR #13 merged
+- [x] GitHub billing restored and remote CI pass
 - [x] merge approved by Michael on 2026-08-15
-- [ ] final main SHA verified
+- [x] final main SHA verified
 
 ### Engineering and website
 
@@ -532,10 +546,10 @@ plaintext, preheaders, DOI, and the test-subscriber isolation plan must pass fir
 - [x] SEO/structured-data checks
 - [x] accessibility defects repaired locally
 - [x] performance baseline recorded
-- [ ] remote desktop/mobile render suite
+- [x] remote desktop/mobile render suite
 - [x] repaired Vercel preview build READY
-- [ ] protected preview route/mobile verification
-- [ ] production verification after approved merge
+- [x] exact PR tree verified by render CI and READY Vercel preview
+- [x] production verification after approved merge
 
 ### Funnel and services
 
