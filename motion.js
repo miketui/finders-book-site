@@ -516,7 +516,7 @@
     mode: "api",
     apiEndpoint: "/api/gap-check-subscribe",
     leadEndpoint: "https://assets.mailerlite.com/jsonp/2202141/forms/194226651000735158/subscribe",
-    supportEmail: "warrenjrmd@gmail.com"
+    supportEmail: "info@michaeldavidjr.beauty"
   };
 
   var form = document.getElementById("gapForm");

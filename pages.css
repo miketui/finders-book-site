@@ -47,6 +47,10 @@
   border-radius:var(--r); padding:clamp(1.3rem,2.4vw,1.9rem);
   display:flex; flex-direction:column; height:100%;
 }
+.tier.tier-lead{
+  background:var(--pine); color:var(--paper); border-color:var(--pine);
+  box-shadow:var(--shadow);
+}
 html.fx .tier{ transition:transform var(--dur-3) var(--ease),box-shadow var(--dur-3) var(--ease) }
 @media (hover:hover){
   html.fx .tier:hover{ transform:translateY(-4px); box-shadow:var(--shadow-sm) }

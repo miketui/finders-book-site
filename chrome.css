@@ -58,6 +58,9 @@
   min-height:var(--hdr-h);
 }
 .brand{ margin-right:auto }
+.hdr .brand,
+.hdr .nav a{ color:var(--pine) }
+.hdr .brand em{ color:var(--gold-ink) }
 
 /* -- over-hero mode: only on pages that opt in with .hdr-over -- */
 .hdr-over .hdr{

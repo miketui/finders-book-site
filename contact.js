@@ -29,7 +29,7 @@
 
   /* ---- configuration ---- */
   var ENDPOINT = "/api/contact";
-  var SUPPORT  = "warrenjrmd@gmail.com";
+  var SUPPORT  = "info@michaeldavidjr.beauty";
 
   var out    = document.getElementById("cfMsgOut");
   var submit = document.getElementById("cfSubmit");
