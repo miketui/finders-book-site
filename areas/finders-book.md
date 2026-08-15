@@ -235,12 +235,12 @@ then mark genuine conversions as Key Events.
 - GitHub Actions at the starting SHA failed because `package.json` and
   `package-lock.json` disagreed on Playwright versions. Vercel deployment was
   healthy despite that CI failure.
-- PR #12 (`codex/launch-readiness-repair`) is open and ready for review. Its
-  preview built successfully at SHA `6719ce5`, but Actions run `31880081235`
-  did not start either job because
-  GitHub annotated the account as locked due to a billing issue.
-- Michael explicitly approved publishing the remaining review repairs, merging
-  PR #12 to `main`, and the linked Vercel production deployment on 2026-08-15.
+- PR #12 (`codex/launch-readiness-repair`) was merged after review.
+- The GitHub billing lock was resolved; PR #13 (`agent/fix-rendered-page-ci`)
+  corrected mobile drawer overflow and a viewport-specific 404 assertion.
+  Workflow `31880730311` passed both static and rendered desktop/mobile jobs.
+- Final verified `main` SHA is `f7149bfb24bf87e58529a5571ab8efb00d794b05`.
+  Vercel production deployment `dpl_3kDXUFo6RNxCQCaWDX81crBTVg8t` is READY.
 
 ## Security and troubleshooting
 
@@ -257,8 +257,8 @@ then mark genuine conversions as Key Events.
 - If CI fails before tests, run `npm install --package-lock-only` and confirm
   Playwright exists only in `devDependencies`, then run a clean `npm ci`.
 - If a job has zero steps and zero runner assignment, inspect the check-run
-  annotation before changing code. The PR #12 failure is an account billing
-  lock, not a package or test failure.
+  annotation before changing code. The historical PR #12 incident was an
+  account billing lock, not a package or test failure.
 - Do not weaken webhook authentication to make a simulation pass.
 
 ## Pre-launch sequence
