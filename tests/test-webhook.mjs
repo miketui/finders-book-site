@@ -12,10 +12,13 @@ process.env.PAYHIP_WEBHOOK_TOKEN = 'test-token-abc';
 const GOOD_SIG = createHash('sha256').update('test-payhip-key', 'utf8').digest('hex');
 
 const GROUP = {
+  '194226608569059081': 'Finder\'s Book — Leads',
+  '194226612687865798': 'All Customers',
   '194226609478173767': 'Essentials Buyers',
   '194226610412455586': 'Ultimate Buyers',
   '194226611505071661': 'Family Bundle Buyers',
   '194226614527067324': 'Refunded',
+  '194226613598028898': 'Review Requested',
 };
 
 let calls = [];
@@ -83,18 +86,20 @@ async function check(name, body, expect, { token = 'test-token-abc', method = 'P
     .flatMap((c) => c.body.groups)
     .map((g) => GROUP[g] ?? g);
   const removals = calls.filter((c) => c.method === 'DELETE').map((c) => c.url.split('/').pop());
+  const removalsNamed = removals.map((g) => GROUP[g] ?? g);
 
   const okStatus = res.statusCode === expect.status;
   const okAction = !expect.action || res.payload?.action === expect.action;
   const okGroups = !expect.groups || JSON.stringify(groupsHit.sort()) === JSON.stringify([...expect.groups].sort());
-  const good = okStatus && okAction && okGroups;
+  const okRemoved = !expect.removed || JSON.stringify(removalsNamed.sort()) === JSON.stringify([...expect.removed].sort());
+  const good = okStatus && okAction && okGroups && okRemoved;
 
   good ? pass++ : fail++;
   console.log(
     `${good ? 'PASS' : 'FAIL'}  ${name}`,
     `\n        -> ${res.statusCode} ${res.payload?.action ?? res.payload?.error ?? ''}` +
     (groupsHit.length ? ` | added: ${groupsHit.join(', ')}` : '') +
-    (removals.length ? ` | removed group: ${removals.join(', ')}` : '')
+    (removalsNamed.length ? ` | removed: ${removalsNamed.join(', ')}` : '')
   );
   if (!good) {
     console.log('        expected:', JSON.stringify(expect));
@@ -104,20 +109,20 @@ async function check(name, body, expect, { token = 'test-token-abc', method = 'P
 console.log('\n=== Payhip -> MailerLite routing ===\n');
 
 await check('paid / Essentials (eHcPG)', paid(['eHcPG']),
-  { status: 200, action: 'buyer_added', groups: ['Essentials Buyers'] });
+  { status: 200, action: 'buyer_added', groups: ['All Customers', 'Essentials Buyers'], removed: ['Refunded', 'Finder\'s Book — Leads'] });
 
 await check('paid / Ultimate (Y1O7B)', paid(['Y1O7B']),
-  { status: 200, action: 'buyer_added', groups: ['Ultimate Buyers'] });
+  { status: 200, action: 'buyer_added', groups: ['All Customers', 'Ultimate Buyers'], removed: ['Refunded', 'Finder\'s Book — Leads'] });
 
 await check('paid / Family Bundle (xPuv4)', paid(['xPuv4']),
-  { status: 200, action: 'buyer_added', groups: ['Family Bundle Buyers'] });
+  { status: 200, action: 'buyer_added', groups: ['All Customers', 'Family Bundle Buyers'], removed: ['Refunded', 'Finder\'s Book — Leads'] });
 
 await check('paid / multi-item cart', paid(['eHcPG', 'xPuv4']),
-  { status: 200, action: 'buyer_added', groups: ['Essentials Buyers', 'Family Bundle Buyers'] });
+  { status: 200, action: 'buyer_added', groups: ['All Customers', 'Essentials Buyers', 'Family Bundle Buyers'], removed: ['Refunded', 'Finder\'s Book — Leads'] });
 
 await check('paid / product_key missing, permalink fallback',
   paid(['Y1O7B'], { items: [{ product_permalink: 'https://payhip.com/b/Y1O7B', quantity: '1' }] }),
-  { status: 200, action: 'buyer_added', groups: ['Ultimate Buyers'] });
+  { status: 200, action: 'buyer_added', groups: ['All Customers', 'Ultimate Buyers'], removed: ['Refunded', 'Finder\'s Book — Leads'] });
 
 await check('paid / unknown product key', paid(['ZZZZZ']),
   { status: 200, action: 'ignored_no_mapped_product', groups: [] });
@@ -129,7 +134,7 @@ await check('paid / buyer declined marketing email',
 console.log('\n=== Refunds ===\n');
 
 await check('refunded / full 4900 of 4900', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'] });
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['All Customers', 'Essentials Buyers', 'Ultimate Buyers', 'Family Bundle Buyers', 'Review Requested', 'Finder\'s Book — Leads'] });
 
 await check('refunded / partial 1000 of 4900', refund({ amount_refunded: 1000 }),
   { status: 200, action: 'ignored_partial_refund', groups: [] });
@@ -145,6 +150,9 @@ await check('wrong URL token rejected', paid(['Y1O7B']),
 await check('GET rejected', paid(['Y1O7B']),
   { status: 405, groups: [] }, { method: 'GET' });
 
+await check('malformed JSON rejected', '{not-json',
+  { status: 400, groups: [] });
+
 console.log('\n=== Edge cases ===\n');
 
 await check('subscription.created ignored', { ...paid(['Y1O7B']), type: 'subscription.created' },
@@ -152,6 +160,12 @@ await check('subscription.created ignored', { ...paid(['Y1O7B']), type: 'subscri
 
 await check('missing email tolerated', paid(['Y1O7B'], { email: '' }),
   { status: 200, action: 'ignored_no_email', groups: [] });
+
+const savedWebhookToken = process.env.PAYHIP_WEBHOOK_TOKEN;
+delete process.env.PAYHIP_WEBHOOK_TOKEN;
+await check('missing webhook token configuration fails closed', paid(['Y1O7B']),
+  { status: 500, groups: [] });
+process.env.PAYHIP_WEBHOOK_TOKEN = savedWebhookToken;
 
 // Email normalisation
 calls = [];

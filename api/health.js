@@ -30,8 +30,15 @@ function fingerprint(value) {
 export default function handler(req, res) {
   res.setHeader('cache-control', 'no-store');
 
+  if (req.method !== 'GET') {
+    return res.status(405).json({ ok: false, error: 'method_not_allowed' });
+  }
+
   const required = process.env.PAYHIP_WEBHOOK_TOKEN;
-  if (required && !safeEqual(req.query?.t ?? '', required)) {
+  if (!required) {
+    return res.status(503).json({ ok: false, error: 'not_configured' });
+  }
+  if (!safeEqual(req.query?.t ?? '', required)) {
     return res.status(401).json({ ok: false, error: 'unauthorized' });
   }
 
@@ -47,14 +54,17 @@ export default function handler(req, res) {
       MAILERLITE_API_KEY: Boolean(process.env.MAILERLITE_API_KEY),
       PAYHIP_API_KEY: Boolean(process.env.PAYHIP_API_KEY),
       PAYHIP_WEBHOOK_TOKEN: Boolean(process.env.PAYHIP_WEBHOOK_TOKEN),
+      GAP_CHECK_TOKEN_SECRET: Boolean(process.env.GAP_CHECK_TOKEN_SECRET),
     },
     // Group IDs are not secret — they are visible in the MailerLite dashboard.
     groups: {
       leads: process.env.ML_GROUP_LEADS || '194226608569059081 (default)',
+      all_customers: process.env.ML_GROUP_ALL_CUSTOMERS || '194226612687865798 (default)',
       essentials: process.env.ML_GROUP_ESSENTIALS || '194226609478173767 (default)',
       ultimate: process.env.ML_GROUP_ULTIMATE || '194226610412455586 (default)',
       family_bundle: process.env.ML_GROUP_FAMILY_BUNDLE || '194226611505071661 (default)',
       refunded: process.env.ML_GROUP_REFUNDED || '194226614527067324 (default)',
+      review_requested: process.env.ML_GROUP_REVIEW_REQUESTED || '194226613598028898 (default)',
     },
     behaviour: {
       respect_email_consent: process.env.RESPECT_EMAIL_CONSENT !== 'false',

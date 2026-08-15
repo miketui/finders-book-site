@@ -61,7 +61,7 @@ export default function handler(req, res) {
   }
 
   const secret = process.env.GAP_CHECK_TOKEN_SECRET;
-  if (!secret) {
+  if (!secret || secret.length < 32) {
     return res.status(503).send('Download service is not configured.');
   }
 

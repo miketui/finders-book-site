@@ -10,7 +10,7 @@
  *      with the IDs filled in — the request dies at the CSP before it is sent.
  *   2. The JSONP endpoint is public by design. Anyone reading source could
  *      pump the list. Keeping the key server-side puts the honeypot and the
- *      rate limit where devtools cannot reach them, exactly as /api/subscribe
+ *      rate limit where devtools cannot reach them, exactly as the Gap Check
  *      already does for the Gap Check.
  *
  * ROUTING RULE (unchanged from the original design intent)
@@ -19,7 +19,7 @@
  * sequence. Each message kind gets its own group.
  *
  * CONSENT
- * Subscribers are created "unconfirmed", matching /api/subscribe. Unconfirmed
+ * Subscribers are created "unconfirmed", matching the Gap Check flow. Unconfirmed
  * subscribers sit on file so you can reply, but are not marketable, which is
  * the correct posture for someone who sent a support message and never asked
  * for marketing. The contact page makes no marketing promise and carries no

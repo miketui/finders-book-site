@@ -1,7 +1,7 @@
 /**
  * POST /api/gap-check-subscribe
  *
- * Subscribes an email to the Leads group (same as /api/subscribe) and returns
+ * Subscribes an email to the Leads group and returns
  * a short-lived HMAC-signed download token so the client can fetch the Gap
  * Check PDF through /api/gap-check-download?token=... instead of a bare
  * public URL.
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
   const key = process.env.MAILERLITE_API_KEY;
   const secret = process.env.GAP_CHECK_TOKEN_SECRET;
 
-  if (!key || !secret) {
+  if (!key || !secret || secret.length < 32) {
     return res.status(503).json({
       ok: false,
       error: 'not_configured',
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
 
   // Honeypot: return 200 so bots learn nothing
   if (payload.company_website) {
-    return res.status(200).json({ ok: true, token: makeToken('honeypot@example.com', secret) });
+    return res.status(200).json({ ok: true });
   }
 
   const email = String(payload.email ?? '').trim().toLowerCase();
