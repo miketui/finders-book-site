@@ -1,9 +1,9 @@
 /**
  * POST /api/payhip-webhook
  *
- * Receives Payhip "paid" and "refunded" events and routes the buyer into the
- * correct MailerLite group. MailerLite's own automations do everything after
- * that — this endpoint deliberately does as little as possible.
+ * Receives Payhip "paid" and "refunded" events and maintains the buyer's
+ * complete MailerLite lifecycle state. The endpoint owns group membership so
+ * buyer suppression and refund cleanup do not depend on a live automation.
  *
  * ---------------------------------------------------------------------------
  * SECURITY NOTE — READ THIS BEFORE CHANGING THE VERIFICATION LOGIC
@@ -29,12 +29,13 @@
  *   MAILERLITE_API_KEY      MailerLite > Integrations > API
  *   PAYHIP_API_KEY          Payhip > Settings > Developer
  *
- * Strongly recommended env:
+ * Required env:
  *   PAYHIP_WEBHOOK_TOKEN    Random string; appended to the URL as ?t=...
  *
  * Optional env:
- *   ML_GROUP_ESSENTIALS / ML_GROUP_ULTIMATE / ML_GROUP_FAMILY_BUNDLE /
- *   ML_GROUP_REFUNDED       Override the baked-in group IDs
+ *   ML_GROUP_LEADS / ML_GROUP_ALL_CUSTOMERS / ML_GROUP_ESSENTIALS /
+ *   ML_GROUP_ULTIMATE / ML_GROUP_FAMILY_BUNDLE / ML_GROUP_REFUNDED /
+ *   ML_GROUP_REVIEW_REQUESTED  Override the baked-in group IDs
  *   PAYHIP_PRODUCT_MAP      JSON, e.g. {"eHcPG":"essentials"} — remap without redeploying
  *   RESPECT_EMAIL_CONSENT   "false" disables the consent gate (default: on)
  *   REFUND_ON_PARTIAL       "true" treats partial refunds as full (default: off)
@@ -47,10 +48,13 @@ const UPSTREAM_TIMEOUT_MS = 8000;
 
 /** Live MailerLite1 (account 2202141) group IDs. */
 const DEFAULT_GROUPS = {
+  leads: '194226608569059081',
+  all_customers: '194226612687865798',
   essentials: '194226609478173767',
   ultimate: '194226610412455586',
   family_bundle: '194226611505071661',
   refunded: '194226614527067324',
+  review_requested: '194226613598028898',
 };
 
 const DEFAULT_PRODUCT_MAP = {
@@ -138,14 +142,14 @@ async function ml(path, init = {}) {
 }
 
 /**
- * Upsert the subscriber and set group membership. Buyers are created "active":
- * they have a purchase relationship, so double opt-in does not apply to them.
- * Returns the MailerLite subscriber id, or null.
+ * Upsert the subscriber and set group membership. Purchase callers explicitly
+ * pass status "active"; refund callers omit it so an existing unsubscribed
+ * subscriber is not deliberately reactivated. Returns the subscriber id.
  */
 async function upsert(email, groups, extra = {}) {
   const res = await ml('/subscribers', {
     method: 'POST',
-    body: JSON.stringify({ email, status: 'active', groups, ...extra }),
+    body: JSON.stringify({ email, groups, ...extra }),
   });
 
   if (res.status === 200 || res.status === 201) {
@@ -156,20 +160,45 @@ async function upsert(email, groups, extra = {}) {
   throw new Error(`mailerlite upsert ${res.status}: ${detail.slice(0, 400)}`);
 }
 
+/**
+ * Fetch group membership after a refund marker is added. MailerLite's
+ * subscriber endpoint returns group objects; treating a missing/invalid list
+ * as an error is safer than guessing and revoking unrelated entitlements.
+ */
+async function currentGroupIds(subscriberId) {
+  if (!subscriberId) throw new Error('mailerlite subscriber id missing');
+  const res = await ml(`/subscribers/${subscriberId}`, { method: 'GET' });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`mailerlite subscriber fetch ${res.status}: ${detail.slice(0, 400)}`);
+  }
+  const body = await res.json().catch(() => ({}));
+  if (!Array.isArray(body?.data?.groups)) {
+    throw new Error('mailerlite subscriber response omitted groups');
+  }
+  return new Set(body.data.groups.map((group) => String(group?.id ?? group)).filter(Boolean));
+}
+
 async function removeFromGroup(subscriberId, groupIdValue) {
   if (!subscriberId || !groupIdValue) return;
   const res = await ml(`/subscribers/${subscriberId}/groups/${groupIdValue}`, { method: 'DELETE' });
   // 404 simply means they were not in that group. Not an error.
   if (!res.ok && res.status !== 404) {
-    console.error('[payhip] group removal failed', res.status, groupIdValue);
+    const detail = await res.text().catch(() => '');
+    throw new Error(`mailerlite group removal ${res.status}: ${detail.slice(0, 400)}`);
   }
 }
 
 function readBody(req) {
   const raw = req.body;
-  if (raw && typeof raw === 'object' && !Buffer.isBuffer(raw)) return raw;
+  if (raw && typeof raw === 'object' && !Buffer.isBuffer(raw)) return { body: raw, malformed: false };
   const text = Buffer.isBuffer(raw) ? raw.toString('utf8') : String(raw ?? '');
-  try { return JSON.parse(text); } catch { return {}; }
+  try {
+    const body = JSON.parse(text);
+    return { body: body && typeof body === 'object' ? body : {}, malformed: false };
+  } catch {
+    return { body: {}, malformed: true };
+  }
 }
 
 export default async function handler(req, res) {
@@ -181,24 +210,26 @@ export default async function handler(req, res) {
 
   const mlKey = process.env.MAILERLITE_API_KEY;
   const payhipKey = process.env.PAYHIP_API_KEY;
-  if (!mlKey || !payhipKey) {
+  const requiredToken = process.env.PAYHIP_WEBHOOK_TOKEN;
+  if (!mlKey || !payhipKey || !requiredToken) {
     // 500 (not 200) on purpose: Payhip retries hourly for 3h, so a misconfigured
     // deploy still delivers the sale once you set the variables.
-    console.error('[payhip] missing MAILERLITE_API_KEY or PAYHIP_API_KEY');
+    console.error('[payhip] missing required integration configuration');
     return res.status(500).json({ ok: false, error: 'not_configured' });
   }
 
   // Second factor — see the security note at the top of this file.
-  const requiredToken = process.env.PAYHIP_WEBHOOK_TOKEN;
-  if (requiredToken) {
-    const supplied = (req.query?.t ?? '') || req.headers['x-webhook-token'] || '';
-    if (!safeEqual(supplied, requiredToken)) {
-      console.warn('[payhip] rejected: bad or missing URL token');
-      return res.status(401).json({ ok: false, error: 'unauthorized' });
-    }
+  const supplied = (req.query?.t ?? '') || req.headers['x-webhook-token'] || '';
+  if (!safeEqual(supplied, requiredToken)) {
+    console.warn('[payhip] rejected: bad or missing URL token');
+    return res.status(401).json({ ok: false, error: 'unauthorized' });
   }
 
-  const body = readBody(req);
+  const parsed = readBody(req);
+  if (parsed.malformed) {
+    return res.status(400).json({ ok: false, error: 'malformed_json' });
+  }
+  const body = parsed.body;
   const expected = createHash('sha256').update(payhipKey, 'utf8').digest('hex');
   if (!safeEqual(body?.signature, expected)) {
     console.warn('[payhip] rejected: signature mismatch');
@@ -229,14 +260,19 @@ export default async function handler(req, res) {
         console.error('[payhip] UNMAPPED PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', unmatched.join(', '));
       }
       if (!tiers.length) {
-        return res.status(200).json({ ok: true, action: 'ignored_no_mapped_product', unmatched });
+        // A mapping deployment within Payhip's retry window can still recover
+        // the sale; do not acknowledge and silently lose segmentation.
+        return res.status(500).json({ ok: false, error: 'unmapped_product' });
       }
 
-      const groups = tiers.map(groupFor).filter(Boolean);
-      const subscriberId = await upsert(email, groups);
+      const groups = [groupFor('all_customers'), ...tiers.map(groupFor)].filter(Boolean);
+      const subscriberId = await upsert(email, groups, { status: 'active' });
 
-      // Someone who refunded and later bought again must not stay suppressed.
-      await removeFromGroup(subscriberId, groupFor('refunded'));
+      // A purchase stops lead sales messages and clears any prior refund flag.
+      await Promise.all([
+        removeFromGroup(subscriberId, groupFor('refunded')),
+        removeFromGroup(subscriberId, groupFor('leads')),
+      ]);
 
       console.log('[payhip] paid ->', tiers.join(','), txId);
       return res.status(200).json({ ok: true, action: 'buyer_added', tiers });
@@ -254,9 +290,44 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, action: 'ignored_partial_refund' });
       }
 
-      await upsert(email, [groupFor('refunded')]);
-      console.log('[payhip] refunded -> Refunded group', txId);
-      return res.status(200).json({ ok: true, action: 'refund_flagged' });
+      const { tiers, unmatched } = tiersFromItems(body?.items);
+      if (unmatched.length) {
+        console.error('[payhip] UNMAPPED REFUND PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', unmatched.join(', '));
+      }
+      if (!tiers.length) {
+        // Retry rather than acknowledging a refund whose entitlement cannot be
+        // identified. No lifecycle group has been changed at this point.
+        return res.status(500).json({ ok: false, error: 'unmapped_product' });
+      }
+
+      const subscriberId = await upsert(email, [groupFor('refunded')]);
+      const memberships = await currentGroupIds(subscriberId);
+      const refundedGroups = tiers.map(groupFor).filter(Boolean);
+      const buyerGroups = ['essentials', 'ultimate', 'family_bundle'].map(groupFor).filter(Boolean);
+      const remainingBuyerGroups = buyerGroups.filter((groupId) =>
+        memberships.has(String(groupId)) && !refundedGroups.includes(groupId)
+      );
+
+      // Refund cleanup is item-scoped: preserve a buyer's other product tiers.
+      // All Customers is intentionally historical (the payment still happened)
+      // and is retained; the Refunded marker owns suppression. This also avoids
+      // revoking the broad customer state for a separate retained purchase.
+      const removals = [
+        ...refundedGroups,
+        groupFor('review_requested'),
+        groupFor('leads'),
+      ];
+      await Promise.all(removals.filter(Boolean).map((groupId) => removeFromGroup(subscriberId, groupId)));
+
+      const remainingTiers = ['essentials', 'ultimate', 'family_bundle']
+        .filter((tier) => remainingBuyerGroups.includes(groupFor(tier)));
+      console.log('[payhip] refunded -> item-scoped cleanup', tiers.join(','), txId);
+      return res.status(200).json({
+        ok: true,
+        action: 'refund_flagged',
+        refunded_tiers: tiers,
+        remaining_tiers: remainingTiers,
+      });
     }
 
     // subscription.* events are not used by this product.

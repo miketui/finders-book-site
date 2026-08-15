@@ -22,7 +22,7 @@
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com 'sha256-HDNxQtHdIU/bKPjcO99cJ4Cmgk+S/k678ia91EdLd7Y=' 'sha256-rbTaSdDD+Sd+K8IZ66VS79bdI78bN8AwXXyN0/lD5fY=' 'sha256-xrYedWKeZKicEZ9JWBjWirEzqHz+/IFQUl1fDfebvyA=' 'sha256-c8+7DO2rE0Rjp6fIwiICz99hXtaEdiKEdFoM+V93+xY='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://www.google-analytics.com; connect-src 'self' https://connect.mailerlite.com https://www.google-analytics.com https://vitals.vercel-insights.com; frame-src https://payhip.com; object-src 'none'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com 'sha256-HDNxQtHdIU/bKPjcO99cJ4Cmgk+S/k678ia91EdLd7Y=' 'sha256-c8+7DO2rE0Rjp6fIwiICz99hXtaEdiKEdFoM+V93+xY='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://www.google-analytics.com; connect-src 'self' https://connect.mailerlite.com https://www.google-analytics.com https://vitals.vercel-insights.com; frame-src https://payhip.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
         }
       ]
     },
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "source": "/:file(styles.css|analytics.js|motion.js)",
+      "source": "/:file(styles.css|chrome.css|pages.css|consent.css|analytics.js|consent.js|chrome.js|motion.js)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]

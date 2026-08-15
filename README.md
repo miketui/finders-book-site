@@ -21,7 +21,13 @@ It intentionally does **not** contain paid customer deliverables distributed thr
 npm run validate
 ```
 
-That command checks for accidentally committed secrets, broken local file references, and Payhip-to-MailerLite webhook routing behavior.
+That command checks for accidentally committed secrets, broken local file references, shared navigation drift, CSP/analytics compatibility, and the Payhip, contact, and lead-magnet serverless flows.
+
+Rendered-page validation is a separate browser job:
+
+```bash
+npm run test:render
+```
 
 ## Environment variables
 
@@ -30,6 +36,7 @@ Copy `.env.example` only as a reference. Store real values in Vercel, never in G
 - `MAILERLITE_API_KEY`
 - `PAYHIP_API_KEY`
 - `PAYHIP_WEBHOOK_TOKEN`
+- `GAP_CHECK_TOKEN_SECRET`
 
 ## Deployment
 

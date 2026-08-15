@@ -37,24 +37,18 @@ const PAGES = [
   { path: '/about.html',   must: ['h1', '.lede', '.eyebrow'] },
   { path: '/order.html',   must: ['h1', '.lede', '.eyebrow', '.book3d', '.tier'] },
   { path: '/contact.html', must: ['h1', '.lede', '.eyebrow', '.cf-radio'] },
+  { path: '/missing/nested-route', must: ['h1', '.lede', '.eyebrow', '.nav-toggle'] },
+  { path: '/terms.html',   must: ['h1', '.lede', '.eyebrow'] },
+];
+const VIEWPORTS = [
+  { name: 'desktop', width: 1280, height: 900 },
+  { name: 'mobile', width: 390, height: 844 },
 ];
 
 /**
- * Paths that are allowed to 404 without failing the build.
- *
- * The 3D book is progressive enhancement: book3d.js is written to fall back
- * silently to the poster, and the poster slot itself degrades to empty space
- * with no layout shift. These assets are pending generation. Everything NOT
- * on this list is treated as a genuine regression.
- *
- * Remove entries from this list as the assets land -- an empty list is the
- * goal state.
+ * Vercel injects Analytics at the edge; it is absent in local static serving.
  */
 const OPTIONAL_404 = [
-  '/assets/models/book.glb',
-  '/assets/book-poster.webp',
-  '/assets/vendor/model-viewer.min.js',
-  // Vercel injects this at the edge; it is absent in local/CI static serving.
   '/_vercel/insights/script.js',
 ];
 
@@ -77,8 +71,8 @@ function startServer() {
         res.writeHead(200, { 'Content-Type': MIME[extname(p)] || 'application/octet-stream' });
         res.end(readFileSync(p));
       } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('not found');
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(readFileSync(join(ROOT, '404.html')));
       }
     });
     server.listen(PORT, () => resolve(server));
@@ -102,9 +96,10 @@ console.log(`\nsmoke-render  ->  ${BASE}\n`);
 const browser = await chromium.launch();
 let failures = 0;
 
+for (const viewport of VIEWPORTS) {
 for (const { path, must } of PAGES) {
   const context = await browser.newContext({
-    viewport: { width: 1280, height: 900 },
+    viewport: { width: viewport.width, height: viewport.height },
     // CI sandboxes and corporate proxies commonly re-sign TLS; this test is
     // about rendering, not certificate validation.
     ignoreHTTPSErrors: true,
@@ -119,6 +114,7 @@ for (const { path, must } of PAGES) {
     const u = r.url();
     if (r.status() < 400 || !u.startsWith(BASE)) return;
     const rel = u.slice(BASE.length).split('?')[0];
+    if (r.status() === 404 && rel === path && path === '/missing/nested-route') return;
     if (OPTIONAL_404.includes(rel)) {
       optional404.push(rel);
       return;
@@ -135,7 +131,7 @@ for (const { path, must } of PAGES) {
     } catch {}
   });
 
-  console.log(`  ${path}`);
+  console.log(`  ${viewport.name.padEnd(7)} ${path}`);
   try {
     await page.goto(BASE + path, { waitUntil: 'load', timeout: 30000 });
   } catch (e) {
@@ -204,10 +200,112 @@ for (const { path, must } of PAGES) {
     console.log(`    ok    CLS ${cls.toFixed(4)}`);
   }
 
+  const overflow = await page.evaluate(() =>
+    Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  );
+  if (overflow > 1) {
+    console.log(`    FAIL  horizontal overflow ${overflow}px`);
+    failures++;
+  } else {
+    console.log('    ok    no horizontal overflow');
+  }
+
+  await context.close();
+}
+}
+
+// --- 5. mobile navigation opens, exposes links, and closes with Escape ---
+console.log('\n  mobile navigation');
+{
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
+  const toggle = page.locator('.nav-toggle');
+  const box = await toggle.boundingBox();
+  if (!box || box.width < 44 || box.height < 44) {
+    console.log(`    FAIL  nav toggle touch target is ${box ? `${box.width}x${box.height}` : 'missing'}`);
+    failures++;
+  } else {
+    console.log(`    ok    nav toggle touch target ${box.width}x${box.height}`);
+  }
+  await toggle.click();
+  const navOpen = await page.locator('#sitenav').isVisible();
+  const expanded = await toggle.getAttribute('aria-expanded');
+  if (!navOpen || expanded !== 'true') {
+    console.log(`    FAIL  mobile navigation did not open (visible=${navOpen}, expanded=${expanded})`);
+    failures++;
+  } else {
+    console.log('    ok    mobile navigation opens with aria-expanded=true');
+  }
+  await page.keyboard.press('Escape');
+  await page.locator('#sitenav').waitFor({ state: 'hidden', timeout: 1500 }).catch(() => {});
+  const expandedAfter = await toggle.getAttribute('aria-expanded');
+  const navVisibleAfter = await page.locator('#sitenav').isVisible();
+  if (expandedAfter !== 'false' || navVisibleAfter) {
+    console.log(`    FAIL  Escape did not close mobile navigation (visible=${navVisibleAfter}, expanded=${expandedAfter})`);
+    failures++;
+  } else {
+    console.log('    ok    Escape hides mobile navigation with aria-expanded=false');
+  }
   await context.close();
 }
 
-// --- 5. the specific regression: sub-pages must survive without GSAP ---
+// --- 6. optional analytics is blocked until explicit consent ---
+console.log('\n  analytics consent');
+{
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  const providerRequests = [];
+  page.on('request', (request) => {
+    const url = request.url();
+    if (url.includes('googletagmanager.com/gtag/js') || url.includes('/_vercel/insights/script.js')) {
+      providerRequests.push(url);
+    }
+  });
+  await page.route('https://www.googletagmanager.com/**', (route) => route.abort());
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
+  await page.waitForTimeout(200);
+
+  const bannerVisible = await page.locator('.consent-banner').isVisible();
+  if (!bannerVisible || providerRequests.length) {
+    console.log(`    FAIL  initial consent state (banner=${bannerVisible}, provider requests=${providerRequests.length})`);
+    failures++;
+  } else {
+    console.log('    ok    no analytics provider request before a choice');
+  }
+
+  await page.locator('.consent-allow').click();
+  await page.waitForTimeout(200);
+  const allowed = await page.evaluate(() => localStorage.getItem('fb_analytics_consent_v1'));
+  if (allowed !== 'granted' || providerRequests.length !== 2) {
+    console.log(`    FAIL  allow choice (stored=${allowed}, provider requests=${providerRequests.length})`);
+    failures++;
+  } else {
+    console.log('    ok    explicit allow loads GA4 and Vercel Analytics once');
+  }
+
+  await page.locator('.consent-reopen').click();
+  await page.locator('.consent-decline').click();
+  const withdrawn = await page.evaluate(() => {
+    const before = (window.dataLayer || []).length;
+    window.fbTrack('event_after_withdrawal');
+    return {
+      stored: localStorage.getItem('fb_analytics_consent_v1'),
+      disabled: window['ga-disable-G-ZXX0M4VYT5'],
+      before,
+      after: (window.dataLayer || []).length,
+    };
+  });
+  if (withdrawn.stored !== 'denied' || withdrawn.disabled !== true || withdrawn.after !== withdrawn.before) {
+    console.log(`    FAIL  withdrawal did not stop site events (${JSON.stringify(withdrawn)})`);
+    failures++;
+  } else {
+    console.log('    ok    withdrawal disables GA and drops future site events');
+  }
+  await context.close();
+}
+
+// --- 7. the specific regression: sub-pages must survive without GSAP ---
 console.log('\n  no-GSAP resilience (blocks the CDN, simulates failure)');
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, ignoreHTTPSErrors: true });

@@ -4,17 +4,20 @@
 Website visitor
     |
     +-- Free lead form
-    |      -> /api/subscribe
+    |      -> /api/gap-check-subscribe
     |      -> MailerLite Leads group
     |      -> MailerLite double opt-in
-    |      -> Lead Nurture & Gap Check automation
+    |      -> signed /api/gap-check-download link
+    |      -> Gap Check Lead Nurture after confirmation (disabled; designs and suppression pending)
     |
     +-- Paid checkout button
            -> Payhip product checkout
            -> Payhip receipt and paid-file delivery
            -> /api/payhip-webhook
-           -> MailerLite buyer/refund groups
-           -> MailerLite onboarding or suppression automation
+           -> All Customers + matching buyer group
+           -> remove Leads / Refunded on purchase
+           -> item-scoped refund suppression and buyer-group cleanup
+           -> MailerLite onboarding/review automation when approved
 ```
 
 ## Source of truth by responsibility
@@ -25,6 +28,8 @@ Website visitor
 | Production secrets | Vercel Environment Variables |
 | Paid product files and checkout | Payhip |
 | Subscriber groups and email automations | MailerLite |
+| Purchase/refund lifecycle mapping | Vercel `/api/payhip-webhook` |
+| Measurement | GA4 + Vercel Web Analytics |
 | Source control and change review | GitHub |
 
 Zapier and Composio are not required in the live purchase path unless a separate, non-duplicative workflow is deliberately added later.

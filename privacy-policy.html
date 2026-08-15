@@ -79,21 +79,8 @@ th{font-family:var(--sans);font-size:.68rem;letter-spacing:.14em;text-transform:
   td::before{content:attr(data-l);display:block;font-family:var(--sans);font-size:.64rem;
     letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.15rem}}
 </style>
+<link rel="stylesheet" href="consent.css">
 
-<!-- Vercel Web Analytics -->
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
-
-<!-- Google tag (gtag.js) — GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZXX0M4VYT5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-ZXX0M4VYT5');
-</script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -101,7 +88,7 @@ th{font-family:var(--sans);font-size:.68rem;letter-spacing:.14em;text-transform:
 <main id="main"><div class="wrap"><article class="doc">
 <p class="eyebrow">How we handle your data</p>
 <h1>Privacy Policy</h1>
-<p class="doc-meta">Last updated 1 August 2026</p>
+<p class="doc-meta">Last updated 15 August 2026</p>
 
 <p class="lede">Short version: we collect an email address if you give us one, we use standard tools to
 run a checkout and see whether the page works, and we do not sell anything about you to anyone. The
@@ -115,7 +102,7 @@ and there is no server where they could be stored.</p>
 
 <h2>Who we are</h2>
 <p>Joanne Godfrey and Michael David Warren Jr., publishers of The Finder's Book &mdash; The Family Clarity System&trade;.
-Contact: <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a>. We are the data controller for the
+Contact: <a href="mailto:info@michaeldavidjr.beauty">info@michaeldavidjr.beauty</a>. We are the data controller for the
 information described here.</p>
 
 <h2>What we collect, and why</h2>
@@ -182,14 +169,18 @@ above is not currently active on the site, no data flows to it.</p>
 <h2>Cookies and similar technologies</h2>
 <p>The site uses a small number of cookies and browser-storage entries:</p>
 <ul>
+  <li><strong>Your analytics preference</strong> is stored in your browser so we can remember whether
+  you allowed or declined optional analytics.</li>
   <li><strong>Session storage</strong> holds campaign parameters (such as <code>utm_source</code>) for the
   length of your visit, so we can tell which channel sent you. It is cleared when you close the tab.</li>
-  <li><strong>Vercel Web Analytics</strong> measures aggregate page views and named site events without setting analytics cookies by default.</li>
-  <li><strong>Google Analytics 4</strong> sets first-party cookies (such as <code>_ga</code> and <code>_ga_*</code>) to distinguish visitors and measure conversions. These cookies expire after up to 2 years. You can block or delete them in your browser settings; the site continues to work normally without them. Google&rsquo;s privacy terms are at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.</li>
+  <li><strong>Vercel Web Analytics</strong> measures aggregate page views and named site events without setting analytics cookies by default. It is not loaded until you allow analytics.</li>
+  <li><strong>Google Analytics 4</strong> is not loaded until you allow analytics. Once allowed, it sets first-party cookies (such as <code>_ga</code> and <code>_ga_*</code>) to distinguish visitors and measure conversions. These cookies expire after up to 2 years. Google&rsquo;s privacy terms are at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.</li>
   <li><strong>No advertising pixel is currently active</strong> on this site.</li>
 </ul>
-<p>You can block or delete cookies in your browser settings. The site works without them; only the
-measurement stops.</p>
+<p>Use the <strong>Privacy choices</strong> control at the bottom of any page to allow, decline, or withdraw
+analytics consent. Withdrawing stops future site events and removes Finder&rsquo;s Book GA cookies that
+are accessible to this site. You can also delete cookies in your browser settings. The site works
+without optional analytics; only the measurement stops.</p>
 
 <h2>How long we keep things</h2>
 <ul>
@@ -209,7 +200,7 @@ measurement stops.</p>
   <li>Stop using it for a particular purpose</li>
   <li>Withdraw consent at any time</li>
 </ul>
-<p>Email <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a>. We respond within 30 days and we do not
+<p>Email <a href="mailto:info@michaeldavidjr.beauty">info@michaeldavidjr.beauty</a>. We respond within 30 days and we do not
 charge for this.</p>
 
 <h3>California residents (CCPA/CPRA)</h3>
@@ -248,18 +239,21 @@ information will be emailed to subscribers before they take effect.</p>
 
 <h2>Contact</h2>
 <p>Joanne Godfrey and Michael David Warren Jr.<br>
-Email: <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a><br>
+Email: <a href="mailto:info@michaeldavidjr.beauty">info@michaeldavidjr.beauty</a><br>
 We answer privacy requests within 30 days.</p>
 
 </article></div></main>
 <footer class="ftr"><div class="wrap">
 <p><strong style="color:var(--gold-hi)">This is not legal advice.</strong> The Finder's Book is a structured template for
 personal record-keeping. It is not a will, trust, contract, power of attorney, or advance directive.</p>
-<p style="margin-top:1rem">Questions: <a href="mailto:warrenjrmd@gmail.com">warrenjrmd@gmail.com</a> &middot;
+<p style="margin-top:1rem">Questions: <a href="mailto:info@michaeldavidjr.beauty">info@michaeldavidjr.beauty</a> &middot;
 <a href="/refund-policy.html">Refund policy</a> &middot;
+<a href="/terms.html">Terms of use</a> &middot;
 <a href="/privacy-policy.html">Privacy policy</a></p>
 <p style="margin-top:1rem">Copyright &copy; 2026 Joanne Godfrey and Michael David Warren Jr.. All rights reserved.
 The Family Clarity System&trade; is a trademark of Joanne Godfrey and Michael David Warren Jr..</p>
 </div></footer>
+<script src="consent.js" defer></script>
+<script src="analytics.js" defer></script>
 </body>
 </html>

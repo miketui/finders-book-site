@@ -30,7 +30,7 @@
 <meta name="twitter:image" content="https://www.familyfindersbook.com/assets/og-finders-book.jpg">
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" as="image" href="assets/book-poster.webp" type="image/webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/cover.webp" type="image/webp" fetchpriority="high">
 <link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-normal.woff2" type="font/woff2" crossorigin>
 <link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-italic.woff2" type="font/woff2" crossorigin>
 <link rel="preload" as="font" href="assets/fonts/archivo-latin-variable-normal.woff2" type="font/woff2" crossorigin>
@@ -38,6 +38,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="chrome.css">
 <link rel="stylesheet" href="pages.css">
+<link rel="stylesheet" href="consent.css">
 <script>document.documentElement.classList.add("fx");</script>
 
 <script type="application/ld+json">
@@ -97,17 +98,13 @@
     </div>
   </section>
 
-  <!-- 3D BOOK — poster is the LCP element; the model loads only on approach -->
+  <!-- Product cover — static by design until production 3D assets exist. -->
   <section class="band">
     <div class="wrap">
       <div class="order-hero">
-        <div class="book3d fx-scale"
-             data-book3d
-             data-src="assets/models/book.glb"
-             data-alt="A three-dimensional view of The Finder's Book. Drag to turn it.">
-          <img class="book-poster" src="assets/book-poster.webp" width="900" height="1200"
+        <div class="book3d fx-scale" aria-label="Cover preview of The Finder's Book">
+          <img class="book-poster" src="assets/cover.webp" width="1100" height="1423"
                alt="The Finder's Book, closed, showing the front cover." fetchpriority="high">
-          <p class="book3d-hint" aria-hidden="true">Drag to turn</p>
         </div>
         <div class="order-hero-txt">
           <p class="eyebrow">What you are buying</p>
@@ -272,6 +269,7 @@
         <ul>
           <li><a href="/contact.html">Ask a question</a></li>
           <li><a href="/refund-policy.html">Refund policy</a></li>
+          <li><a href="/terms.html">Terms of use</a></li>
           <li><a href="/privacy-policy.html">Privacy policy</a></li>
           <li><a href="/contact.html">Professional licensing</a></li>
         </ul>
@@ -285,9 +283,9 @@
 </footer>
 <!-- CHROME:FOOTER:END -->
 
+<script src="consent.js" defer></script>
 <script src="analytics.js" defer></script>
 <script src="chrome.js" defer></script>
 <script src="motion.js" defer></script>
-<script src="book3d.js" type="module"></script>
 </body>
 </html>
