@@ -9,7 +9,7 @@ Last verified: 2026-08-15
 - Canonical site: `https://www.familyfindersbook.com`
 - Apex redirect: `https://familyfindersbook.com` -> `https://www.familyfindersbook.com`
 - Vercel project: `finders-book-v34` in team `mikes-projects-1e9a868e`
-- Support address: `info@michaeldavidjr.beauty`
+- Support address: `info@familyfindersbook.com`
 - Product: The Finder's Book — The Family Clarity System™
 
 Do not merge, trigger a production deployment, activate MailerLite automations,
@@ -135,7 +135,7 @@ receipt and file delivery.
 
 Connected account: account `2202141`. Authentication identities are intentionally
 not recorded in this public repository. The public support/reply-to address is
-`info@michaeldavidjr.beauty`.
+`info@familyfindersbook.com`.
 
 ### Groups
 
@@ -170,7 +170,7 @@ without sending email, but disabled is not equivalent to launch-ready.
 | Contact Acknowledgement | `195847302637684408` | disabled | Candidate after sender/reply-to/plaintext QA |
 
 Preferred sender: `Joanne and Michael`.
-Preferred reply-to: `info@michaeldavidjr.beauty`.
+Preferred From and reply-to: `info@familyfindersbook.com`.
 
 Before any activation:
 

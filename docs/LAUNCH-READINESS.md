@@ -398,7 +398,7 @@ Vercel Web Analytics: loaded by consent.js only after explicit allow
 
 1. Restore the three HTML designs using the retained screenshots/brand template.
 2. Confirm order: Gap Check delivery -> 3 days -> completion objection -> 4 days -> gap/offer message.
-3. Set sender `Joanne and Michael` and reply-to `info@michaeldavidjr.beauty`.
+3. Set sender name `Joanne and Michael`; set both From and reply-to to `info@familyfindersbook.com`.
 4. Add useful preheaders and real plaintext versions.
 5. Exclude All Customers and Refunded and exit when a subscriber leaves Leads,
    or insert equivalent conditions before Emails 2 and 3.
@@ -491,7 +491,7 @@ result: source/medium/campaign persists from landing through purchase.
 ### CONTACT — operational alert
 
 Choose a support inbox/transactional provider or a monitored MailerLite queue
-that alerts `info@michaeldavidjr.beauty` when a contact group receives a new
+that alerts `info@familyfindersbook.com` when a contact group receives a new
 message. Expected result: a controlled contact receives acknowledgement and an
 internal owner sees the message without polling the subscriber list.
 

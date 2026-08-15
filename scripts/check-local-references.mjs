@@ -15,6 +15,12 @@ const htmlFiles = [
 const missing = [];
 const publicHost = 'https://www.familyfindersbook.com';
 const retiredHost = 'https://finders-book-v34.vercel.app';
+const supportEmail = 'info@familyfindersbook.com';
+const retiredSupportEmails = [
+  'info@michaeldavidjr.beauty',
+  'warrenjrmd@gmail.com',
+  'info@familyfindersboik.com',
+];
 
 for (const file of htmlFiles) {
   const abs = resolve(root, file);
@@ -22,6 +28,10 @@ for (const file of htmlFiles) {
 
   if (html.includes(retiredHost)) {
     missing.push(`${file} -> retired production host remains in public metadata`);
+  }
+
+  for (const email of retiredSupportEmails) {
+    if (html.includes(email)) missing.push(`${file} -> retired or misspelled support address remains: ${email}`);
   }
 
   if (file !== '404.html' && !html.includes(`<link rel="canonical" href="${publicHost}${file === 'index.html' ? '/' : `/${file}`}">`)) {
@@ -47,6 +57,14 @@ for (const file of htmlFiles) {
     } catch {
       missing.push(`${file} -> ${ref}`);
     }
+  }
+}
+
+for (const file of ['contact.js', 'motion.js']) {
+  const contents = await readFile(resolve(root, file), 'utf8');
+  if (!contents.includes(supportEmail)) missing.push(`${file} -> canonical support address is missing`);
+  for (const email of retiredSupportEmails) {
+    if (contents.includes(email)) missing.push(`${file} -> retired or misspelled support address remains: ${email}`);
   }
 }
 
