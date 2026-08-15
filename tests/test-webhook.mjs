@@ -22,13 +22,37 @@ const GROUP = {
 };
 
 let calls = [];
+let membership = new Set();
+let failingRemoval = null;
 globalThis.fetch = async (url, init = {}) => {
   const body = init.body ? JSON.parse(init.body) : null;
   calls.push({ url: String(url), method: init.method, body });
   if (String(url).endsWith('/subscribers')) {
-    return { status: 201, ok: true, json: async () => ({ data: { id: 'sub_123' } }), text: async () => '' };
+    (body?.groups || []).forEach((group) => membership.add(String(group)));
+    return {
+      status: 201,
+      ok: true,
+      json: async () => ({ data: { id: 'sub_123', groups: [...membership].map((id) => ({ id })) } }),
+      text: async () => '',
+    };
   }
-  return { status: 204, ok: true, json: async () => ({}), text: async () => '' };
+  if (String(url).endsWith('/subscribers/sub_123') && init.method === 'GET') {
+    return {
+      status: 200,
+      ok: true,
+      json: async () => ({ data: { id: 'sub_123', groups: [...membership].map((id) => ({ id })) } }),
+      text: async () => '',
+    };
+  }
+  if (init.method === 'DELETE') {
+    const groupId = String(url).split('/').pop();
+    if (groupId === failingRemoval) {
+      return { status: 503, ok: false, json: async () => ({}), text: async () => 'temporary failure' };
+    }
+    const existed = membership.delete(groupId);
+    return { status: existed ? 204 : 404, ok: existed, json: async () => ({}), text: async () => '' };
+  }
+  return { status: 500, ok: false, json: async () => ({}), text: async () => 'unexpected mock call' };
 };
 
 const { default: handler } = await import('../api/payhip-webhook.js');
@@ -76,8 +100,15 @@ const refund = (over = {}) => ({
 
 let pass = 0, fail = 0;
 
-async function check(name, body, expect, { token = 'test-token-abc', method = 'POST' } = {}) {
+async function check(name, body, expect, {
+  token = 'test-token-abc',
+  method = 'POST',
+  initialGroups = [],
+  failRemoval = null,
+} = {}) {
   calls = [];
+  membership = new Set(initialGroups);
+  failingRemoval = failRemoval;
   const res = mockRes();
   await handler({ method, query: { t: token }, headers: {}, body }, res);
 
@@ -90,9 +121,10 @@ async function check(name, body, expect, { token = 'test-token-abc', method = 'P
 
   const okStatus = res.statusCode === expect.status;
   const okAction = !expect.action || res.payload?.action === expect.action;
+  const okError = !expect.error || res.payload?.error === expect.error;
   const okGroups = !expect.groups || JSON.stringify(groupsHit.sort()) === JSON.stringify([...expect.groups].sort());
   const okRemoved = !expect.removed || JSON.stringify(removalsNamed.sort()) === JSON.stringify([...expect.removed].sort());
-  const good = okStatus && okAction && okGroups && okRemoved;
+  const good = okStatus && okAction && okError && okGroups && okRemoved;
 
   good ? pass++ : fail++;
   console.log(
@@ -125,7 +157,7 @@ await check('paid / product_key missing, permalink fallback',
   { status: 200, action: 'buyer_added', groups: ['All Customers', 'Ultimate Buyers'], removed: ['Refunded', 'Finder\'s Book — Leads'] });
 
 await check('paid / unknown product key', paid(['ZZZZZ']),
-  { status: 200, action: 'ignored_no_mapped_product', groups: [] });
+  { status: 500, error: 'unmapped_product', groups: [] });
 
 await check('paid / buyer declined marketing email',
   paid(['Y1O7B'], { unconsented_from_emails: true }),
@@ -134,10 +166,27 @@ await check('paid / buyer declined marketing email',
 console.log('\n=== Refunds ===\n');
 
 await check('refunded / full 4900 of 4900', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['All Customers', 'Essentials Buyers', 'Ultimate Buyers', 'Family Bundle Buyers', 'Review Requested', 'Finder\'s Book — Leads'] });
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { initialGroups: ['194226612687865798', '194226610412455586'] });
+
+await check('refunded / Ultimate preserves separate Essentials purchase', refund(),
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { initialGroups: ['194226612687865798', '194226609478173767', '194226610412455586'] });
 
 await check('refunded / partial 1000 of 4900', refund({ amount_refunded: 1000 }),
   { status: 200, action: 'ignored_partial_refund', groups: [] });
+
+await check('refunded / unknown product does not revoke entitlements', refund({ items: [item('ZZZZZ')] }),
+  { status: 500, error: 'unmapped_product', groups: [], removed: [] },
+  { initialGroups: ['194226612687865798', '194226610412455586'] });
+
+await check('refunded / repeated event is idempotent', refund(),
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { initialGroups: ['194226612687865798', '194226614527067324'] });
+
+await check('refunded / MailerLite removal failure returns retryable 500', refund(),
+  { status: 500, groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { initialGroups: ['194226612687865798', '194226610412455586'], failRemoval: '194226610412455586' });
 
 console.log('\n=== Security ===\n');
 
