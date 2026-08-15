@@ -1,28 +1,25 @@
 /* ============================================================
    THE FINDER'S BOOK — CONTACT & FEEDBACK
 
-   GATE 2 decision: MailerLite, not a new vendor and not a new
-   route in api/. MailerLite is already the site's data processor,
-   already named in privacy-policy.html, and already an allowed
-   origin because the Gap Check form uses it. Nothing new enters
-   the privacy surface.
+   Posts to /api/contact, the site's own serverless route, for the
+   same reasons the Gap Check form posts to /api/gap-check-subscribe:
+   the MailerLite key stays server-side, and the honeypot and rate
+   limit live where devtools cannot reach them.
 
-   ROUTING RULE (important)
-   Contact and feedback must NOT land in the leads group
-   (194226608569059081). Someone asking where their download is
-   should never be dropped into the Gap Check nurture sequence.
-   Each message kind gets its own group and its own event.
+   This replaces an earlier client-side MailerLite JSONP stub that
+   was never wired up (ML_FORM and all three group IDs were blank,
+   so every submission fell through to the support address). That
+   approach could not have worked regardless: the site CSP allows
+   connect-src 'self' and connect.mailerlite.com, but NOT
+   assets.mailerlite.com, where the JSONP endpoint lives.
 
-   MANUAL SETUP REQUIRED before this works — see docs/CHROME.md:
-     1. MailerLite > Subscribers > Groups: create
-          "Contact — presale question"
-          "Contact — reader feedback"
-          "Contact — licensing"
-     2. MailerLite > Forms: create one embedded form with fields
-          name, email, message, kind
-     3. Paste the form's JSONP subscribe endpoint into ML_FORM below
-        and the three group IDs into GROUPS.
-   Until then the form fails gracefully to the support address.
+   ROUTING RULE (unchanged)
+   Contact and feedback must NOT land in the Leads group. Someone
+   asking where their download is should never be dropped into the
+   Gap Check nurture sequence. Each message kind gets its own group
+   and its own event. The routing now lives in api/contact.js.
+
+   No manual setup remains. Groups, fields, and the route all exist.
    ============================================================ */
 (function () {
   "use strict";
@@ -31,14 +28,8 @@
   if (!form) return;
 
   /* ---- configuration ---- */
-  var ML_ACCOUNT   = "2202141";
-  var ML_FORM      = "";            /* e.g. "https://assets.mailerlite.com/jsonp/2202141/forms/XXXXXXXXXXXXXXXX/subscribe" */
-  var SUPPORT      = "warrenjrmd@gmail.com";
-  var GROUPS = {
-    question:  "",                  /* Contact — presale question   */
-    feedback:  "",                  /* Contact — reader feedback    */
-    licensing: ""                   /* Contact — licensing          */
-  };
+  var ENDPOINT = "/api/contact";
+  var SUPPORT  = "warrenjrmd@gmail.com";
 
   var out    = document.getElementById("cfMsgOut");
   var submit = document.getElementById("cfSubmit");
@@ -69,12 +60,6 @@
       function (el) { el.removeAttribute("aria-invalid"); }
     );
   }
-
-  var KIND_LABEL = {
-    question:  "question",
-    feedback:  "feedback",
-    licensing: "licensing"
-  };
 
   /* Fires once when the form is genuinely seen, for funnel maths. */
   if ("IntersectionObserver" in window) {
@@ -120,35 +105,26 @@
       return fieldError(msgEl, "Please add a little more detail so we can actually help.");
     }
 
-    if (!ML_FORM || !GROUPS[kind]) {
-      say("err", "The message form is not connected yet. Email " + SUPPORT + " and a person will reply.");
-      track("contact_submit_unconfigured", { kind: kind });
-      return;
-    }
-
     busy = true;
-    if (submit) { submit.disabled = true; submit.textContent = "Sending\u2026"; }
-    say("ok", "Sending\u2026");
+    if (submit) { submit.disabled = true; submit.textContent = "Sending…"; }
+    say("ok", "Sending…");
 
-    var payload = new URLSearchParams();
-    payload.set("fields[email]", email);
-    payload.set("fields[name]", name);
-    payload.set("fields[message]", body);
-    payload.set("fields[kind]", KIND_LABEL[kind] || kind);
-    payload.set("groups[]", GROUPS[kind]);
-    payload.set("ml-submit", "1");
-    payload.set("anticsrf", "true");
-
-    fetch(ML_FORM, {
+    fetch(ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: payload.toString()
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        message: body,
+        kind: kind,
+        company_website: (hp && hp.value) || ""
+      })
     })
     .then(function (r) {
-      return r.json().catch(function () { return { ok: r.ok, success: r.ok }; });
+      return r.json().catch(function () { return { ok: r.ok }; });
     })
     .then(function (data) {
-      if (data && (data.ok || data.success)) {
+      if (data && data.ok) {
         say("ok", "Message received. A person will reply to " + email + ".");
         track(kind === "feedback" ? "feedback_submit" : "contact_submit",
               Object.assign({ kind: kind }, attribution()));
@@ -168,7 +144,4 @@
       if (submit) { submit.disabled = false; submit.textContent = "Send message"; }
     });
   });
-
-  /* Account reference kept for the setup docs. */
-  void ML_ACCOUNT;
 })();
