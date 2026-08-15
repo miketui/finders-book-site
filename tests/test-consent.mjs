@@ -26,8 +26,10 @@ console.log('\n=== Optional analytics consent ===\n');
 check('all public pages load consent before analytics', () => {
   for (const page of pages) {
     const html = readFileSync(page, 'utf8');
-    assert.ok(html.indexOf('src="consent.js"') >= 0, `${page} missing consent.js`);
-    assert.ok(html.indexOf('src="consent.js"') < html.indexOf('src="analytics.js"'), `${page} order`);
+    const consentIndex = html.search(/src=["']\/?consent\.js["']/);
+    const analyticsIndex = html.search(/src=["']\/?analytics\.js["']/);
+    assert.ok(consentIndex >= 0, `${page} missing consent.js`);
+    assert.ok(consentIndex < analyticsIndex, `${page} order`);
   }
 });
 

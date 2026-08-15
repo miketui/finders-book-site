@@ -108,8 +108,8 @@ html.fx .nav a::after{ transition:transform var(--dur-2) var(--ease) }
   background:none; border:1px solid var(--hair); border-radius:var(--r);
   color:inherit; cursor:pointer;
 }
-.hdr-over .nav-toggle{ border-color:var(--hair-lt) }
-.hdr-over .hdr.solid .nav-toggle{ border-color:var(--hair) }
+.hdr-over .nav-toggle{ color:var(--paper); border-color:var(--hair-lt) }
+.hdr-over .hdr.solid .nav-toggle{ color:var(--pine); border-color:var(--hair) }
 .nav-toggle span{
   display:block; width:20px; height:2px; background:currentColor;
   position:relative;

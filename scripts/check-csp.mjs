@@ -45,12 +45,12 @@ for (const page of PAGES) {
     if (!allowedHashes.has(hash)) fail(`${page} has an inline script missing from script-src: sha256-${hash}`);
   }
 
-  const consentIndex = html.indexOf('src="consent.js"');
-  const analyticsIndex = html.indexOf('src="analytics.js"');
+  const consentIndex = html.search(/src=["']\/?consent\.js["']/);
+  const analyticsIndex = html.search(/src=["']\/?analytics\.js["']/);
   if (consentIndex === -1 || analyticsIndex === -1 || consentIndex > analyticsIndex) {
     fail(`${page} must load consent.js before analytics.js`);
   }
-  if (!html.includes('href="consent.css"')) {
+  if (!/href=["']\/?consent\.css["']/.test(html)) {
     fail(`${page} is missing consent.css`);
   }
   if (html.includes('googletagmanager.com/gtag/js') || html.includes('/_vercel/insights/script.js')) {

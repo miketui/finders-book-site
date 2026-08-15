@@ -37,7 +37,7 @@ const PAGES = [
   { path: '/about.html',   must: ['h1', '.lede', '.eyebrow'] },
   { path: '/order.html',   must: ['h1', '.lede', '.eyebrow', '.book3d', '.tier'] },
   { path: '/contact.html', must: ['h1', '.lede', '.eyebrow', '.cf-radio'] },
-  { path: '/404.html',     must: ['h1', '.lede', '.eyebrow'] },
+  { path: '/missing/nested-route', must: ['h1', '.lede', '.eyebrow', '.nav-toggle'] },
   { path: '/terms.html',   must: ['h1', '.lede', '.eyebrow'] },
 ];
 const VIEWPORTS = [
@@ -71,8 +71,8 @@ function startServer() {
         res.writeHead(200, { 'Content-Type': MIME[extname(p)] || 'application/octet-stream' });
         res.end(readFileSync(p));
       } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('not found');
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(readFileSync(join(ROOT, '404.html')));
       }
     });
     server.listen(PORT, () => resolve(server));
@@ -114,6 +114,7 @@ for (const { path, must } of PAGES) {
     const u = r.url();
     if (r.status() < 400 || !u.startsWith(BASE)) return;
     const rel = u.slice(BASE.length).split('?')[0];
+    if (r.status() === 404 && rel === path && path === '/missing/nested-route') return;
     if (OPTIONAL_404.includes(rel)) {
       optional404.push(rel);
       return;
