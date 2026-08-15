@@ -1,19 +1,19 @@
 /* ============================================================
    THE FINDER'S BOOK — ANALYTICS & FUNNEL TRACKING
-   Fires to Vercel Analytics, GTM dataLayer, gtag, Plausible,
-   and Meta Pixel when any are present. Zero hard dependencies.
+   Fires to consent-loaded analytics providers only after the visitor
+   explicitly allows optional analytics. Zero hard dependencies.
    ============================================================ */
 (function(){
   "use strict";
 
   /* ---------- shared tracking bus ---------- */
   function track(name, params){
+    if (window.fbAnalyticsConsent !== "granted") return;
     var p = Object.assign({page_variant:"v3.2"}, params || {});
     try{
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push(Object.assign({event:name}, p));
       if (typeof window.va === "function") window.va("event", {name:name, data:p});
       if (typeof window.gtag === "function") window.gtag("event", name, p);
+      else if (Array.isArray(window.dataLayer)) window.dataLayer.push(Object.assign({event:name}, p));
       if (typeof window.plausible === "function") window.plausible(name, {props:p});
       if (typeof window.fbq === "function" && name === "checkout_click") window.fbq("track","InitiateCheckout",p);
       if (typeof window.fbq === "function" && name === "lead_submit") window.fbq("track","Lead",p);
@@ -33,6 +33,11 @@
 
   /* ---------- landing view ---------- */
   track("landing_view", Object.assign({offer:"the-finders-book"}, attribution()));
+  window.addEventListener("finder:analytics-consent", function(e){
+    if (e && e.detail && e.detail.status === "granted") {
+      track("landing_view", Object.assign({offer:"the-finders-book"}, attribution()));
+    }
+  });
 
   /* ---------- forward UTM params to external checkout links ---------- */
   function forwardAttribution(el){

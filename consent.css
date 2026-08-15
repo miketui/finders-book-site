@@ -1,0 +1,33 @@
+/* Optional analytics choice. Kept independent so legal pages can use it too. */
+.consent-banner{
+  position:fixed; right:1rem; bottom:1rem; left:1rem; z-index:120;
+  display:flex; align-items:center; justify-content:space-between; gap:1.25rem;
+  max-width:980px; margin:0 auto; padding:1rem 1.1rem;
+  color:#FAF4E8; background:#0B1F19; border:1px solid rgba(250,244,232,.28);
+  border-radius:6px; box-shadow:0 14px 45px rgba(0,0,0,.3);
+  font-family:"Archivo Local",system-ui,-apple-system,sans-serif;
+}
+.consent-banner[hidden],.consent-reopen[hidden]{display:none}
+.consent-copy{max-width:62ch}
+.consent-copy h2{margin:0 0 .2rem;color:#FAF4E8;font:600 1rem/1.3 "Archivo Local",system-ui,-apple-system,sans-serif}
+.consent-copy p{margin:0;color:#DCE6E0;font-size:.86rem;line-height:1.5}
+.consent-copy a{color:#DFC99D}
+.consent-actions{display:flex;flex-wrap:wrap;gap:.6rem;flex:0 0 auto}
+.consent-actions button,.consent-reopen{
+  min-height:44px; padding:.65rem .9rem; border:1px solid #DFC99D; border-radius:3px;
+  color:#FAF4E8; background:transparent; cursor:pointer;
+  font:600 .78rem/1.2 "Archivo Local",system-ui,-apple-system,sans-serif;
+}
+.consent-actions button:focus-visible,.consent-reopen:focus-visible{outline:3px solid #FAF4E8;outline-offset:2px}
+.consent-reopen{
+  position:fixed;right:.75rem;bottom:.75rem;z-index:119;
+  min-height:40px;padding:.55rem .75rem;color:#FAF4E8;background:#14372D;
+  border-color:rgba(250,244,232,.45);box-shadow:0 5px 18px rgba(0,0,0,.2)
+}
+@media (max-width:720px){
+  .consent-banner{align-items:stretch;flex-direction:column}
+  .consent-actions{display:grid;grid-template-columns:1fr 1fr}
+}
+@media (max-width:440px){
+  .consent-actions{grid-template-columns:1fr}
+}

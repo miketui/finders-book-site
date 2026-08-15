@@ -237,17 +237,74 @@ console.log('\n  mobile navigation');
     console.log('    ok    mobile navigation opens with aria-expanded=true');
   }
   await page.keyboard.press('Escape');
+  await page.locator('#sitenav').waitFor({ state: 'hidden', timeout: 1500 }).catch(() => {});
   const expandedAfter = await toggle.getAttribute('aria-expanded');
-  if (expandedAfter !== 'false') {
-    console.log(`    FAIL  Escape did not close mobile navigation (expanded=${expandedAfter})`);
+  const navVisibleAfter = await page.locator('#sitenav').isVisible();
+  if (expandedAfter !== 'false' || navVisibleAfter) {
+    console.log(`    FAIL  Escape did not close mobile navigation (visible=${navVisibleAfter}, expanded=${expandedAfter})`);
     failures++;
   } else {
-    console.log('    ok    Escape closes mobile navigation');
+    console.log('    ok    Escape hides mobile navigation with aria-expanded=false');
   }
   await context.close();
 }
 
-// --- 6. the specific regression: sub-pages must survive without GSAP ---
+// --- 6. optional analytics is blocked until explicit consent ---
+console.log('\n  analytics consent');
+{
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  const providerRequests = [];
+  page.on('request', (request) => {
+    const url = request.url();
+    if (url.includes('googletagmanager.com/gtag/js') || url.includes('/_vercel/insights/script.js')) {
+      providerRequests.push(url);
+    }
+  });
+  await page.route('https://www.googletagmanager.com/**', (route) => route.abort());
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
+  await page.waitForTimeout(200);
+
+  const bannerVisible = await page.locator('.consent-banner').isVisible();
+  if (!bannerVisible || providerRequests.length) {
+    console.log(`    FAIL  initial consent state (banner=${bannerVisible}, provider requests=${providerRequests.length})`);
+    failures++;
+  } else {
+    console.log('    ok    no analytics provider request before a choice');
+  }
+
+  await page.locator('.consent-allow').click();
+  await page.waitForTimeout(200);
+  const allowed = await page.evaluate(() => localStorage.getItem('fb_analytics_consent_v1'));
+  if (allowed !== 'granted' || providerRequests.length !== 2) {
+    console.log(`    FAIL  allow choice (stored=${allowed}, provider requests=${providerRequests.length})`);
+    failures++;
+  } else {
+    console.log('    ok    explicit allow loads GA4 and Vercel Analytics once');
+  }
+
+  await page.locator('.consent-reopen').click();
+  await page.locator('.consent-decline').click();
+  const withdrawn = await page.evaluate(() => {
+    const before = (window.dataLayer || []).length;
+    window.fbTrack('event_after_withdrawal');
+    return {
+      stored: localStorage.getItem('fb_analytics_consent_v1'),
+      disabled: window['ga-disable-G-ZXX0M4VYT5'],
+      before,
+      after: (window.dataLayer || []).length,
+    };
+  });
+  if (withdrawn.stored !== 'denied' || withdrawn.disabled !== true || withdrawn.after !== withdrawn.before) {
+    console.log(`    FAIL  withdrawal did not stop site events (${JSON.stringify(withdrawn)})`);
+    failures++;
+  } else {
+    console.log('    ok    withdrawal disables GA and drops future site events');
+  }
+  await context.close();
+}
+
+// --- 7. the specific regression: sub-pages must survive without GSAP ---
 console.log('\n  no-GSAP resilience (blocks the CDN, simulates failure)');
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, ignoreHTTPSErrors: true });

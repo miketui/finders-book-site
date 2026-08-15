@@ -19,12 +19,21 @@ const csp = vercel.headers
   .flatMap((entry) => entry.headers || [])
   .find((header) => header.key.toLowerCase() === 'content-security-policy')?.value || '';
 const allowedHashes = new Set([...csp.matchAll(/'sha256-([^']+)'/g)].map((match) => match[1]));
+const consentSource = readFileSync('consent.js', 'utf8');
 
 let failed = false;
 const fail = (message) => { failed = true; console.error(`  FAIL  ${message}`); };
 const ok = (message) => console.log(`  ok    ${message}`);
 
 console.log('\ncontent security policy');
+
+if (!/(?:^|;)\s*frame-ancestors\s+'self'\s*(?:;|$)/.test(csp)) {
+  fail("production CSP must enforce frame-ancestors 'self'");
+}
+if (!consentSource.includes('G-ZXX0M4VYT5') ||
+    !consentSource.includes('/_vercel/insights/script.js')) {
+  fail('consent.js must own both optional analytics loaders');
+}
 
 for (const page of PAGES) {
   const html = readFileSync(page, 'utf8');
@@ -36,13 +45,18 @@ for (const page of PAGES) {
     if (!allowedHashes.has(hash)) fail(`${page} has an inline script missing from script-src: sha256-${hash}`);
   }
 
-  if (!html.includes('https://www.googletagmanager.com/gtag/js?id=G-ZXX0M4VYT5')) {
-    fail(`${page} is missing the GA4 loader`);
+  const consentIndex = html.indexOf('src="consent.js"');
+  const analyticsIndex = html.indexOf('src="analytics.js"');
+  if (consentIndex === -1 || analyticsIndex === -1 || consentIndex > analyticsIndex) {
+    fail(`${page} must load consent.js before analytics.js`);
   }
-  if (!html.includes('/_vercel/insights/script.js')) {
-    fail(`${page} is missing Vercel Web Analytics`);
+  if (!html.includes('href="consent.css"')) {
+    fail(`${page} is missing consent.css`);
   }
-  if (!failed) ok(`${page} inline scripts and telemetry are CSP-compatible`);
+  if (html.includes('googletagmanager.com/gtag/js') || html.includes('/_vercel/insights/script.js')) {
+    fail(`${page} loads optional analytics before consent`);
+  }
+  if (!failed) ok(`${page} inline scripts and consent-gated telemetry are CSP-compatible`);
 }
 
 if (failed) {

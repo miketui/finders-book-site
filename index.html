@@ -39,6 +39,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="chrome.css">
 <link rel="stylesheet" href="pages.css">
+<link rel="stylesheet" href="consent.css">
 
 <style>
 /* Critical @font-face declarations kept inline to avoid FOIT */
@@ -59,20 +60,6 @@
 <!-- v3.2 ELEVATION: motion opt-in, runs before first paint -->
 <script>(function(){try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.className+=" fx";}}catch(e){}})();</script>
 
-<!-- Vercel Web Analytics -->
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
-
-<!-- Google tag (gtag.js) — GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZXX0M4VYT5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-ZXX0M4VYT5');
-</script>
 </head>
 <body>
 
@@ -670,7 +657,8 @@
   <p class="lb-cap" id="lbCap"></p>
 </div>
 
-<script src="analytics.js"></script>
+<script src="consent.js" defer></script>
+<script src="analytics.js" defer></script>
 <script src="chrome.js" defer></script>
 
 <!-- GSAP + ScrollTrigger + SplitText (v3.13+, all free post-Webflow acquisition) -->
