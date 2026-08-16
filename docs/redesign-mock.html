@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Act Zero</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Interactive redesign mock for The Finder's Book: an Act Zero anxiety-to-relief opening, an earned book reveal, and a re-sequenced page.">
+<!--
+  ============================================================================
+  THE FINDER'S BOOK · ACT ZERO — interactive redesign mock
+  Companion to docs/redesign-direction.html
+  ----------------------------------------------------------------------------
+  This is a DESIGN MOCK, not a shipping page. It is not in the sitemap, not in
+  the validation PAGES allowlist, and not linked from site navigation.
+  It reuses the live design tokens verbatim (styles.css :root) so that anything
+  approved here can be lifted into index.html without a palette or type change.
+
+  Single visual world by intent: the page is the book's own trade dress, so it
+  does not follow the viewer's light/dark preference. Every colour is painted
+  explicitly from a token; nothing inherits a host ground.
+  ============================================================================
+-->
+
+<style>
+/* ---------- faces: same variable fonts the live site self-hosts ---------- */
+@font-face{font-family:"Newsreader Local";font-style:normal;font-display:swap;font-weight:200 800;
+  src:url("../assets/fonts/newsreader-latin-variable-normal.woff2") format("woff2-variations")}
+@font-face{font-family:"Newsreader Local";font-style:italic;font-display:swap;font-weight:200 800;
+  src:url("../assets/fonts/newsreader-latin-variable-italic.woff2") format("woff2-variations")}
+@font-face{font-family:"Archivo Local";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("../assets/fonts/archivo-latin-variable-normal.woff2") format("woff2-variations")}
+
+/* ---------- tokens: lifted unchanged from styles.css, plus one new step ---------- */
+:root{
+  --pine-900:#0B1F19; --pine:#14372D; --pine-700:#1D4A3C;
+  --paper:#FAF4E8; --paper-hi:#FDFAF1; --sage:#DCE6E0;
+  --gold:#B8923D; --gold-hi:#DFC99D; --gold-ink:#7A5E22;
+  --mute:#4A5D55; --mute-pine:#A9BDB2;
+  --hair:rgba(20,55,45,.16); --hair-lt:rgba(250,244,232,.20);
+  --serif:"Newsreader Local",Georgia,"Times New Roman",serif;
+  --sans:"Archivo Local",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --r:3px; --wrap:1180px;
+  /* NEW — the single display step. Used exactly three times on the page. */
+  --h-display:clamp(3.1rem,8.4vw,6.6rem);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;overflow-x:clip}
+body{
+  margin:0;background:var(--pine-900);color:var(--pine);
+  font-family:var(--serif);font-size:1.0625rem;line-height:1.65;
+  font-optical-sizing:auto;-webkit-font-smoothing:antialiased;overflow-x:clip;
+}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{margin:0;font-weight:400;line-height:1.06;letter-spacing:-.02em;text-wrap:balance}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+:focus-visible{outline:3px solid var(--paper-hi);outline-offset:3px;border-radius:2px}
+
+.wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 clamp(1.15rem,4vw,2.5rem)}
+
+/* ============================ REVIEW CHROME ============================ */
+.bar{
+  position:sticky;top:0;z-index:120;background:rgba(11,31,25,.93);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--hair-lt);
+}
+.bar-in{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;padding:.7rem clamp(1rem,3vw,2rem)}
+.bar-id{
+  font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--gold-hi);margin-right:auto;
+}
+.ctl{
+  font-family:var(--sans);font-size:.7rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--gold-hi);background:transparent;border:1px solid rgba(223,201,157,.42);
+  border-radius:var(--r);padding:.5rem .9rem;cursor:pointer;
+}
+.ctl:hover{background:rgba(223,201,157,.1)}
+.ctl-solid{color:var(--pine-900);background:var(--gold-hi);border-color:var(--gold-hi)}
+
+/* Annotation blocks — hidden until "Show notes" */
+.note{display:none;border-top:2px solid var(--gold);padding-top:.85rem;margin-top:1.5rem;max-width:64ch}
+.notes-on .note{display:block}
+.note-tag{
+  display:inline-block;font-family:var(--sans);font-size:.58rem;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pine-900);background:var(--gold);padding:.26rem .5rem;border-radius:2px;
+}
+.note p{font-family:var(--sans);font-size:.73rem;line-height:1.55;margin:.6rem 0 0;color:var(--mute)}
+.on-dark .note p{color:var(--mute-pine)}
+.act-label{
+  display:none;align-items:center;gap:.8rem;font-family:var(--sans);font-size:.58rem;font-weight:700;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--mute-pine);
+  padding:1.6rem clamp(1.15rem,4vw,2.5rem) .2rem;max-width:var(--wrap);margin:0 auto;
+}
+.notes-on .act-label{display:flex}
+.act-label span{flex:1;height:1px;background:rgba(223,201,157,.34)}
+
+/* ============================ SHARED GRAMMAR ============================ */
+.eyebrow{
+  font-family:var(--sans);font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold-ink);display:flex;align-items:center;gap:.85rem;margin:0 0 1.4rem;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--gold);opacity:.55;max-width:180px}
+.on-dark .eyebrow{color:var(--gold-hi)}
+.on-dark .eyebrow::after{background:var(--gold-hi);opacity:.4}
+
+.h-lg{font-size:clamp(1.9rem,3.9vw,2.9rem);line-height:1.09;letter-spacing:-.024em}
+.h-md{font-size:clamp(1.3rem,2.2vw,1.65rem);line-height:1.22}
+.lede{font-size:clamp(1.06rem,1.5vw,1.2rem);line-height:1.62;color:var(--mute);max-width:58ch}
+.on-dark .lede{color:var(--mute-pine)}
+.ital{font-style:italic;color:var(--pine-700)}
+.on-dark .ital{color:var(--gold-hi)}
+.tiny{font-family:var(--sans);font-size:.76rem;line-height:1.5;color:var(--mute)}
+.on-dark .tiny{color:var(--mute-pine)}
+
+.rfield{border-top:1px solid var(--hair);padding-top:.7rem;margin-bottom:1.4rem}
+.rfield-label{
+  display:block;font-family:var(--sans);font-size:.62rem;font-weight:600;letter-spacing:.17em;
+  text-transform:uppercase;color:var(--gold-ink);margin-bottom:.4rem;
+}
+.rfield-value{font-size:1rem;line-height:1.5}
+.on-dark .rfield{border-top-color:var(--hair-lt)}
+.on-dark .rfield-label{color:var(--gold-hi)}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;font-family:var(--sans);
+  font-size:.94rem;font-weight:600;padding:1.02rem 1.85rem;border-radius:var(--r);
+  border:1.5px solid transparent;min-height:50px;
+}
+.btn-primary{background:var(--paper);color:var(--pine);border-color:var(--paper)}
+.on-light .btn-primary{background:var(--pine);color:var(--paper);border-color:var(--pine)}
+.btn-ghost{background:transparent;color:var(--pine);border-color:var(--hair)}
+
+.act{padding:clamp(4rem,8vw,7rem) 0}
+.on-dark{background:var(--pine);color:var(--paper)}
+.on-deep{background:var(--pine-900);color:var(--paper)}
+.on-light{background:var(--paper)}
+.on-hi{background:var(--paper-hi)}
+.on-sage{background:var(--sage)}
+
+/* ============================ ACT 0 · THE CALL ============================ */
+/* 4 statements, scroll-scrubbed inside one sticky stage. No product, no
+   price, no image, no button. One sentence is the entire screen. */
+#call{position:relative;background:var(--pine-900);height:460vh}
+.call-stage{
+  position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;padding:0 clamp(1.5rem,7vw,7rem);
+}
+.call-glow{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(184,146,61,.13),transparent 62%);
+}
+/* the spine: a single gold hairline that grows as you descend Act 0.
+   It is the book's edge, drawn before the book exists. */
+.spine{position:absolute;left:clamp(1.5rem,4vw,3.4rem);top:0;width:1px;background:var(--gold);opacity:.55;height:0}
+.call-lines{position:relative;width:100%;max-width:min(1020px,92vw);margin:0 auto;text-align:center}
+.call-line{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  /* measure is set on the element that carries the display size, so ch
+     resolves against the display step and not against body copy */
+  max-width:15ch;margin-left:auto;margin-right:auto;
+  font-size:var(--h-display);line-height:.96;letter-spacing:-.038em;color:var(--paper);
+  opacity:0;visibility:hidden;
+}
+.call-line em{font-style:italic;color:var(--gold-hi)}
+.call-line.is-on{opacity:1;visibility:visible}
+.call-line .clip{display:block;overflow:hidden}
+.call-line .clip i{display:block;font-style:normal;transform:translateY(104%);transition:transform .82s var(--ease)}
+.call-line.is-on .clip i{transform:translateY(0)}
+.call-line .clip:nth-child(2) i{transition-delay:.07s}
+.call-line .clip:nth-child(3) i{transition-delay:.14s}
+/* the turn — the relief. Smaller than the questions on purpose: the answer
+   does not need to shout once the questions have done the work. */
+.call-line.turn{font-size:clamp(1.9rem,4.2vw,3.2rem);letter-spacing:-.026em;max-width:20ch;margin:0 auto}
+.call-hint{
+  position:absolute;left:0;right:0;bottom:2.2rem;text-align:center;font-family:var(--sans);
+  font-size:.62rem;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-pine);
+  opacity:.75;transition:opacity .4s var(--ease);
+}
+.call-hint.gone{opacity:0}
+
+/* ============================ ACT I · THE REVEAL ============================ */
+#reveal{position:relative;background:var(--pine);overflow:hidden}
+.reveal-grain{
+  position:absolute;inset:0;pointer-events:none;opacity:.3;
+  background-image:linear-gradient(120deg,rgba(250,244,232,.06) 0 1px,transparent 1px 100%);
+  background-size:38px 38px;
+}
+.reveal-wash{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(110% 78% at 82% 2%,rgba(184,146,61,.24),transparent 60%);
+}
+/* the opening gesture: a full-width gold hairline that draws across the top
+   of the reveal. It is the cover being lifted. */
+.opening-rule{
+  position:absolute;left:0;right:0;top:0;height:1px;background:var(--gold);
+  transform:scaleX(0);transform-origin:left center;
+}
+.is-revealed .opening-rule{transform:scaleX(1);transition:transform .72s .2s var(--ease)}
+
+.reveal-grid{
+  position:relative;z-index:2;display:grid;grid-template-columns:1.1fr .9fr;
+  gap:clamp(2rem,5vw,4.5rem);align-items:center;
+  padding:clamp(4rem,8vw,7rem) 0 clamp(2.5rem,4vw,3.5rem);
+}
+.reveal-grid .eyebrow{color:var(--gold-hi);margin-bottom:1.5rem}
+.reveal-grid .eyebrow::after{background:var(--gold-hi);opacity:.42}
+/* The hero headline stays on the EXISTING .h-xl step, not the new display
+   step. It carries the keyword copy that must not be shortened, and the
+   display step is reserved for the two places where the line is short
+   enough to be an image in its own right: Act 0, and the Moment callout. */
+h1.display{font-size:clamp(2.4rem,4.5vw,3.6rem);line-height:1.03;letter-spacing:-.03em;color:var(--paper);margin:0 0 1.7rem}
+h1.display .clip{display:block;overflow:hidden}
+h1.display .clip i{display:block;font-style:normal;transform:translateY(105%)}
+.is-revealed h1.display .clip i{transform:translateY(0);transition:transform .9s var(--ease)}
+.is-revealed h1.display .clip:nth-child(2) i{transition-delay:.08s}
+.is-revealed h1.display .clip:nth-child(3) i{transition-delay:.16s}
+h1.display em{font-style:italic;color:var(--gold-hi)}
+
+.reveal-lede{font-size:1.16rem;line-height:1.6;color:var(--mute-pine);max-width:42ch;margin:0 0 2rem}
+.reveal-cta{display:flex;flex-wrap:wrap;gap:.9rem 1.4rem;align-items:center}
+.quiet-link{
+  font-family:var(--sans);font-size:.84rem;font-weight:600;color:var(--gold-hi);
+  border-bottom:1px solid rgba(223,201,157,.4);padding-bottom:.15rem;
+}
+.reveal-lede,.reveal-cta{opacity:0;transform:translateY(14px)}
+.is-revealed .reveal-lede{opacity:1;transform:none;transition:opacity .6s .9s var(--ease),transform .6s .9s var(--ease)}
+.is-revealed .reveal-cta{opacity:1;transform:none;transition:opacity .6s 1.05s var(--ease),transform .6s 1.05s var(--ease)}
+
+/* ---- the object ---- */
+.stage{position:relative;display:flex;justify-content:center;perspective:1700px;perspective-origin:50% 44%}
+.book{
+  position:relative;width:clamp(190px,21vw,282px);aspect-ratio:1100/1423;
+  transform-style:preserve-3d;transform:rotateY(196deg) translateY(42px);opacity:0;
+}
+/* ONE earned rotation: 214 degrees of travel that decelerates onto the
+   three-quarter view and STOPS. Not a loop. A loop is a mockup; a landing
+   is an object. */
+.is-revealed .book{
+  opacity:1;transform:rotateY(-18deg) translateY(0);
+  transition:transform 2.6s .35s var(--ease),opacity .9s .35s var(--ease);
+}
+.book-face{position:absolute;inset:0;backface-visibility:hidden}
+.book-front{transform:translateZ(11px);border-radius:2px 3px 3px 2px}
+.book-front img{width:100%;height:100%;object-fit:cover;border-radius:2px 3px 3px 2px;box-shadow:0 0 0 1px rgba(250,244,232,.14)}
+.book-back{
+  transform:rotateY(180deg) translateZ(11px);border-radius:3px 2px 2px 3px;background:var(--pine);
+  box-shadow:0 0 0 1px rgba(250,244,232,.14) inset;
+  display:flex;flex-direction:column;justify-content:space-between;padding:clamp(.9rem,1.5vw,1.4rem);
+}
+.book-back .bk-kicker{font-family:var(--sans);font-size:.48rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi)}
+.book-back .bk-rule{height:1px;background:var(--gold);opacity:.6;margin:.6rem 0 .8rem}
+.book-back .bk-copy{font-size:.76rem;line-height:1.45;color:var(--paper)}
+.book-back .bk-foot{font-family:var(--sans);font-size:.5rem;line-height:1.5;color:var(--mute-pine)}
+.book-spine{
+  position:absolute;left:0;top:0;bottom:0;width:22px;transform-origin:left center;
+  transform:rotateY(-90deg) translateZ(11px);
+  background:linear-gradient(90deg,var(--pine-900),var(--pine) 45%,var(--pine-900));
+  display:flex;align-items:center;justify-content:center;
+}
+.book-spine span{
+  font-family:var(--sans);font-size:.45rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold-hi);writing-mode:vertical-rl;white-space:nowrap;
+}
+.book-edge{
+  position:absolute;right:0;top:0;bottom:0;width:22px;transform-origin:right center;
+  transform:rotateY(90deg) translateZ(11px);
+  background:repeating-linear-gradient(90deg,var(--paper) 0 1.5px,#E4DAC6 1.5px 3px);
+}
+.book-shadow{
+  position:absolute;left:-16%;right:-16%;bottom:-32px;height:40px;filter:blur(8px);opacity:0;
+  background:radial-gradient(58% 100% at 50% 0%,rgba(0,0,0,.65),transparent 72%);
+}
+.is-revealed .book-shadow{opacity:1;transition:opacity 1s 1.2s var(--ease)}
+
+/* ---- fact rail: the old proof-strip band, folded into the hero base ---- */
+.fact-rail{
+  position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--hair-lt);
+}
+.fact{padding:1.3rem clamp(.9rem,1.6vw,1.4rem);border-right:1px solid var(--hair-lt);opacity:0;transform:translateY(12px)}
+.fact:last-child{border-right:0}
+.fact:first-child{padding-left:0}
+.is-revealed .fact{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.is-revealed .fact:nth-child(1){transition-delay:1.3s}
+.is-revealed .fact:nth-child(2){transition-delay:1.38s}
+.is-revealed .fact:nth-child(3){transition-delay:1.46s}
+.is-revealed .fact:nth-child(4){transition-delay:1.54s}
+.fact b{display:block;font-weight:400;font-size:1.02rem;color:var(--paper);margin-bottom:.15rem}
+.fact span{font-family:var(--sans);font-size:.7rem;color:var(--mute-pine);line-height:1.45}
+
+/* ============================ ACT II · THE MOMENT ============================ */
+.moment-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(2rem,5vw,4rem)}
+.moment-callout{
+  font-size:clamp(1.6rem,3.4vw,2.5rem);line-height:1.16;letter-spacing:-.026em;font-style:italic;
+  color:var(--pine-700);border-top:2px solid var(--gold);padding-top:1.3rem;margin-top:1.8rem;max-width:20ch;
+}
+.moment-grid p{margin:0 0 1.1rem;max-width:56ch;color:var(--mute)}
+
+/* ============================ ACT III · THE SNAPSHOT ============================ */
+.snap-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:clamp(2rem,5vw,4rem);align-items:center}
+.snap-card{
+  position:relative;background:var(--paper-hi);border-top:4px solid var(--gold);border-radius:var(--r);
+  box-shadow:0 24px 60px -30px rgba(11,31,25,.45);padding:clamp(1.6rem,3vw,2.4rem);
+}
+.snap-kicker{font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.19em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.35rem}
+.snap-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 1.6rem;margin-top:1.4rem}
+.snap-fields .rfield{margin-bottom:1.2rem}
+/* WRITE-IN: the labels and rules are already printed; the values arrive.
+   A fractional rotation keeps it reading as a hand, not a form submit. */
+.wv{display:block;font-style:italic;color:var(--pine-700);font-size:1.02rem;opacity:0;transform:translateY(7px) rotate(-.45deg)}
+.is-written .wv{opacity:1;transform:none;transition:opacity .55s var(--ease),transform .55s var(--ease)}
+.is-written .wv-1{transition-delay:.10s}
+.is-written .wv-2{transition-delay:.19s}
+.is-written .wv-3{transition-delay:.28s}
+.is-written .wv-4{transition-delay:.37s}
+.snap-foot{border-top:1px solid var(--hair);padding-top:.9rem;font-family:var(--sans);font-size:.72rem;line-height:1.5;color:var(--mute)}
+
+/* ============================ ACT IV · THE DOCTRINE ============================ */
+.doc-cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.4rem,3vw,2.4rem);margin-top:2.2rem}
+.doc-panel{border:1px solid var(--hair-lt);border-radius:var(--r);padding:clamp(1.35rem,2.5vw,2rem);background:rgba(250,244,232,.045)}
+.doc-panel h3{color:var(--paper);font-size:1.2rem;margin-bottom:1.1rem}
+.doc-panel li{
+  position:relative;padding:.6rem 0 .6rem 1.7rem;border-bottom:1px solid var(--hair-lt);
+  font-family:var(--sans);font-size:.88rem;line-height:1.45;
+}
+.doc-panel li:last-child{border-bottom:0}
+.doc-yes li{color:var(--paper)}
+.doc-yes li::before{content:"";position:absolute;left:0;top:1rem;width:9px;height:9px;border-radius:50%;background:var(--gold-hi)}
+.doc-no li{color:var(--mute-pine)}
+.doc-no li::before{content:"";position:absolute;left:0;top:1.22rem;width:11px;height:1.5px;background:var(--mute-pine);opacity:.75}
+.doc-no li s{text-decoration:none;position:relative;display:inline-block}
+/* STRIKE: the promise being kept in front of you, one line at a time. */
+.doc-no li s::after{
+  content:"";position:absolute;left:0;right:0;top:53%;height:1px;background:var(--mute-pine);
+  transform:scaleX(0);transform-origin:left center;
+}
+.is-struck .doc-no li s::after{transform:scaleX(1);transition:transform .34s var(--ease)}
+.is-struck .doc-no li:nth-child(1) s::after{transition-delay:.05s}
+.is-struck .doc-no li:nth-child(2) s::after{transition-delay:.11s}
+.is-struck .doc-no li:nth-child(3) s::after{transition-delay:.17s}
+.is-struck .doc-no li:nth-child(4) s::after{transition-delay:.23s}
+.is-struck .doc-no li:nth-child(5) s::after{transition-delay:.29s}
+
+/* ============================ ACT V · THE SPREAD ============================ */
+#spread{background:var(--sage);overflow:hidden}
+.spread-head{max-width:56ch;margin-bottom:2.4rem}
+.spread-vp{overflow:hidden;padding-left:max(calc((100vw - var(--wrap))/2),clamp(1.15rem,4vw,2.5rem))}
+.spread-track{display:flex;gap:clamp(1rem,2.2vw,1.9rem);will-change:transform}
+.spread-track figure{margin:0;flex:0 0 clamp(215px,25vw,325px)}
+.spread-track img{width:100%;border:1px solid var(--hair);border-radius:var(--r);box-shadow:0 24px 50px -26px rgba(11,31,25,.5)}
+.spread-track figcaption{font-family:var(--sans);font-size:.71rem;color:var(--mute);margin-top:.7rem}
+.veil{position:relative;overflow:hidden;border:1px solid var(--hair);border-radius:var(--r);box-shadow:0 24px 50px -26px rgba(11,31,25,.5);cursor:pointer;width:100%;padding:0;background:none;display:block}
+.veil img{border:0;border-radius:0;box-shadow:none;filter:blur(9px) saturate(.66);transform:scale(1.07)}
+.veil-over{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,55,45,.34),rgba(20,55,45,.88));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.3rem;gap:.55rem}
+.veil-over .k{font-family:var(--sans);font-size:.56rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi)}
+.veil-over .t{font-size:1.1rem;line-height:1.25;color:var(--paper)}
+.veil-over .a{font-family:var(--sans);font-size:.7rem;font-weight:600;color:var(--paper);border-bottom:1px solid rgba(250,244,232,.5);padding-bottom:.12rem;margin-top:.3rem}
+.spread-meter{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;padding-top:2rem}
+.spread-meter p{font-family:var(--sans);font-size:.76rem;letter-spacing:.05em;color:var(--mute)}
+.meter{flex:1;min-width:110px;max-width:240px;height:2px;background:var(--hair);position:relative}
+.meter i{position:absolute;inset:0 auto 0 0;width:0;background:var(--gold);display:block}
+
+/* overlay: the seven pages that left the grid still live here */
+.sheet{position:fixed;inset:0;z-index:200;background:rgba(11,31,25,.96);overflow:auto;padding:clamp(1.2rem,4vw,3rem);display:none}
+.sheet.open{display:block}
+.sheet-in{max-width:1080px;margin:0 auto}
+.sheet-hd{display:flex;align-items:flex-start;gap:1.5rem;margin-bottom:2rem}
+.sheet-hd h3{color:var(--paper);font-size:clamp(1.5rem,3vw,2.1rem);margin-bottom:.5rem}
+.sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1.2rem}
+.sheet-grid figure{margin:0}
+.sheet-grid img{border:1px solid var(--hair-lt);border-radius:2px}
+.sheet-grid figcaption{font-family:var(--sans);font-size:.66rem;color:var(--mute-pine);margin-top:.5rem}
+
+/* ============================ ACT VI · WHAT ARRIVES ============================ */
+.arrive{border-top:1px solid var(--hair);margin-top:2.2rem}
+.arrive-row{display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:baseline;padding:1.15rem 0;border-bottom:1px solid var(--hair)}
+.arrive-row .n{font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-ink);min-width:5.5rem}
+.arrive-row h3{font-size:1.08rem;margin-bottom:.2rem}
+.arrive-row p{font-size:.95rem;color:var(--mute);line-height:1.5;max-width:62ch}
+.fmt{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.2rem,3vw,2.2rem);margin-top:2.4rem}
+.fmt-card{border-top:2px solid var(--gold);padding-top:1.1rem}
+.fmt-card h3{font-size:1.15rem;margin-bottom:.6rem}
+.fmt-card p{font-size:.93rem;color:var(--mute);line-height:1.55;margin-bottom:.7rem}
+
+/* ============================ ACT VII · TRUST ============================ */
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1.4rem,3vw,2.4rem);margin-top:2.2rem}
+.trust h3{font-size:1.1rem;margin-bottom:.6rem}
+.trust p{font-size:.95rem;line-height:1.55;color:var(--mute)}
+.trust-foot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:clamp(1.4rem,3vw,2.4rem);margin-top:2.8rem;padding-top:1.6rem;border-top:1px solid var(--hair)}
+
+/* ============================ ACT VIII · THE LEDGER ============================ */
+.first-pass{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--hair);margin-bottom:3.4rem}
+.fp{padding:1.2rem 1.2rem 1.2rem 0;border-right:1px solid var(--hair)}
+.fp:last-child{border-right:0}
+.fp b{display:block;font-weight:400;font-size:1rem;margin-bottom:.2rem}
+.fp span{font-family:var(--sans);font-size:.71rem;line-height:1.45;color:var(--mute)}
+.ledger{border-top:1px solid var(--hair)}
+.row{display:grid;grid-template-columns:120px 1fr auto;gap:1.5rem;align-items:center;padding:1.55rem 0;border-bottom:1px solid var(--hair)}
+.row .price{font-size:2rem;line-height:1;letter-spacing:-.03em}
+.row .price sup{font-size:.42em;top:-.85em;position:relative;font-family:var(--sans);font-weight:600}
+.row .tier{font-family:var(--sans);font-size:.66rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.4rem}
+.row .desc{font-size:1rem;color:var(--mute);line-height:1.5}
+/* the recommended tier is signalled by inversion and weight — never a pill */
+.row-lead{
+  background:var(--pine);color:var(--paper);border-radius:var(--r);border-bottom:0;
+  padding:1.9rem 1.5rem;margin:.5rem 0;box-shadow:0 24px 60px -30px rgba(11,31,25,.45);
+}
+.row-lead .price{font-size:2.55rem;color:var(--paper)}
+.row-lead .tier{color:var(--gold-hi)}
+.row-lead .desc{color:var(--paper)}
+.row-lead .btn{background:var(--paper);color:var(--pine);border-color:var(--paper)}
+
+/* ============================ ACT IX · GAP CHECK + FAQ ============================ */
+.gap-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:clamp(2rem,5vw,4rem);align-items:start}
+.gap-list li{position:relative;padding-left:1.65rem;font-size:.97rem;color:var(--mute);margin-bottom:.7rem}
+.gap-list li::before{content:"";position:absolute;left:0;top:.68em;width:.6rem;height:1px;background:var(--gold)}
+.gap-card{background:var(--paper-hi);border-top:4px solid var(--gold);border-radius:var(--r);box-shadow:0 24px 60px -30px rgba(11,31,25,.45);padding:clamp(1.6rem,3vw,2.3rem)}
+.gap-card h3{font-size:1.34rem;margin-bottom:.45rem}
+.gfield{display:grid;gap:.4rem;margin-bottom:.9rem}
+.gfield label{font-family:var(--sans);font-size:.64rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-ink)}
+.gfield input{font-family:var(--serif);font-size:1rem;color:var(--pine);background:var(--paper);border:1px solid var(--hair);border-radius:var(--r);padding:.82rem .9rem;width:100%;min-height:48px}
+.gap-card .btn{width:100%}
+.gdone{display:none;border-top:1px solid var(--hair);padding-top:1.1rem;margin-top:.4rem}
+.gdone.on{display:block}
+.gdone .f{font-style:italic;color:var(--pine-700);font-size:1rem;margin-bottom:.25rem}
+.faq{margin-top:3.4rem;border-top:1px solid var(--hair)}
+.faq details{border-bottom:1px solid var(--hair)}
+.faq summary{cursor:pointer;padding:1.05rem 0;font-size:1.04rem;list-style:none;display:flex;gap:1rem;align-items:baseline}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::before{content:"+";font-family:var(--sans);color:var(--gold-ink);font-size:.9rem}
+.faq details[open] summary::before{content:"–"}
+.faq .body{padding:0 0 1.15rem 1.9rem;font-size:.95rem;line-height:1.6;color:var(--mute);max-width:70ch}
+
+/* ============================ ACT X · CLOSE ============================ */
+#close{text-align:center;position:relative;overflow:hidden}
+.close-wash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(78% 88% at 50% 0%,rgba(184,146,61,.19),transparent 62%)}
+.close-in{position:relative;max-width:720px;margin:0 auto}
+#close .eyebrow{justify-content:center;color:var(--gold-hi)}
+#close .eyebrow::after{display:none}
+#close h2{color:var(--paper);font-size:clamp(2rem,4.2vw,3.2rem);margin-bottom:1.2rem}
+#close p{color:var(--mute-pine);font-size:1.1rem;line-height:1.6;max-width:50ch;margin:0 auto 2.1rem}
+
+/* ============================ SUPPRESSED CHROME ============================ */
+/* The header CTA and the sticky bar do not exist during Act 0. They arrive
+   with the book, so nothing competes with the first four sentences. */
+.late{opacity:0;visibility:hidden;transition:opacity .5s var(--ease),visibility .5s}
+.chrome-on .late{opacity:1;visibility:visible}
+
+/* ============================ RESPONSIVE ============================ */
+@media (max-width:900px){
+  .reveal-grid,.moment-grid,.snap-grid,.doc-cols,.gap-grid,.fmt,.trust-foot{grid-template-columns:1fr}
+  .trust{grid-template-columns:1fr}
+  .fact-rail{grid-template-columns:1fr 1fr}
+  .fact{border-bottom:1px solid var(--hair-lt)}
+  .fact:nth-child(2){border-right:0}
+  .fact:nth-child(3){padding-left:0}
+  .first-pass{grid-template-columns:1fr 1fr}
+  .fp{border-bottom:1px solid var(--hair)}
+  .fp:nth-child(2){border-right:0}
+  .fp:nth-child(3){padding-left:0}
+  .row{grid-template-columns:auto 1fr;gap:.4rem 1.2rem}
+  .row .btn{grid-column:1/-1;margin-top:.8rem;width:100%}
+  .stage{order:-1;margin-bottom:1.5rem}
+  #call{height:340vh}
+  .snap-fields{grid-template-columns:1fr}
+}
+
+/* ============================ REDUCED MOTION ============================ */
+/* Act 0 stops being a scrubbed sequence and becomes one static screen with
+   the three questions stacked. Nothing is lost; nothing moves. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  #call{height:auto}
+  .call-stage{position:static;height:auto;padding:clamp(4rem,10vw,7rem) clamp(1.5rem,7vw,7rem);display:block}
+  .call-lines{max-width:26ch;margin:0 auto;text-align:left}
+  .call-line{position:static;transform:none;opacity:1;visibility:visible;margin-bottom:2.2rem;font-size:clamp(1.7rem,4vw,2.6rem)}
+  .call-line .clip i{transform:none}
+  .call-hint{display:none}
+  .spine{height:100%!important}
+  .book{opacity:1;transform:rotateY(-18deg)}
+  .book-shadow{opacity:1}
+  h1.display .clip i,.reveal-lede,.reveal-cta,.fact,.wv,.book{opacity:1;transform:none}
+  .book{transform:rotateY(-18deg)}
+  .opening-rule{transform:scaleX(1)}
+  .doc-no li s::after{transform:scaleX(1)}
+  .late{opacity:1;visibility:visible}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== REVIEW CHROME ===================== -->
+<div class="bar">
+  <div class="bar-in">
+    <p class="bar-id">The Finder's Book · Act Zero redesign mock</p>
+    <button class="ctl ctl-solid" type="button" id="replay">Replay from the top</button>
+    <button class="ctl" type="button" id="notesBtn" aria-pressed="false">Show notes</button>
+    <button class="ctl" type="button" id="skipBtn">Skip Act 0</button>
+  </div>
+</div>
+
+<main id="main">
+
+<!-- ===================== ACT 0 · THE CALL ===================== -->
+<p class="act-label">Act 0 · The call<span></span>Motion: Call — scrubbed, 4 statements</p>
+
+<section id="call" aria-label="Opening sequence">
+  <div class="call-stage">
+    <div class="call-glow" aria-hidden="true"></div>
+    <div class="spine" id="spine" aria-hidden="true"></div>
+
+    <div class="call-lines">
+      <p class="call-line" data-slot="0">
+        <span class="clip"><i>At some point,</i></span>
+        <span class="clip"><i>someone will have</i></span>
+        <span class="clip"><i>to step in.</i></span>
+      </p>
+      <p class="call-line" data-slot="1">
+        <span class="clip"><i>What would</i></span>
+        <span class="clip"><i>they actually</i></span>
+        <span class="clip"><i><em>know?</em></i></span>
+      </p>
+      <p class="call-line" data-slot="2">
+        <span class="clip"><i>And what would</i></span>
+        <span class="clip"><i>they have to</i></span>
+        <span class="clip"><i><em>search for?</em></i></span>
+      </p>
+      <p class="call-line turn" data-slot="3">
+        <span class="clip"><i>There is one place</i></span>
+        <span class="clip"><i>that answers <em>all three.</em></i></span>
+      </p>
+    </div>
+
+    <p class="call-hint" id="hint">Scroll</p>
+  </div>
+</section>
+
+<div class="note" style="max-width:none;padding:0 clamp(1.15rem,4vw,2.5rem);margin:0 auto 0;max-width:var(--wrap)">
+  <span class="note-tag">01 · Call</span>
+  <p style="color:var(--mute-pine)">Four statements, each holding the full viewport, tied to scroll position rather than a timer so the reader sets the pace. No product, no price, no image, no button, no navigation CTA — the header purchase button and the sticky bar are suppressed until the book arrives. The three questions are set in the display step; the fourth line, the relief, is set smaller on purpose: once the questions have done the work, the answer does not need to shout. The gold hairline at the left edge grows as you descend — the book's spine, drawn before the book exists. Under reduced motion this collapses to one static screen with all four lines stacked.</p>
+</div>
+
+<!-- ===================== ACT I · THE REVEAL ===================== -->
+<p class="act-label">Act I · The reveal<span></span>Motion: Reveal + Ink + Rule</p>
+
+<section id="reveal" class="on-dark" aria-label="The Finder's Book">
+  <div class="opening-rule" aria-hidden="true"></div>
+  <div class="reveal-wash" aria-hidden="true"></div>
+  <div class="reveal-grain" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="reveal-grid">
+      <div>
+        <p class="eyebrow">The Finder's Book · Family emergency binder</p>
+
+        <h1 class="display">
+          <span class="clip"><i>A family emergency</i></span>
+          <span class="clip"><i>binder that gives</i></span>
+          <span class="clip"><i>loved ones <em>one clear place to start.</em></i></span>
+        </h1>
+
+        <p class="reveal-lede">Forty-nine fillable and printable pages that record who to call, what matters, and where things are kept — using pointers, never passwords.</p>
+
+        <div class="reveal-cta">
+          <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="hero" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
+          <a class="quiet-link" href="#spread" data-scroll-cta data-placement="hero-preview">See real pages</a>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="book" id="book">
+          <div class="book-face book-front">
+            <img src="../assets/cover.webp" width="1100" height="1423" alt="The Finder's Book, Ultimate Digital Edition, front cover.">
+          </div>
+          <div class="book-face book-back">
+            <div>
+              <p class="bk-kicker">The Family Clarity System</p>
+              <div class="bk-rule"></div>
+              <p class="bk-copy">One place that records who to call, what matters, and where things are kept.</p>
+            </div>
+            <div>
+              <p class="bk-foot">No passwords. No PINs. No account numbers.</p>
+              <div class="bk-rule" style="margin:.5rem 0"></div>
+              <p class="bk-kicker" style="letter-spacing:.14em">49 pages · Ultimate Digital Edition</p>
+            </div>
+          </div>
+          <div class="book-spine"><span>The Finder's Book</span></div>
+          <div class="book-edge"></div>
+          <div class="book-shadow" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fact-rail">
+      <div class="fact"><b>49 sequential pages</b><span>Matched internal references</span></div>
+      <div class="fact"><b>Two formats included</b><span>Fillable PDF plus print PDF</span></div>
+      <div class="fact"><b>Credentials stay separate</b><span>Pointers, never passwords</span></div>
+      <div class="fact"><b>Five practical tools</b><span>Included with the Ultimate edition</span></div>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">02 · Reveal</span>
+      <p>The object arrives only here, roughly two and a half screens in. It rises forty-two pixels out of the dark and turns through two hundred and fourteen degrees over 2600ms, decelerating onto the three-quarter view — and then it stops. A loop reads as a mockup; a landing reads as an object. Hovering nudges it a few degrees; it never spins again. The headline writes in on top of the turn, and the buy button is present at 1.05s, never gated behind the rotation. The old proof strip is no longer a band — it is the base of this one.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT II · THE MOMENT ===================== -->
+<p class="act-label">Act II · The moment<span></span>Motion: Settle only</p>
+
+<section class="act on-hi" aria-label="When something changes">
+  <div class="wrap">
+    <p class="eyebrow">When something changes</p>
+    <h2 class="h-lg" style="max-width:20ch;margin-bottom:2.4rem">The emergency is hard enough. Finding the basics should not make it harder.</h2>
+
+    <div class="moment-grid">
+      <div>
+        <p>A fall. A hospital call at 6 a.m. A diagnosis that changes the next year. A parent who moves and cannot remember which bank holds the mortgage.</p>
+        <p>In that hour, someone who loves you starts opening drawers. They call siblings who do not know either. They try to identify the insurer, the attorney, the neighbour with the spare key, and the person who can care for the dog.</p>
+        <p class="moment-callout">Preparation cannot remove the hard part. It can remove the searching.</p>
+      </div>
+      <div>
+        <div class="rfield">
+          <span class="rfield-label">What it replaces</span>
+          <p class="rfield-value">Scattered folders, a mental list only one person holds, and the assumption that someone else knows.</p>
+        </div>
+        <div class="rfield">
+          <span class="rfield-label">What it is not</span>
+          <p class="rfield-value">Not a will. Not a trust. Not a power of attorney. It records <em>where those documents live</em> and who is named in them.</p>
+        </div>
+        <div class="rfield">
+          <span class="rfield-label">Who fills it in</span>
+          <p class="rfield-value">You, for your family — or you and a parent together at a kitchen table over a few short sessions.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">03 · The nerve moment</span>
+      <p>This is the strongest writing on the site and it has never been set large enough to be seen. The callout takes the second of the three permitted display-adjacent moments, cut from twenty-one words to thirteen so it can carry the size. Nothing on this screen moves.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT III · THE SNAPSHOT ===================== -->
+<p class="act-label">Act III · The book being filled<span></span>Motion: Write-in</p>
+
+<section class="act on-light" id="snapshot" aria-label="Page 2, Continuity Snapshot">
+  <div class="wrap">
+    <div class="snap-grid">
+      <div>
+        <p class="eyebrow">Page 2 · Continuity Snapshot</p>
+        <h2 class="h-lg" style="max-width:16ch;margin-bottom:1.1rem">Four answers a trusted person can act on <span class="ital">tonight.</span></h2>
+        <p class="lede">The first page anyone opens. No passwords, no PINs, no account numbers — only the pointers someone actually needs in the first hour.</p>
+      </div>
+
+      <div class="snap-card">
+        <p class="snap-kicker">Page 2 · Example entries</p>
+        <h3 class="h-md">Continuity Snapshot</h3>
+        <div class="snap-fields">
+          <div class="rfield">
+            <span class="rfield-label">First person to call</span>
+            <span class="wv wv-1">Dana · 555 0147</span>
+          </div>
+          <div class="rfield">
+            <span class="rfield-label">Backup person to call</span>
+            <span class="wv wv-2">Marcus · 555 0182</span>
+          </div>
+          <div class="rfield">
+            <span class="rfield-label">Child / dependent caretaker</span>
+            <span class="wv wv-3">Aunt Ruth · next door</span>
+          </div>
+          <div class="rfield">
+            <span class="rfield-label">Pet caretaker</span>
+            <span class="wv wv-4">Dana · keys in blue dish</span>
+          </div>
+        </div>
+        <p class="snap-foot">No passwords. No PINs. No account numbers. Only the pointers a trusted person actually needs.</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">04 · Write-in</span>
+      <p>This card used to sit inside the first screen, competing with a twenty-seven word headline, a fifty-one word lede and two buttons. On its own it is the most persuasive four seconds on the site: printed labels and rules already in place, values arriving one at a time, 550ms apart by 90ms, each set at a fractional rotation so it reads as a hand rather than a form submit. Fires once, on enter, and nothing else on screen moves while it runs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT IV · THE DOCTRINE ===================== -->
+<p class="act-label">Act IV · The promise kept in front of you<span></span>Motion: Strike</p>
+
+<section class="act on-dark" id="doctrine" aria-label="Security doctrine">
+  <div class="wrap">
+    <p class="eyebrow">The security question, answered first</p>
+    <h2 class="h-lg" style="color:var(--paper);max-width:18ch">A family map, <span class="ital">not a password vault.</span></h2>
+
+    <div class="doc-cols">
+      <div class="doc-panel">
+        <h3>What the book records</h3>
+        <ul class="doc-yes">
+          <li>Who to call first, and who backs them up</li>
+          <li>Where the signed originals are physically kept</li>
+          <li>Which institutions hold what, by name</li>
+          <li>Who is named as executor, agent, or guardian</li>
+          <li>A pointer to the secure system that holds the secrets</li>
+        </ul>
+      </div>
+      <div class="doc-panel">
+        <h3>What the book never records</h3>
+        <ul class="doc-no">
+          <li><s>Passwords for any account</s></li>
+          <li><s>PINs for any card or device</s></li>
+          <li><s>Two-factor recovery codes</s></li>
+          <li><s>Full account numbers</s></li>
+          <li><s>Combinations to safes or storage units</s></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">05 · Strike</span>
+      <p>The left column is static, because those things exist. The right column strikes itself out on entry, 340ms per line, 60ms apart. The asymmetry is the entire point: one side is being written, the other is being refused. Cheapest motion on the page, highest trust return.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT V · THE SPREAD ===================== -->
+<p class="act-label">Act V · Five pages open, forty-four kept back<span></span>Motion: Spread — scrubbed</p>
+
+<section class="act" id="spread" aria-label="Pages from the book">
+  <div class="wrap spread-head">
+    <p class="eyebrow">Real pages from the actual book</p>
+    <h2 class="h-lg" style="max-width:18ch">Five real pages. Not the whole book.</h2>
+    <p class="lede" style="margin-top:.9rem">Scroll to move through the spread. Five pages open. The rest stay closed until the book is yours.</p>
+  </div>
+
+  <div class="spread-vp">
+    <div class="spread-track" id="track">
+      <figure>
+        <img src="../assets/continuity-snapshot.webp" width="900" height="1165" loading="lazy" alt="Continuity Snapshot page listing first person to call, backup, dependent caretaker and pet caretaker.">
+        <figcaption>Page 2 · Continuity Snapshot</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/letter-to-finder.webp" width="900" height="1165" loading="lazy" alt="A written letter addressed to whoever finds the book, explaining what to do first.">
+        <figcaption>Page 6 · Letter to the finder</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/documents-locator.webp" width="900" height="1165" loading="lazy" alt="Document locator page recording where each signed original is kept.">
+        <figcaption>Page 9 · Document locator</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/levels-of-access.webp" width="900" height="1165" loading="lazy" alt="Access matrix assigning Now, Later, or Never permission levels to each trusted person.">
+        <figcaption>Pages 12–13 · The access matrix</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/will-locator.webp" width="900" height="1165" loading="lazy" alt="Will locator page recording the executor, where the original is stored, and the attorney.">
+        <figcaption>Page 21 · The will</figcaption>
+      </figure>
+      <figure>
+        <button class="veil" type="button" id="veilBtn" aria-haspopup="dialog">
+          <img src="../assets/trusted-people.webp" width="900" height="1165" loading="lazy" alt="A further page from the book, shown deliberately blurred.">
+          <span class="veil-over">
+            <span class="k">Pages 22 to 49</span>
+            <span class="t">The other forty-four open when the book is yours.</span>
+            <span class="a">See all 49 pages</span>
+          </span>
+        </button>
+        <figcaption>People · access · money · property · digital life</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="wrap spread-meter">
+    <p>Five of forty-nine shown</p>
+    <div class="meter"><i id="meter"></i></div>
+  </div>
+
+  <div class="wrap">
+    <div class="note">
+      <span class="note-tag">06 · Spread</span>
+      <p>Twelve equal thumbnails is zero thumbnails — the old grid read as a contact sheet, so none of the most persuasive assets on the site was actually seen. Five, at roughly double the size, tied directly to vertical scroll: no autoplay, no arrows, no dots. The sixth card is veiled on purpose — enough proof to believe it, not enough to rebuild it. Nothing was deleted: the seven pages that left the grid live in the overlay behind "See all 49 pages". This is the only large gesture on the page, and nothing else moves while it runs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT VI · WHAT ARRIVES ===================== -->
+<p class="act-label">Act VI · What arrives<span></span>Bonuses + formats, merged</p>
+
+<section class="act on-light" aria-label="What you receive">
+  <div class="wrap">
+    <p class="eyebrow">Included with the Ultimate edition</p>
+    <h2 class="h-lg" style="max-width:22ch">Five tools that get the book started, found, and used.</h2>
+    <p class="lede" style="margin-top:.9rem">A binder nobody can find is half a binder. These close the gap between filling it in and it actually working.</p>
+
+    <div class="arrive">
+      <div class="arrive-row">
+        <span class="n">Bonus 1</span>
+        <div><h3>Emergency Fridge Card</h3><p>A single printable card for the first-hour essentials, designed for an agreed, easy-to-find location without account credentials.</p></div>
+      </div>
+      <div class="arrive-row">
+        <span class="n">Bonus 2</span>
+        <div><h3>15-Minute Secure Vault Setup</h3><p>Walks you through the secure companion system the book points to, beginning with the accounts that unlock other accounts.</p></div>
+      </div>
+      <div class="arrive-row">
+        <span class="n">Bonus 3</span>
+        <div><h3>Continuity Check-In Plan</h3><p>Creates a reliable way for someone to know <em>when</em> to look for the book. Particularly important if you live alone.</p></div>
+      </div>
+      <div class="arrive-row">
+        <span class="n">Bonus 4</span>
+        <div><h3>Trusted Person Handoff Scripts</h3><p>Copy-ready wording for the calls nobody rehearses: arranging pet care, notifying an employer, or reaching a caretaker.</p></div>
+      </div>
+      <div class="arrive-row">
+        <span class="n">Bonus 5</span>
+        <div><h3>Digital Legacy Link + QR Guide</h3><p>Direct links and QR codes for legacy-contact and inactive-account settings, with a reminder to verify current provider instructions when you use them.</p></div>
+      </div>
+      <div class="arrive-row">
+        <span class="n">Plus</span>
+        <div><h3>Start Here + License</h3><p>A one-page orientation, plain-language printing and license terms, and checksums so you can verify every file you downloaded.</p></div>
+      </div>
+    </div>
+
+    <div class="fmt">
+      <div class="fmt-card">
+        <h3>Fillable edition</h3>
+        <p>Standard AcroForm fields. Type directly into the PDF, save, and reopen. Best on a laptop or desktop in Adobe Acrobat Reader or another AcroForm-compatible reader.</p>
+        <p class="tiny"><strong>Before you start:</strong> save a working copy, type a test entry, close it, and reopen to confirm your reader preserves entries — particularly on mobile.</p>
+      </div>
+      <div class="fmt-card">
+        <h3>Print edition</h3>
+        <p>The same 49 pages, laid out for handwriting. Print at home or at a copy shop, then keep the completed pages in a binder or another agreed location.</p>
+        <p class="tiny">You can use both: type the account and contact pages, then handwrite the personal letters.</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">07 · Merge</span>
+      <p>Two bands became one. "Bonuses" and "Formats" answered the same reader question — what do I actually receive — and separating them made each feel smaller. The six near-identical bonus thumbnails are gone: at that scale they were a second contact sheet. A ledger of six rows reads faster and costs nothing in comprehension.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT VII · TRUST ===================== -->
+<p class="act-label">Act VII · Who it is for, and who made it<span></span>Two bands, merged</p>
+
+<section class="act on-hi" aria-label="Who it is for">
+  <div class="wrap">
+    <p class="eyebrow">Who it is built for</p>
+    <h2 class="h-lg" style="max-width:22ch">Built for the person everyone calls when something changes.</h2>
+
+    <div class="trust">
+      <div>
+        <h3>Adult children &amp; family caregivers</h3>
+        <p>You may be the one phoning siblings, finding the insurer, and working out who has power of attorney. Fill this in with your parent before you need it.</p>
+      </div>
+      <div>
+        <h3>Solo agers &amp; people living alone</h3>
+        <p>Independence is the point, not the problem. Choose who helps, define exactly what each person may know and when, and keep credentials outside the book entirely.</p>
+      </div>
+      <div>
+        <h3>Households, couples &amp; gift-givers</h3>
+        <p>When one person holds most of the household knowledge, this makes the essentials easier to share after a marriage, home purchase, birth, diagnosis, or move.</p>
+      </div>
+    </div>
+
+    <div class="trust-foot">
+      <div class="rfield">
+        <span class="rfield-label">Created by</span>
+        <p class="rfield-value">Joanne Godfrey and Michael David</p>
+      </div>
+      <div class="rfield">
+        <span class="rfield-label">What it is</span>
+        <p class="rfield-value">A personal information organizer and handoff map.</p>
+      </div>
+      <div class="rfield">
+        <span class="rfield-label">What it is not</span>
+        <p class="rfield-value">Professional advice, legal authority, or a place to store credentials.</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">08 · Merge</span>
+      <p>"Who it's for" and "Created with clear boundaries" ran back to back as two full reassurance bands, and consecutive reassurance dilutes. The audiences keep the band; the creator transparency becomes its footer as three ruled fields. Same words, same disclaimers, one band instead of two.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT VIII · THE LEDGER ===================== -->
+<p class="act-label">Act VIII · The handoff<span></span>Motion: Settle only</p>
+
+<section class="act on-light" id="ledger" aria-label="Editions and pricing">
+  <div class="wrap">
+    <p class="eyebrow">A focused first pass</p>
+    <h2 class="h-lg" style="max-width:20ch;margin-bottom:1.9rem">Four decisions first. The rest whenever you are ready.</h2>
+
+    <div class="first-pass">
+      <div class="fp"><b>Complete the snapshot</b><span>Page 2 · who to call, dependent and animal care</span></div>
+      <div class="fp"><b>Name two trusted people</b><span>Page 11 · the two names that make it work</span></div>
+      <div class="fp"><b>Record document locations</b><span>Page 9 · where the signed originals are kept</span></div>
+      <div class="fp"><b>Point to your secure system</b><span>Page 5 + Bonus 2 · where the secrets live</span></div>
+    </div>
+
+    <h2 class="h-lg" style="max-width:18ch;margin-bottom:2rem">Three editions. One decision.</h2>
+
+    <div class="ledger">
+      <div class="row">
+        <p class="price"><sup>$</sup>29</p>
+        <div>
+          <p class="tier">Essentials</p>
+          <p class="desc">The 49-page fillable and print editions, plus the Start Here orientation.</p>
+        </div>
+        <a class="btn btn-ghost" href="https://payhip.com/b/eHcPG" data-checkout data-placement="pricing-essentials" data-tier="essentials" data-price="29">Get Essentials</a>
+      </div>
+
+      <div class="row row-lead">
+        <p class="price"><sup>$</sup>49</p>
+        <div>
+          <p class="tier">Ultimate · recommended</p>
+          <p class="desc">Everything in Essentials, plus the five tools that make the book findable and usable, license terms and file checksums.</p>
+        </div>
+        <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="pricing-ultimate" data-tier="ultimate" data-price="49">Get Ultimate</a>
+      </div>
+
+      <div class="row">
+        <p class="price"><sup>$</sup>89</p>
+        <div>
+          <p class="tier">Family Bundle</p>
+          <p class="desc">Everything in Ultimate, plus the Family Coordination Guide, licensed for more than one household.</p>
+        </div>
+        <a class="btn btn-ghost" href="https://payhip.com/b/xPuv4" data-checkout data-placement="pricing-bundle" data-tier="bundle" data-price="89">Get the Family Bundle</a>
+      </div>
+    </div>
+
+    <p class="tiny" style="margin-top:1.7rem;max-width:76ch">One-time purchase. Files you save and keep. Consumer license: personal and household use, with printing for your own household. Professional, institutional, co-branded, and white-label use require a separate written license. Review the page previews above and the refund policy before purchase.</p>
+
+    <div class="note">
+      <span class="note-tag">09 · Ledger, not towers</span>
+      <p>Same three tiers, same prices, same Payhip links, same tracking attributes. Three towers with a floating "Most complete" pill was the one place the page looked like every other digital-product page. Rows read as a ledger — the book's own grammar — and the recommended tier is signalled by inversion and weight rather than a badge. The 15-minute first pass moves directly above the decision, where it answers the last real objection: that this is a project nobody finishes. At the point of decision, nothing performs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT IX · GAP CHECK + FAQ ===================== -->
+<p class="act-label">Act IX · The free door in<span></span>Motion: Write-in on success</p>
+
+<section class="act on-sage" id="gap" aria-label="Free Family Readiness Gap Check">
+  <div class="wrap">
+    <div class="gap-grid">
+      <div>
+        <p class="eyebrow">Free · No purchase</p>
+        <h2 class="h-lg" style="max-width:15ch;margin-bottom:1.1rem">What could your family find <span class="ital">tomorrow morning?</span></h2>
+        <p class="lede" style="margin-bottom:1.5rem">The Family Readiness Gap Check is one page, twelve questions, four minutes. You score it yourself. Most people miss more than they expect.</p>
+        <ul class="gap-list">
+          <li>Twelve questions across people, documents, access, and money</li>
+          <li>A plain scoring band, so you know whether this is urgent or simply overdue</li>
+          <li>Written to stand alone — a diagnostic, not a sample chapter</li>
+          <li>Confirm once by email. Unsubscribe in one click.</li>
+        </ul>
+      </div>
+
+      <div class="gap-card">
+        <h3>Send me the Gap Check</h3>
+        <p class="tiny" style="margin-bottom:1.3rem">Check your inbox for a confirmation link. The printable PDF arrives right after.</p>
+
+        <form id="gapForm" novalidate>
+          <div class="gfield">
+            <label for="gapName">First name (optional)</label>
+            <input id="gapName" name="fields[name]" type="text" autocomplete="given-name" placeholder="Optional">
+          </div>
+          <div class="gfield">
+            <label for="gapEmail">Email address</label>
+            <input id="gapEmail" name="fields[email]" type="email" autocomplete="email" required placeholder="you@example.com">
+          </div>
+          <button class="btn btn-primary" id="gapSubmit" type="submit">Send me the Gap Check</button>
+        </form>
+
+        <div class="gdone" id="gapDone">
+          <p class="snap-kicker">Check your inbox</p>
+          <p style="font-size:1.02rem;line-height:1.55;margin-bottom:.9rem">Confirm the link we just sent and the Gap Check arrives immediately after.</p>
+          <p class="rfield-label" style="border-top:1px solid var(--hair);padding-top:.75rem">Files on the way</p>
+          <p class="f">family-readiness-gap-check.pdf · 1 page</p>
+          <p class="f">how-to-score-it.pdf · 1 page</p>
+        </div>
+
+        <p class="tiny" style="margin-top:1.1rem">We send the checklist, occasional notes about the book, and nothing else. No sharing, no reselling.</p>
+      </div>
+    </div>
+
+    <div class="faq">
+      <details>
+        <summary>Is this a will, or does it replace one?</summary>
+        <div class="body">No. The Finder's Book is a personal record, not a legal instrument. It is not a will, trust, contract, power of attorney, or advance directive, and it gives nobody authority over your accounts or medical decisions. It records where those signed originals are kept and who is named in them.</div>
+      </details>
+      <details>
+        <summary>Isn't putting all of this in one place dangerous?</summary>
+        <div class="body">Any completed organizer should be treated as private personal information. The Finder's Book reduces exposure by excluding passwords, PINs, recovery codes, safe combinations, and full account or Social Security numbers. Store it according to what you choose to include and limit access to people you trust.</div>
+      </details>
+      <details>
+        <summary>Do I have to complete all 49 pages for it to help?</summary>
+        <div class="body">No. Begin with the Continuity Snapshot, two trusted people, your document locations, and a pointer to your secure system. Set a 15-minute timer for the first pass, then return after a marriage, birth, diagnosis, move, or change in work.</div>
+      </details>
+      <details>
+        <summary>Will the fillable PDF work on my computer?</summary>
+        <div class="body">It uses standard AcroForm fields and works in Adobe Acrobat Reader and other AcroForm-compatible readers on Windows and macOS. Some mobile PDF apps do not preserve saved entries, so save a working copy and test one entry first. The print edition contains the same 49 pages.</div>
+      </details>
+      <details>
+        <summary>What exactly do I receive, and when?</summary>
+        <div class="body">Immediately after purchase you receive a download containing the 49-page fillable PDF, the 49-page print PDF, a Start Here orientation page, license and printing terms, file checksums, and — with the Ultimate and Family editions — all five bonus PDFs. There is no app or subscription.</div>
+      </details>
+    </div>
+
+    <div class="note">
+      <span class="note-tag">10 · One ending, not three</span>
+      <p>The page currently ends three times: FAQ, then Gap Check, then final CTA. The FAQ is objection handling, so it belongs with the free offer rather than as its own full band — same nine questions, same JSON-LD FAQPage markup, one band instead of two. On success the form is replaced in place with no page change, and the two filenames write in using the same treatment as the Snapshot, so the free door feels like the product.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT X · CLOSE ===================== -->
+<section class="act on-deep" id="close" aria-label="Get the book">
+  <div class="close-wash" aria-hidden="true"></div>
+  <div class="wrap close-in">
+    <p class="eyebrow">One last thing</p>
+    <h2>Give the right person a clear first step.</h2>
+    <p>Every field you fill, even imperfectly, is one less question your family has to answer alone.</p>
+    <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="final" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
+  </div>
+</section>
+
+</main>
+
+<!-- ===================== ALL 49 OVERLAY ===================== -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="All pages from the book">
+  <div class="sheet-in">
+    <div class="sheet-hd">
+      <div>
+        <h3>The pages that did not make the spread</h3>
+        <p class="tiny" style="color:var(--mute-pine);max-width:56ch">Nothing was deleted in the restage. The seven page scans that left the grid live here, so the assets keep working without turning the page into a contact sheet.</p>
+      </div>
+      <button class="ctl" type="button" id="sheetClose" style="margin-left:auto">Close</button>
+    </div>
+    <div class="sheet-grid">
+      <figure><img src="../assets/trusted-people.webp" width="900" height="1165" loading="lazy" alt="Page for naming two trusted people with their contact details and roles."><figcaption>Page 11 · Two trusted people</figcaption></figure>
+      <figure><img src="../assets/important-people.webp" width="900" height="1165" loading="lazy" alt="Page listing the most important people to notify and how to reach them."><figcaption>Page 10 · People to notify</figcaption></figure>
+      <figure><img src="../assets/security-doctrine.webp" width="900" height="1165" loading="lazy" alt="Page listing what never belongs in the book, including passwords, PINs and recovery codes."><figcaption>Page 5 · What never goes in</figcaption></figure>
+      <figure><img src="../assets/credit-cards.webp" width="900" height="1165" loading="lazy" alt="Credit card page recording issuer and last four digits only."><figcaption>Page 31 · Cards, last four only</figcaption></figure>
+      <figure><img src="../assets/email-accounts.webp" width="900" height="1165" loading="lazy" alt="Email accounts page explaining why email is the key to other accounts."><figcaption>Page 39 · Email + digital life</figcaption></figure>
+      <figure><img src="../assets/letter-to-loved-one.webp" width="900" height="1165" loading="lazy" alt="Personal letter page addressed to a partner, child, sibling or caregiver."><figcaption>Page 47 · Letter to a loved one</figcaption></figure>
+      <figure><img src="../assets/how-to-use.webp" width="900" height="1165" loading="lazy" alt="Instructions page describing how to use and return to the book over time."><figcaption>Page 4 · How to use it</figcaption></figure>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var root   = document.documentElement;
+
+  /* ---------- review chrome ---------- */
+  var notesBtn = document.getElementById("notesBtn");
+  notesBtn.addEventListener("click", function(){
+    var on = document.body.classList.toggle("notes-on");
+    notesBtn.textContent = on ? "Hide notes" : "Show notes";
+    notesBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+
+  var callSec = document.getElementById("call");
+  var revealSec = document.getElementById("reveal");
+
+  document.getElementById("skipBtn").addEventListener("click", function(){
+    revealSec.scrollIntoView({behavior: reduce ? "auto" : "smooth", block:"start"});
+  });
+
+  document.getElementById("replay").addEventListener("click", function(){
+    revealSec.classList.remove("is-revealed");
+    document.body.classList.remove("chrome-on");
+    document.querySelectorAll(".is-written,.is-struck").forEach(function(n){
+      n.classList.remove("is-written","is-struck");
+    });
+    seen = {};
+    window.scrollTo({top:0, behavior: reduce ? "auto" : "smooth"});
+  });
+
+  /* ---------- ACT 0 · the Call ----------
+     Four statements mapped onto the scroll depth of one tall section.
+     Progress is read from the section, never from a timer, so the reader
+     controls the pace and can stop on any sentence. */
+  var lines = Array.prototype.slice.call(document.querySelectorAll(".call-line"));
+  var spine = document.getElementById("spine");
+  var hint  = document.getElementById("hint");
+  var current = -1;
+
+  function paintCall(){
+    if (reduce) { lines.forEach(function(l){ l.classList.add("is-on"); }); return; }
+    var box = callSec.getBoundingClientRect();
+    var travel = callSec.offsetHeight - window.innerHeight;
+    var p = travel > 0 ? Math.min(1, Math.max(0, -box.top / travel)) : 0;
+
+    /* Four slots, weighted rather than even quarters: the three questions
+       take 22% of the travel each, and the relief holds for the remaining
+       34% so it has a longer beat before the book arrives. */
+    var stops = [0, 0.22, 0.44, 0.66];
+    var slot = 0;
+    for (var i = stops.length - 1; i >= 0; i--){ if (p >= stops[i]) { slot = i; break; } }
+    if (slot !== current){
+      current = slot;
+      lines.forEach(function(l, i){ l.classList.toggle("is-on", i === slot); });
+    }
+    spine.style.height = (p * 100).toFixed(1) + "%";
+    hint.classList.toggle("gone", p > 0.04);
+  }
+
+  /* ---------- reveal + one-shot section motions ---------- */
+  var seen = {};
+  function armOnce(el, cls, key){
+    if (!el || seen[key]) return;
+    var r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight * 0.78 && r.bottom > 0){
+      seen[key] = true;
+      el.classList.add(cls);
+    }
+  }
+
+  function paintReveal(){
+    var r = revealSec.getBoundingClientRect();
+    if (!revealSec.classList.contains("is-revealed") && r.top < window.innerHeight * 0.62){
+      revealSec.classList.add("is-revealed");
+      /* the header CTA and sticky bar become available only once the book
+         has landed — 3.5s after the reveal begins */
+      window.setTimeout(function(){ document.body.classList.add("chrome-on"); }, reduce ? 0 : 3500);
+    }
+  }
+
+  /* ---------- ACT V · the Spread, tied to scroll ---------- */
+  var spreadSec = document.getElementById("spread");
+  var track = document.getElementById("track");
+  var meter = document.getElementById("meter");
+
+  function paintSpread(){
+    if (!spreadSec || !track) return;
+    var r = spreadSec.getBoundingClientRect();
+    var vh = window.innerHeight;
+    var p = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
+    var travel = Math.max(0, track.scrollWidth - track.parentElement.clientWidth);
+    if (!reduce) track.style.transform = "translate3d(" + (-travel * p).toFixed(1) + "px,0,0)";
+    meter.style.width = (p * 100).toFixed(1) + "%";
+  }
+
+  var ticking = false;
+  function onScroll(){
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(function(){
+      paintCall();
+      paintReveal();
+      paintSpread();
+      armOnce(document.getElementById("snapshot"), "is-written", "snap");
+      armOnce(document.getElementById("doctrine"), "is-struck", "doc");
+      ticking = false;
+    });
+  }
+
+  window.addEventListener("scroll", onScroll, {passive:true});
+  window.addEventListener("resize", onScroll);
+  onScroll();
+
+  /* ---------- the book responds to a cursor, and never spins again ---------- */
+  var book = document.getElementById("book");
+  var stage = book && book.parentElement;
+  if (book && stage && !reduce){
+    stage.addEventListener("pointermove", function(e){
+      if (!revealSec.classList.contains("is-revealed")) return;
+      var b = stage.getBoundingClientRect();
+      var dx = (e.clientX - (b.left + b.width/2)) / b.width;
+      book.style.transition = "transform .6s var(--ease)";
+      book.style.transform = "rotateY(" + (-18 + dx * 14).toFixed(2) + "deg) translateY(0)";
+    });
+    stage.addEventListener("pointerleave", function(){
+      book.style.transform = "rotateY(-18deg) translateY(0)";
+    });
+  }
+
+  /* ---------- the "all 49" overlay ---------- */
+  var sheet = document.getElementById("sheet");
+  var veilBtn = document.getElementById("veilBtn");
+  var sheetClose = document.getElementById("sheetClose");
+  function closeSheet(){ sheet.classList.remove("open"); veilBtn.focus(); }
+  veilBtn.addEventListener("click", function(){ sheet.classList.add("open"); sheetClose.focus(); });
+  sheetClose.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && sheet.classList.contains("open")) closeSheet(); });
+
+  /* ---------- gap check: replaced in place, no page change ---------- */
+  var gapForm = document.getElementById("gapForm");
+  var gapDone = document.getElementById("gapDone");
+  gapForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!document.getElementById("gapEmail").value) return;
+    gapForm.style.display = "none";
+    gapDone.classList.add("on");
+  });
+
+  /* ---------- the mock never actually charges anyone ---------- */
+  document.querySelectorAll("[data-checkout]").forEach(function(a){
+    a.addEventListener("click", function(ev){ ev.preventDefault(); });
+  });
+})();
+</script>
+
+</body>
+</html>
