@@ -1,10 +1,13 @@
 /* ============================================================
-   THE FINDER'S BOOK — MOTION & INTERACTIONS (v4.0 GSAP ELEVATION)
-   Powered by GSAP ScrollTrigger + SplitText + Lenis WHERE AVAILABLE,
-   with a vanilla IntersectionObserver reveal fallback everywhere else.
-   Progressive enhancement: animates only when html.fx is set
-   and prefers-reduced-motion is not active.
-   Depends on analytics.js exposing window.fbTrack / window.fbAttribution.
+   THE FINDER'S BOOK — MOTION & INTERACTIONS (v4.1 ACT-ZERO)
+   The page is sequenced as the book being opened: Act 0 withholds
+   the product for four scroll-scrubbed statements, then the reveal
+   earns the object with one rotation. Powered by GSAP where present,
+   with a vanilla scroll layer that runs on every page so the sequence,
+   the lightbox, the sticky bar and the form all work with or without
+   the CDN. Animates only when html.fx is set and prefers-reduced-motion
+   is not active. Depends on analytics.js exposing window.fbTrack /
+   window.fbAttribution. Support: info@familyfindersbook.com
    ============================================================ */
 (function(){
   "use strict";
@@ -18,29 +21,60 @@
     return {};
   }
 
-  /* ---------- Reveal fallback (runs when GSAP is absent) ----------
-     GSAP is loaded from a CDN on index.html only. about/order/contact
-     share this same file without it. The previous `return` here killed
-     the ENTIRE module on those pages -- not just the animations, but the
-     lightbox, sticky bar and form handlers 200 lines below -- leaving
-     every .fx-up / .fx-scale element stuck at opacity 0 (they are set to
-     opacity:0 by styles.css and only made visible by adding .fx-on).
-     This restores the original vanilla IntersectionObserver reveal so the
-     page is fully readable with or without GSAP, and with or without a
-     working CDN. */
-  function vanillaReveal(){
+  var docEl = document.documentElement;
+  /* Marks the instant this file begins executing — the very first thing
+     it does. styles.css uses html.fx:not(.js) as a narrow, layout-neutral
+     fallback for #call's first line (see the ACT 0 comment there): if this
+     script is blocked or throws before reaching this line, Act 0 still
+     shows its opening statement instead of a blank pine screen. The tall
+     sticky layout itself is chosen by html.fx alone, synchronously in
+     <head> before first paint, so this marker never causes a layout shift
+     — only a content-visibility fallback. */
+  docEl.classList.add("js");
+
+  var reduced = false;
+  try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+  /* ============================================================
+     0. ACT-0 COMPRESSION — warm traffic does not need the full intro.
+     Any deep-link (#anchor), a returning visitor, or paid/retargeting
+     traffic collapses Act 0 to a single relief statement. Cold organic
+     and direct traffic get the full four-statement sequence.
+     Set before the reveal binds so the scroll math uses the right height.
+     ============================================================ */
+  (function(){
+    var call = document.getElementById("call");
+    if (!call) return;
+    var warm = false;
+    try {
+      if (location.hash && location.hash.length > 1) warm = true;
+      var qs = new URLSearchParams(location.search);
+      var medium = (qs.get("utm_medium") || "").toLowerCase();
+      if (/cpc|paid|retarget|remarket|display|social|email|affiliate/.test(medium)) warm = true;
+      if (localStorage.getItem("fb_seen_call") === "1") warm = true;
+    } catch (e) {}
+    if (warm) docEl.classList.add("call-compress");
+    /* Mark this browser as having seen the intro, for next time. */
+    try {
+      window.addEventListener("load", function(){
+        try { localStorage.setItem("fb_seen_call", "1"); } catch (e) {}
+      });
+    } catch (e) {}
+  })();
+
+  /* ============================================================
+     1. CSS REVEAL — reveals every html.fx-gated element on scroll.
+     Runs on EVERY page, with or without GSAP, so .rfield, .eyebrow
+     rules and .fx-* primitives are never left invisible. Idempotent
+     with the GSAP layer below (different elements / properties).
+     ============================================================ */
+  function cssReveal(){
     var els = document.querySelectorAll(".fx-up, .fx-fade, .fx-scale, .fx-in, .fx-rule, .rfield, .eyebrow");
     if (!els.length) return;
-
-    var reduced = false;
-    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
-
-    /* No IntersectionObserver, or motion is unwanted: show everything now. */
     if (reduced || !("IntersectionObserver" in window)){
       Array.prototype.forEach.call(els, function(el){ el.classList.add("fx-on"); });
       return;
     }
-
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         if (!entry.isIntersecting) return;
@@ -50,8 +84,6 @@
     }, { rootMargin: "0px 0px -10% 0px", threshold: 0.01 });
 
     Array.prototype.forEach.call(els, function(el, i){
-      /* Anything already above the fold reveals immediately rather than
-         waiting for a scroll that may never come. */
       var r = el.getBoundingClientRect();
       if (r.top < (window.innerHeight || 0)){
         el.style.setProperty("--fx-d", Math.min(i * 60, 360) + "ms");
@@ -61,375 +93,278 @@
       }
     });
   }
+  cssReveal();
+
+  /* ============================================================
+     2. THE ACT SEQUENCE — vanilla scroll, works with or without GSAP.
+     Act 0 scrub · the reveal · write-in · strike · the spread.
+     Under reduced motion everything is shown at once and nothing moves.
+     ============================================================ */
+  (function(){
+    var call    = document.getElementById("call");
+    var reveal  = document.getElementById("reveal");
+    var spine   = document.getElementById("callSpine");
+    var hint    = document.getElementById("callHint");
+    var skip    = document.getElementById("callSkip");
+    var lines   = call ? Array.prototype.slice.call(call.querySelectorAll(".call-line")) : [];
+    var snapshot= document.getElementById("snapshot");
+    var security= document.getElementById("security");
+    var track3d = document.getElementById("spreadTrack");
+    var spread  = document.getElementById("inside");
+    var bar     = document.getElementById("spreadBar");
+
+    /* Reduced motion, or no Act 0 on the page: reveal everything, done. */
+    if (reduced){
+      if (reveal) reveal.classList.add("is-revealed");
+      if (snapshot) snapshot.classList.add("is-written");
+      if (security) security.classList.add("is-struck");
+      lines.forEach(function(l){ l.classList.add("is-on"); });
+      return;
+    }
+
+    var current = -1;
+    var revealed = false;
+    var seen = {};
+
+    function armOnce(el, cls, key){
+      if (!el || seen[key]) return;
+      var r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.80 && r.bottom > 0){
+        seen[key] = true;
+        el.classList.add(cls);
+      }
+    }
+
+    function paintCall(){
+      if (!call || !lines.length) return;
+      var compressed = docEl.classList.contains("call-compress");
+      if (compressed){
+        /* Single relief line, always shown; no scrub. */
+        if (current !== 3){
+          current = 3;
+          lines.forEach(function(l){ l.classList.toggle("is-on", l.getAttribute("data-slot") === "3"); });
+        }
+        return;
+      }
+      var box = call.getBoundingClientRect();
+      var travel = call.offsetHeight - window.innerHeight;
+      var p = travel > 0 ? Math.min(1, Math.max(0, -box.top / travel)) : 0;
+      var stops = [0, 0.22, 0.44, 0.66];
+      var slot = 0;
+      for (var i = stops.length - 1; i >= 0; i--){ if (p >= stops[i]) { slot = i; break; } }
+      if (slot !== current){
+        current = slot;
+        lines.forEach(function(l, idx){ l.classList.toggle("is-on", idx === slot); });
+      }
+      if (spine) spine.style.height = (p * 100).toFixed(1) + "%";
+      if (hint) hint.classList.toggle("gone", p > 0.04);
+      /* Suppress the header purchase CTA until the reveal has begun. */
+      document.body.classList.toggle("in-call", !revealed && box.bottom > window.innerHeight * 0.5);
+    }
+
+    function paintReveal(){
+      if (!reveal || revealed) return;
+      var r = reveal.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.62){
+        revealed = true;
+        reveal.classList.add("is-revealed");
+        document.body.classList.remove("in-call");
+      }
+    }
+
+    function paintSpread(){
+      if (!spread || !track3d) return;
+      var r = spread.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var p = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
+      var vp = track3d.parentElement;
+      var travel = Math.max(0, track3d.scrollWidth - vp.clientWidth);
+      track3d.style.transform = "translate3d(" + (-travel * p).toFixed(1) + "px,0,0)";
+      if (bar) bar.style.width = (p * 100).toFixed(1) + "%";
+    }
+
+    var ticking = false;
+    function onScroll(){
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(function(){
+        paintCall();
+        paintReveal();
+        paintSpread();
+        armOnce(snapshot, "is-written", "snap");
+        armOnce(security, "is-struck", "strike");
+        ticking = false;
+      });
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    onScroll();
+
+    if (skip && reveal){
+      skip.addEventListener("click", function(){
+        reveal.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    /* The book answers the cursor once revealed, and never spins again. */
+    var book = document.getElementById("book");
+    var stage = book && book.parentElement;
+    if (book && stage){
+      stage.addEventListener("pointermove", function(e){
+        if (!revealed) return;
+        var b = stage.getBoundingClientRect();
+        var dx = (e.clientX - (b.left + b.width / 2)) / b.width;
+        book.style.transition = "transform .6s cubic-bezier(.22,1,.36,1)";
+        book.style.transform = "rotateY(" + (-18 + dx * 14).toFixed(2) + "deg) translateY(0)";
+      });
+      stage.addEventListener("pointerleave", function(){
+        if (!revealed) return;
+        book.style.transform = "rotateY(-18deg) translateY(0)";
+      });
+    }
+  })();
+
+  /* ============================================================
+     3. THE "ALL 49" OVERLAY — holds the seven scans off the spread.
+     ============================================================ */
+  (function(){
+    var overlay = document.getElementById("allPages");
+    var openBtn = document.getElementById("veilBtn");
+    var closeBtn = document.getElementById("allPagesClose");
+    if (!overlay || !openBtn || !closeBtn) return;
+    var lastFocus = null;
+    function open(){
+      lastFocus = document.activeElement;
+      overlay.hidden = false;
+      document.body.style.overflow = "hidden";
+      closeBtn.focus();
+      track("all_pages_open", { offer: "the-finders-book" });
+    }
+    function close(){
+      overlay.hidden = true;
+      document.body.style.overflow = "";
+      if (lastFocus) lastFocus.focus();
+    }
+    /* Focus trap: the overlay holds a real grid of page-preview buttons a
+       keyboard user should be able to reach, so Tab must cycle within the
+       dialog (first <-> last) rather than escape to the page behind it. */
+    function focusables(){
+      return Array.prototype.slice.call(
+        overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      ).filter(function(el){ return !el.disabled && el.offsetParent !== null; });
+    }
+
+    openBtn.addEventListener("click", open);
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function(e){ if (e.target === overlay) close(); });
+    document.addEventListener("keydown", function(e){
+      if (overlay.hidden) return;
+      if (e.key === "Escape"){ close(); return; }
+      if (e.key !== "Tab") return;
+      var list = focusables();
+      if (!list.length) return;
+      var first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first){
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last){
+        e.preventDefault(); first.focus();
+      }
+    });
+  })();
 
   /* ---------- GSAP setup ---------- */
   var hasGSAP = (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined");
 
-  if (!hasGSAP){
-    /* No GSAP on this page (or the CDN failed). Reveal content the plain
-       way, then fall through -- the lightbox, sticky bar and form handlers
-       below are not GSAP-dependent and must still run. */
-    vanillaReveal();
-  } else {
-  gsap.registerPlugin(ScrollTrigger);
-  if (typeof SplitText !== "undefined") gsap.registerPlugin(SplitText);
+  if (hasGSAP){
+    gsap.registerPlugin(ScrollTrigger);
 
-  /* ---------- Progressive enhancement + reduced-motion ----------
-     Uses gsap.matchMedia() per SKILL.md best practice.
-     All animations live inside the matchMedia handler so they
-     are automatically reverted if conditions change. */
-  var mm = gsap.matchMedia();
+    var mm = gsap.matchMedia();
+    mm.add(
+      {
+        animate: "(prefers-reduced-motion: no-preference)",
+        reduce:  "(prefers-reduced-motion: reduce)"
+      },
+      function(context){
+        var conditions = context.conditions;
+        var animate = conditions.animate && docEl.classList.contains("fx");
+        var compactMotion = window.matchMedia("(max-width: 860px)").matches || window.matchMedia("(pointer:coarse)").matches;
+        if (!animate) return;
 
-  mm.add(
-    {
-      animate: "(prefers-reduced-motion: no-preference)",
-      reduce:  "(prefers-reduced-motion: reduce)"
-    },
-    function(context){
-      var conditions = context.conditions;
-      var animate = conditions.animate && document.documentElement.classList.contains("fx");
-      var compactMotion = window.matchMedia("(max-width: 860px)").matches || window.matchMedia("(pointer:coarse)").matches;
-
-      /* ===========================================================
-         LENIS SMOOTH SCROLL
-         Butter-smooth inertia scrolling that elevates the entire
-         page feel. Synced with GSAP's ticker for perfect
-         ScrollTrigger compatibility.
-         =========================================================== */
-      var lenis = null;
-      if (animate && !compactMotion && typeof Lenis !== "undefined"){
-        lenis = new Lenis({
-          lerp: 0.09,
-          duration: 1.2,
-          smoothWheel: true,
-          wheelMultiplier: 1,
-          touchMultiplier: 1.5
-        });
-
-        /* Sync Lenis with GSAP ticker — per Lenis README integration pattern */
-        lenis.on("scroll", ScrollTrigger.update);
-        gsap.ticker.add(function(time){
-          lenis.raf(time * 1000);
-        });
-        gsap.ticker.lagSmoothing(0);
-      }
-
-      if (!animate){
-        /* Reduced motion: ensure all elements are visible, no animation */
-        gsap.set(".hero .eyebrow, .hero h1, .hero .lede, .hero .btn-row, .hero .btn-note, .hero .snap", {
-          clearProps: "all"
-        });
-        return; // exit — no animations created
-      }
-
-      /* ===========================================================
-         1. HERO CHOREOGRAPHY — GSAP TIMELINE
-         One orchestrated wave, resolved by ~700ms.
-         The CTA is never the last thing to arrive.
-         =========================================================== */
-      var hero = document.querySelector(".hero");
-      if (hero){
-        var heroTl = gsap.timeline({
-          defaults: { ease: "power3.out", duration: 0.7 }
-        });
-
-        /* Staggered entrance of hero text elements */
-        heroTl
-          .from(".hero .eyebrow", {
-            y: 20, opacity: 0, duration: 0.5
-          })
-          .from(".hero h1", {
-            y: 30, opacity: 0, duration: 0.8
-          }, "-=0.35")
-          .from(".hero .lede", {
-            y: 20, opacity: 0, duration: 0.6
-          }, "-=0.45")
-          .from(".hero .btn-row", {
-            y: 16, opacity: 0, duration: 0.5
-          }, "-=0.35")
-          .from(".hero .btn-note", {
-            y: 12, opacity: 0, duration: 0.4
-          }, "-=0.25");
-
-        /* SplitText: hero h1 character-by-character reveal
-           Adds cinematic text animation per GSAP SplitText SKILL.md.
-           Uses autoSplit + onSplit for font-load resilience. */
-        if (typeof SplitText !== "undefined"){
-          var h1El = hero.querySelector("h1");
-          if (h1El){
-            SplitText.create(h1El, {
-              type: compactMotion ? "words" : "words, chars",
-              autoSplit: true,
-              onSplit: function(self){
-                var units = self.chars && self.chars.length ? self.chars : self.words;
-                return gsap.from(units, {
-                  opacity: 0,
-                  y: compactMotion ? 14 : 24,
-                  rotateX: compactMotion ? 0 : -40,
-                  stagger: compactMotion ? 0.03 : 0.018,
-                  duration: compactMotion ? 0.45 : 0.55,
-                  ease: "back.out(1.4)",
-                  delay: 0.15
-                });
-              }
-            });
-          }
+        var lenis = null;
+        if (!compactMotion && typeof Lenis !== "undefined"){
+          lenis = new Lenis({ lerp: 0.09, duration: 1.2, smoothWheel: true, wheelMultiplier: 1, touchMultiplier: 1.5 });
+          lenis.on("scroll", ScrollTrigger.update);
+          gsap.ticker.add(function(time){ lenis.raf(time * 1000); });
+          gsap.ticker.lagSmoothing(0);
         }
 
-        /* Snapshot card entrance with ruled fields filling in */
-        var snap = hero.querySelector(".snap");
-        if (snap){
-          heroTl.from(snap, {
-            y: 40, opacity: 0, scale: 0.97, duration: 0.8,
-            ease: "power2.out"
-          }, "-=0.5");
+        /* ---- restrained editorial reveals ----
+           Section heads and card grids settle up when scrolled to. This is
+           the "Settle" neutral. The named motions (Act 0, reveal, write-in,
+           strike, spread) are driven by the vanilla layer above so they work
+           identically without the CDN; GSAP only adds the quiet settle. */
 
-          var fields = hero.querySelectorAll(".rfield");
-          if (fields.length){
-            heroTl.from(fields, {
-              y: 12, opacity: 0, stagger: 0.09, duration: 0.45,
-              ease: "power2.out"
-            }, "-=0.3");
-          }
-        }
-
-        /* Eyebrow gold rule draws itself */
-        var eyebrowAfter = hero.querySelector(".eyebrow");
-        if (eyebrowAfter){
-          gsap.from(eyebrowAfter, {
-            "--rule-scale": 0,
-            duration: 0.8,
-            ease: "power2.out",
-            delay: 0.1
-          });
-        }
-      }
-
-      /* ===========================================================
-         2. SCROLL-TRIGGERED SECTION REVEALS (replaces IntersectionObserver)
-         Uses ScrollTrigger.batch() per SKILL.md — the GSAP
-         replacement for IntersectionObserver with stagger support.
-         =========================================================== */
-
-      /* Section headers: staggered children reveal */
-      var headBlocks = document.querySelectorAll(".band .head-block");
-      headBlocks.forEach(function(hb){
-        if (hero && hero.contains(hb)) return;
-        var children = hb.children;
-        if (children.length){
+        /* Section heads (outside the hero/reveal). */
+        document.querySelectorAll(".band .head-block").forEach(function(hb){
+          var children = hb.children;
+          if (!children.length) return;
           gsap.from(children, {
-            y: 28, opacity: 0, stagger: 0.08, duration: 0.65,
+            y: 24, opacity: 0, stagger: 0.08, duration: 0.85,
             ease: "power3.out",
-            scrollTrigger: {
-              trigger: hb,
-              start: "top 85%",
-              toggleActions: "play none none none"
-            }
+            scrollTrigger: { trigger: hb, start: "top 82%", toggleActions: "play none none none" }
           });
-        }
-      });
-
-      /* Card grids: staggered batch reveal */
-      var batchSelectors = [
-        ".gallery .pg",
-        ".tiers .tier",
-        ".bonus-grid .bonus",
-        ".aud",
-        ".steps .step",
-        ".doctrine .doc-panel",
-        ".fmt .card"
-      ];
-
-      batchSelectors.forEach(function(sel){
-        var nodes = document.querySelectorAll(sel);
-        if (!nodes.length) return;
-
-        ScrollTrigger.batch(nodes, {
-          start: "top 88%",
-          onEnter: function(batch){
-            gsap.from(batch, {
-              y: 30,
-              opacity: 0,
-              stagger: 0.08,
-              duration: 0.6,
-              ease: "power3.out",
-              overwrite: true
-            });
-          }
         });
-      });
 
-      /* Proof strip: items slide up with stagger */
-      var proofItems = document.querySelectorAll(".proof-list li");
-      if (proofItems.length){
-        gsap.from(proofItems, {
-          y: 20, opacity: 0, stagger: 0.1, duration: 0.5,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: ".proof-strip",
-            start: "top 85%",
-            toggleActions: "play none none none"
-          }
-        });
-      }
-      var journeyLinks = document.querySelectorAll(".journey-links a");
-      if (journeyLinks.length){
-        gsap.from(journeyLinks, {
-          y: 14, opacity: 0, stagger: 0.05, duration: 0.45,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: ".journey-strip",
+        /* Card grids: quiet staggered settle. */
+        [".tiers .tier", ".bonus-grid .bonus", ".aud", ".steps .step",
+         ".doctrine .doc-panel", ".fmt .card", ".trust-foot .rfield",
+         ".fact-rail li"].forEach(function(sel){
+          var nodes = document.querySelectorAll(sel);
+          if (!nodes.length) return;
+          ScrollTrigger.batch(nodes, {
             start: "top 88%",
-            toggleActions: "play none none none"
-          }
-        });
-      }
-
-      /* ===========================================================
-         3. PARALLAX + SCROLL-SCRUB EFFECTS
-         Adds depth and cinematic feel per ScrollTrigger patterns.
-         =========================================================== */
-
-      /* Hero: subtle upward parallax as user scrolls past */
-      if (hero){
-        gsap.to(".hero", {
-          yPercent: compactMotion ? -3 : -8,
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".hero",
-            start: "top top",
-            end: "bottom top",
-            scrub: true
-          }
-        });
-
-        /* Hero cover image: slow float */
-        var heroCover = hero.querySelector(".hero-cover");
-        if (heroCover){
-          gsap.to(heroCover, {
-            y: -15, rotation: 0.5,
-            ease: "none",
-            scrollTrigger: {
-              trigger: ".hero",
-              start: "top top",
-              end: "bottom top",
-              scrub: 1.5
+            onEnter: function(batch){
+              gsap.from(batch, { y: 26, opacity: 0, stagger: 0.08, duration: 0.8, ease: "power3.out", overwrite: true });
             }
+          });
+        });
+
+        /* The moment callout: the one quiet image-scale on the page. */
+        var callout = document.querySelector(".moment-callout");
+        if (callout){
+          gsap.from(callout, {
+            opacity: 0, y: 20, duration: 1.1, ease: "power3.out",
+            scrollTrigger: { trigger: callout, start: "top 80%", toggleActions: "play none none none" }
           });
         }
-      }
 
-      /* Section band backgrounds: subtle parallax depth */
-      if (!compactMotion){
-        document.querySelectorAll(".band-pine, .band-deep, .band-sage, .band-hi").forEach(function(band){
-          gsap.from(band, {
-            backgroundPositionY: "20%",
-            ease: "none",
-            scrollTrigger: {
-              trigger: band,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true
-            }
+        /* FAQ rows. */
+        var faqDetails = document.querySelectorAll(".faq details");
+        if (faqDetails.length){
+          gsap.from(faqDetails, {
+            y: 16, opacity: 0, stagger: 0.06, duration: 0.6, ease: "power2.out",
+            scrollTrigger: { trigger: ".faq", start: "top 82%", toggleActions: "play none none none" }
           });
-        });
-      }
+        }
 
-      /* Bonus images: gentle float on scroll */
-      if (!compactMotion){
-        document.querySelectorAll(".bonus img").forEach(function(img){
-          gsap.to(img, {
-            y: -8, rotation: -0.5,
-            ease: "none",
-            scrollTrigger: {
-              trigger: img,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: 2
-            }
+        /* Final CTA. */
+        var finalCta = document.getElementById("final-cta");
+        if (finalCta){
+          gsap.from("#final-cta .h-lg", {
+            y: 26, opacity: 0, duration: 0.85, ease: "power3.out",
+            scrollTrigger: { trigger: finalCta, start: "top 78%", toggleActions: "play none none none" }
           });
-        });
+        }
+
+        return function(){ if (lenis){ lenis.destroy(); lenis = null; } };
       }
-
-      /* FAQ: details items reveal with micro-stagger */
-      var faqDetails = document.querySelectorAll(".faq details");
-      if (faqDetails.length){
-        gsap.from(faqDetails, {
-          y: 16, opacity: 0, stagger: 0.06, duration: 0.5,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: ".faq",
-            start: "top 80%",
-            toggleActions: "play none none none"
-          }
-        });
-      }
-
-      /* Final CTA: scale-up entrance with emotional weight */
-      var finalCta = document.getElementById("final-cta");
-      if (finalCta){
-        gsap.from("#final-cta .h-lg", {
-          scale: 0.92, opacity: 0, y: 30, duration: 0.8,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: finalCta,
-            start: "top 75%",
-            toggleActions: "play none none none"
-          }
-        });
-        gsap.from("#final-cta .btn", {
-          y: 20, opacity: 0, duration: 0.6,
-          ease: "back.out(1.4)",
-          delay: 0.2,
-          scrollTrigger: {
-            trigger: finalCta,
-            start: "top 75%",
-            toggleActions: "play none none none"
-          }
-        });
-      }
-
-      /* Gap Check section: card slides in */
-      var gapSection = document.getElementById("gap-check");
-      if (gapSection){
-        gsap.from(".gap-card", {
-          x: 40, opacity: 0, duration: 0.7,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: gapSection,
-            start: "top 75%",
-            toggleActions: "play none none none"
-          }
-        });
-      }
-
-      /* ===========================================================
-         4. PRICING TIER HOVER ELEVATION
-         Interactive micro-animation on hover via GSAP.
-         =========================================================== */
-      document.querySelectorAll(".tier").forEach(function(tier){
-        tier.addEventListener("mouseenter", function(){
-          if (compactMotion) return;
-          gsap.to(tier, { y: -6, scale: 1.015, duration: 0.3, ease: "power2.out" });
-        });
-        tier.addEventListener("mouseleave", function(){
-          if (compactMotion) return;
-          gsap.to(tier, { y: 0, scale: 1, duration: 0.4, ease: "power2.out" });
-        });
-      });
-
-      /* Cleanup function — called when matchMedia conditions change */
-      return function(){
-        if (lenis){ lenis.destroy(); lenis = null; }
-      };
-    }
-  );
-  } /* end if (hasGSAP) */
+    );
+  }
 
   /* ============================================================
-     5. LIGHTBOX (unchanged — not scroll-dependent)
-     Deliberately OUTSIDE the GSAP branch: this and everything
-     below it works without GSAP and must run on every page.
+     4. LIGHTBOX — works on every .pg (spread + overlay). Not scroll-
+     dependent; deliberately outside the GSAP branch.
      ============================================================ */
   var lb = document.getElementById("lb"),
       lbImg = document.getElementById("lbImg"),
@@ -439,8 +374,6 @@
 
   function openLb(src, cap){
     lastFocus = document.activeElement;
-    /* Sanitize: only relative asset paths are allowed as image sources.
-       Blocks javascript:, data:, and absolute URLs to prevent DOM XSS. */
     var safeSrc = String(src || "");
     if (safeSrc.indexOf("assets/") === 0) {
       lbImg.setAttribute("src", safeSrc);
@@ -474,7 +407,8 @@
   });
 
   /* ============================================================
-     6. STICKY MOBILE CTA (unchanged — uses rAF efficiently)
+     5. STICKY MOBILE CTA — hidden through Act 0 and the reveal; shows
+     only after the hero (reveal) is scrolled past. Unchanged logic.
      ============================================================ */
   var sticky = document.getElementById("sticky"),
       pricing = document.getElementById("pricing"),
@@ -510,7 +444,7 @@
   updateSticky();
 
   /* ============================================================
-     7. GAP CHECK LEAD CAPTURE (unchanged)
+     6. GAP CHECK LEAD CAPTURE (unchanged)
      ============================================================ */
   var FB_LEAD = {
     mode: "api",
@@ -536,7 +470,6 @@
       ev.preventDefault();
       if (busy) return;
 
-      /* Honeypot: a real person never fills this. */
       var hp = form.querySelector('input[name="company_website"]');
       if (hp && hp.value) return;
 
@@ -560,8 +493,8 @@
       }
 
       busy = true;
-      if (submit){ submit.disabled = true; submit.textContent = "Sending\u2026"; }
-      say("ok", "Sending your checklist\u2026");
+      if (submit){ submit.disabled = true; submit.textContent = "Sending…"; }
+      say("ok", "Sending your checklist…");
 
       var req;
       if (useApi){
@@ -598,7 +531,6 @@
           form.querySelectorAll("input").forEach(function(i){ i.value = ""; });
 
           if (data.token){
-            /* Token-gated download: show an immediate download link. */
             var dl = document.createElement("a");
             dl.href = "/api/gap-check-download?token=" + encodeURIComponent(data.token);
             dl.className = "btn btn-primary gap-download-btn";
@@ -609,7 +541,7 @@
               msg.setAttribute("data-state", "ok");
               msg.textContent = "";
               msg.appendChild(dl);
-              msg.appendChild(document.createTextNode("\u00a0Check your inbox — a confirmation link is also on its way."));
+              msg.appendChild(document.createTextNode(" Check your inbox — a confirmation link is also on its way."));
             }
           } else {
             say("ok", "Check your inbox for a confirmation link. Your Gap Check arrives right after you confirm.");
@@ -629,23 +561,13 @@
       });
     });
 
-    /* Fire once when the section is actually seen, for funnel maths.
-       Uses ScrollTrigger when GSAP is present, and a plain
-       IntersectionObserver otherwise, so the lead_form_view event is
-       never silently lost just because the CDN did not load. */
+    /* Fire once when the section is actually seen, for funnel maths. */
     (function(){
       var gapEl = document.getElementById("gap-check");
       if (!gapEl) return;
-
       function fireOnce(){ track("lead_form_view", {offer:"gap-check"}); }
-
       if (hasGSAP && typeof ScrollTrigger !== "undefined"){
-        ScrollTrigger.create({
-          trigger: "#gap-check",
-          start: "top 65%",
-          once: true,
-          onEnter: fireOnce
-        });
+        ScrollTrigger.create({ trigger: "#gap-check", start: "top 65%", once: true, onEnter: fireOnce });
       } else if ("IntersectionObserver" in window){
         var gio = new IntersectionObserver(function(entries){
           entries.forEach(function(entry){
