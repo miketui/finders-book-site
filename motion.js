@@ -22,15 +22,13 @@
   }
 
   var docEl = document.documentElement;
-  /* Marks the instant this file begins executing — the very first thing
-     it does. styles.css uses html.fx:not(.js) as a narrow, layout-neutral
-     fallback for #call's first line (see the ACT 0 comment there): if this
-     script is blocked or throws before reaching this line, Act 0 still
-     shows its opening statement instead of a blank pine screen. The tall
-     sticky layout itself is chosen by html.fx alone, synchronously in
-     <head> before first paint, so this marker never causes a layout shift
-     — only a content-visibility fallback. */
-  docEl.classList.add("js");
+  /* html.js is added once the Act sequence controller has fully bound —
+     see the end of section 2 below, not here. It must mark "the sequence
+     is confirmed running," not "the file started executing": a script
+     that starts but throws partway through section 2, before any line's
+     is-on class gets set, would otherwise leave html.js present with
+     nothing actually driving Act 0 — the exact blank-screen failure this
+     marker exists to prevent. */
 
   var reduced = false;
   try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
@@ -51,13 +49,16 @@
       var qs = new URLSearchParams(location.search);
       var medium = (qs.get("utm_medium") || "").toLowerCase();
       if (/cpc|paid|retarget|remarket|display|social|email|affiliate/.test(medium)) warm = true;
-      if (localStorage.getItem("fb_seen_call") === "1") warm = true;
+      /* sessionStorage, not localStorage: this is a same-session warm-
+         traffic signal for choosing which UI variant to show, not data
+         this site persists across visits without consent — consent.js
+         owns that decision for everything that actually needs it. */
+      if (sessionStorage.getItem("fb_seen_call") === "1") warm = true;
     } catch (e) {}
     if (warm) docEl.classList.add("call-compress");
-    /* Mark this browser as having seen the intro, for next time. */
     try {
       window.addEventListener("load", function(){
-        try { localStorage.setItem("fb_seen_call", "1"); } catch (e) {}
+        try { sessionStorage.setItem("fb_seen_call", "1"); } catch (e) {}
       });
     } catch (e) {}
   })();
@@ -105,7 +106,6 @@
     var reveal  = document.getElementById("reveal");
     var spine   = document.getElementById("callSpine");
     var hint    = document.getElementById("callHint");
-    var skip    = document.getElementById("callSkip");
     var lines   = call ? Array.prototype.slice.call(call.querySelectorAll(".call-line")) : [];
     var snapshot= document.getElementById("snapshot");
     var security= document.getElementById("security");
@@ -172,14 +172,21 @@
       }
     }
 
+    /* scrollWidth/clientWidth only change on resize, not on scroll — reading
+       them inside the scroll-driven paint functions forces a synchronous
+       layout on every frame. Cached here, recomputed only on resize. */
+    var spreadTravel = 0;
+    function measureSpread(){
+      if (!track3d) return;
+      spreadTravel = Math.max(0, track3d.scrollWidth - track3d.parentElement.clientWidth);
+    }
+
     function paintSpread(){
       if (!spread || !track3d) return;
       var r = spread.getBoundingClientRect();
       var vh = window.innerHeight;
       var p = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
-      var vp = track3d.parentElement;
-      var travel = Math.max(0, track3d.scrollWidth - vp.clientWidth);
-      track3d.style.transform = "translate3d(" + (-travel * p).toFixed(1) + "px,0,0)";
+      track3d.style.transform = "translate3d(" + (-spreadTravel * p).toFixed(1) + "px,0,0)";
       if (bar) bar.style.width = (p * 100).toFixed(1) + "%";
     }
 
@@ -197,15 +204,22 @@
       });
     }
 
+    measureSpread();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", function(){ measureSpread(); onScroll(); });
     onScroll();
 
-    if (skip && reveal){
-      skip.addEventListener("click", function(){
-        reveal.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
+    /* Everything above this line ran without throwing: the scroll/resize
+       listeners are attached and the first paint is queued. This is the
+       point html.js means "the sequence is bound" rather than merely
+       "the file started" — see the note where docEl is declared. Also
+       switches .spread-viewport from native scroll to the JS-controlled
+       transform (styles.css, html.fx.js .spread-viewport). */
+    docEl.classList.add("js");
+
+    /* #callSkip's real handler is the delegated one in <head> — it has to
+       work even when this file never loads, so it owns the click. Do not
+       bind it a second time here. */
 
     /* The book answers the cursor once revealed, and never spins again. */
     var book = document.getElementById("book");
@@ -237,12 +251,14 @@
     function open(){
       lastFocus = document.activeElement;
       overlay.hidden = false;
+      openBtn.setAttribute("aria-expanded", "true");
       document.body.style.overflow = "hidden";
       closeBtn.focus();
       track("all_pages_open", { offer: "the-finders-book" });
     }
     function close(){
       overlay.hidden = true;
+      openBtn.setAttribute("aria-expanded", "false");
       document.body.style.overflow = "";
       if (lastFocus) lastFocus.focus();
     }
