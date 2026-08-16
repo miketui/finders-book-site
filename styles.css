@@ -683,6 +683,11 @@ html.fx .lb.on img{transform:scale(1);opacity:1}
 .call{position:relative;background:var(--pine-900);color:var(--paper);padding:clamp(4rem,10vw,7rem) 0}
 .call-stage{position:relative;display:block;padding:0 clamp(1.5rem,7vw,7rem)}
 html.fx .call{height:460vh;padding:0}
+/* On a phone each of the four statements is a full swipe, and 460vh left the
+   closing line sitting alone above roughly two empty screens of stage. The
+   scrub derives from call.offsetHeight (motion.js), so shortening the stage
+   redistributes the four stops automatically rather than clipping the last. */
+@media (max-width:720px){ html.fx .call{height:330vh} }
 html.fx .call-stage{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 clamp(1.5rem,7vw,7rem)}
 .call-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 0%,rgba(184,146,61,.13),transparent 62%)}
 .call-spine{position:absolute;left:clamp(1.5rem,4vw,3.4rem);top:0;width:1px;background:var(--gold);opacity:.55;height:0}
