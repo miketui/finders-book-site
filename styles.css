@@ -651,12 +651,13 @@ html.fx .lb.on img{transform:scale(1);opacity:1}
    exactly like .book3d and every other entrance animation on this site —
    so there is no post-paint layout switch and therefore no CLS.
    Content visibility is a separate, narrower guarantee: html.js marks
-   the instant motion.js begins executing (its first statement, so this
-   happens within microseconds once the script tag is reached). Until
-   that marker exists — the page has no JS at all, or motion.js failed
-   outright — the first line stays visible by default rather than the
-   whole section going blank. Once html.js is present, JS's own
-   .is-on toggling takes over completely. */
+   that the Act sequence controller in motion.js has fully bound — its
+   scroll/resize listeners attached and its first paint queued — not
+   merely that the file started executing. A script that throws
+   partway through setup leaves html.js absent, same as a script that
+   never loads at all. Until that marker exists, the first line stays
+   visible by default rather than the whole section going blank. Once
+   html.js is present, JS's own .is-on toggling takes over completely. */
 .call{position:relative;background:var(--pine-900);color:var(--paper);padding:clamp(4rem,10vw,7rem) 0}
 .call-stage{position:relative;display:block;padding:0 clamp(1.5rem,7vw,7rem)}
 html.fx .call{height:460vh;padding:0}
