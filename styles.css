@@ -136,20 +136,15 @@ p{margin:0 0 1rem}
 .btn-note{font-family:var(--sans);font-size:.8rem;color:var(--mute);margin-top:1rem}
 .band-pine .btn-note,.band-deep .btn-note{color:var(--mute-pine)}
 
-/* ---------- header ---------- */
-.hdr{
-  position:sticky;top:0;z-index:90;background:rgba(20,55,45,.94);
-  backdrop-filter:saturate(150%) blur(12px);-webkit-backdrop-filter:saturate(150%) blur(12px);
-  border-bottom:1px solid var(--hair-lt);
-}
-.hdr-in{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:66px}
-.brand{display:inline-flex;align-items:center;min-height:44px;font-family:var(--serif);font-size:1.02rem;color:var(--paper);text-decoration:none;letter-spacing:-.01em;white-space:nowrap}
-.brand em{font-style:italic;color:var(--gold-hi)}
-.nav{display:flex;align-items:center;gap:1.85rem}
-.nav a{display:inline-flex;align-items:center;min-height:44px;font-family:var(--sans);font-size:.84rem;color:var(--mute-pine);text-decoration:none;transition:color .2s}
-.nav a:hover{color:var(--paper)}
-.hdr .btn{padding:.66rem 1.15rem;font-size:.84rem;min-height:44px}
-@media (max-width:860px){.nav{display:none}}
+/* ---------- header ----------
+   Header styling lives in chrome.css, which loads after this file and owns
+   .hdr, .hdr-in, .brand, .nav and .nav-toggle in full. The duplicate block
+   that used to sit here was dead in every context — it declared a translucent
+   pine bar that chrome.css overrode with paper on every page, and a
+   max-width:860px .nav{display:none} that fought chrome.css's 721px drawer
+   breakpoint. Only the header button sizing was unique to it, and that has
+   moved to chrome.css beside the rest of the header. Do not reintroduce
+   header rules here. */
 
 /* ---------- hero ---------- */
 .hero{background:var(--pine);color:var(--paper);position:relative;overflow:hidden;padding:clamp(3.5rem,7vw,6rem) 0 clamp(4rem,8vw,6.5rem)}
@@ -373,8 +368,35 @@ p{margin:0 0 1rem}
 /* ---------- creator transparency ---------- */
 .creator-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(2.5rem,6vw,5.5rem);align-items:start}
 .creator-grid .head-block{margin-bottom:0}
-.creator-note{border-top:1px solid var(--hair-lt);padding-top:1rem}
-.creator-note a{color:var(--gold-hi);text-underline-offset:.18em}
+.creator-note{border-top:1px solid var(--hair);padding-top:1rem}
+/* --gold-ink is the light-surface gold (5.55:1 on cream). --gold-hi is the
+   dark-surface gold and measured 1.55:1 here, because .creator-note sits in
+   #creators, which is .band-hi — a paper background. Default to the light
+   token and let the dark bands opt back in. */
+.creator-note a{color:var(--gold-ink);text-underline-offset:.18em}
+.band-pine .creator-note,.band-deep .creator-note{border-top-color:var(--hair-lt)}
+.band-pine .creator-note a,.band-deep .creator-note a{color:var(--gold-hi)}
+
+/* ---------- inline gap-check invitation (security act) ---------- */
+.gap-inline{
+  margin-top:clamp(2rem,4vw,3rem);padding-top:clamp(1.6rem,3vw,2.2rem);
+  border-top:1px solid var(--hair-lt);
+  display:grid;grid-template-columns:minmax(0,1fr) auto;
+  gap:.4rem clamp(2rem,5vw,4rem);align-items:center;
+}
+.gap-inline-q{
+  grid-column:1;font-family:var(--serif);font-size:clamp(1.15rem,2vw,1.45rem);
+  line-height:1.3;margin:0;color:var(--paper);
+}
+.gap-inline-a{
+  grid-column:1;font-family:var(--sans);font-size:.86rem;line-height:1.6;
+  color:var(--mute-pine);margin:0;max-width:62ch;
+}
+.gap-inline .btn{grid-column:2;grid-row:1 / span 2;white-space:nowrap}
+@media (max-width:720px){
+  .gap-inline{grid-template-columns:1fr;gap:.5rem}
+  .gap-inline .btn{grid-column:1;grid-row:auto;margin-top:1rem;justify-self:start}
+}
 @media (max-width:760px){.creator-grid{grid-template-columns:1fr}}
 
 /* ---------- lightbox ---------- */
@@ -661,6 +683,11 @@ html.fx .lb.on img{transform:scale(1);opacity:1}
 .call{position:relative;background:var(--pine-900);color:var(--paper);padding:clamp(4rem,10vw,7rem) 0}
 .call-stage{position:relative;display:block;padding:0 clamp(1.5rem,7vw,7rem)}
 html.fx .call{height:460vh;padding:0}
+/* On a phone each of the four statements is a full swipe, and 460vh left the
+   closing line sitting alone above roughly two empty screens of stage. The
+   scrub derives from call.offsetHeight (motion.js), so shortening the stage
+   redistributes the four stops automatically rather than clipping the last. */
+@media (max-width:720px){ html.fx .call{height:330vh} }
 html.fx .call-stage{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 clamp(1.5rem,7vw,7rem)}
 .call-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 0%,rgba(184,146,61,.13),transparent 62%)}
 .call-spine{position:absolute;left:clamp(1.5rem,4vw,3.4rem);top:0;width:1px;background:var(--gold);opacity:.55;height:0}

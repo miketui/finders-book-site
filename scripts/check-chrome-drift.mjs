@@ -16,7 +16,43 @@
 import { readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 
-const PAGES = ["index.html", "about.html", "order.html", "contact.html"];
+/**
+ * Every HTML page in the site root. This used to be four, which meant the
+ * check printed "identical across 4 pages" while the other four quietly
+ * carried three different header implementations between them — two of them
+ * with no nav, no footer and no path back to checkout at all. A guard that
+ * reports green on a diverged site is worse than no guard, so the list is now
+ * the whole site and any new page must be added here deliberately.
+ */
+const PAGES = [
+  "index.html", "about.html", "order.html", "contact.html",
+  "privacy-policy.html", "refund-policy.html", "terms.html", "404.html",
+];
+
+/**
+ * Pages permitted to ship without the header checkout button. The drawer CTA
+ * inside the nav block is still required everywhere, so every page keeps a
+ * purchase path; this only exempts the desktop header button. Keep this list
+ * short and justified — an empty exemption list is the goal.
+ */
+const NO_HEADER_CTA = new Set([]);
+
+/**
+ * The canonical tier spec. index.html and order.html both sell the same three
+ * SKUs and used to describe them differently — order.html silently dropped the
+ * Family Coordination Guide from the $89 tier, and neither page disclosed the
+ * three-household cap that the Payhip listing enforces at checkout. Each
+ * fragment below must appear on both pricing pages.
+ */
+const TIER_PARITY = [
+  { label: "Essentials · fillable + print",  needle: "49-page organizer: fillable PDF + print PDF" },
+  { label: "Essentials · Start Here",        needle: "Start Here orientation page" },
+  { label: "Ultimate · five tools named",    needle: "All five implementation tools: fridge card, secure vault setup, check-in plan, handoff scripts, digital legacy link + QR guide" },
+  { label: "Ultimate · checksums",           needle: "File checksums so you can verify every download" },
+  { label: "Family · coordination guide",    needle: "Family Coordination Guide" },
+  { label: "Family · three-household cap",   needle: "Licensed for up to three households" },
+];
+const PRICING_PAGES = ["index.html", "order.html"];
 
 const BLOCKS = [
   { name: "NAV",    re: /<!-- CHROME:NAV:START[\s\S]*?<!-- CHROME:NAV:END -->/ },
@@ -91,6 +127,46 @@ for (const p of present) {
   if (!/<nav class="nav" id="sitenav"/.test(s))fail(`${p} nav missing id=sitenav`);
 }
 if (!failed) ok("skip link, aria-expanded, aria-controls present on every page");
+
+/* ---- 3b. every page keeps a path back to checkout ---- */
+console.log("\nconversion path");
+for (const p of present) {
+  const s = src[p];
+  const hasCheckout = CHECKOUT.some((u) => s.includes(u));
+  const hasOrderLink = /href="\/order\.html"/.test(s);
+  if (!hasCheckout && !hasOrderLink) {
+    fail(`${p} has no checkout link and no /order.html link — it is a conversion dead end`);
+  }
+  if (!NO_HEADER_CTA.has(p) && !/class="btn btn-primary hdr-cta"/.test(s)) {
+    fail(`${p} is missing the header checkout button`);
+  }
+  if (!/CHROME:FOOTER:START/.test(s)) fail(`${p} is missing the canonical footer`);
+}
+if (!failed) ok(`all ${present.length} pages reach checkout, keep the header CTA and the canonical footer`);
+
+/* ---- 3c. tier parity between the two pricing surfaces ---- */
+console.log("\ntier parity");
+for (const { label, needle } of TIER_PARITY) {
+  const misses = PRICING_PAGES.filter((p) => src[p] && !src[p].includes(needle));
+  if (misses.length) fail(`tier copy "${label}" missing from: ${misses.join(", ")}`);
+}
+if (!failed) ok(`${TIER_PARITY.length} tier fragments identical on ${PRICING_PAGES.join(" + ")}`);
+
+/* ---- 3d. third-party scripts ---- */
+console.log("\nthird-party scripts");
+for (const p of present) {
+  for (const m of src[p].matchAll(/<script\b[^>]*\bsrc="(https?:\/\/[^"]+)"[^>]*>/g)) {
+    const tag = m[0], url = m[1];
+    if (/googletagmanager\.com/.test(url)) continue; // injected post-consent, measured separately
+    if (!/\bdefer\b|\basync\b/.test(tag)) {
+      fail(`${p} loads ${url} without defer/async — it blocks the parser on a page that takes payment`);
+    }
+    if (!/\bintegrity="/.test(tag)) {
+      fail(`${p} loads ${url} without an integrity hash — pin it or self-host it under /assets/vendor/`);
+    }
+  }
+}
+if (!failed) ok("no unpinned or parser-blocking third-party scripts");
 
 /* ---- 4. structured data parses ---- */
 console.log("\nstructured data");

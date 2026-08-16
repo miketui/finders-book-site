@@ -7,9 +7,23 @@
 <meta name="description" content="What The Finder's Book collects, who processes it, how long it is kept, and your rights under GDPR and CCPA.">
 <meta name="robots" content="index,follow">
 <meta name="theme-color" content="#14372D">
+<meta name="author" content="Joanne Godfrey and Michael David">
 <link rel="canonical" href="https://www.familyfindersbook.com/privacy-policy.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Family Clarity Co.">
+<meta property="og:url" content="https://www.familyfindersbook.com/privacy-policy.html">
+<meta property="og:title" content="Privacy Policy | The Finder's Book">
+<meta property="og:description" content="What we collect, who processes it, how long it is kept, and your rights under GDPR and CCPA. Nothing you write in the book ever reaches us.">
+<meta property="og:image" content="https://www.familyfindersbook.com/assets/og-finders-book.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy Policy | The Finder's Book">
+<meta name="twitter:description" content="What we collect, who processes it, how long it is kept, and your rights under GDPR and CCPA.">
+<meta name="twitter:image" content="https://www.familyfindersbook.com/assets/og-finders-book.jpg">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-normal.woff2" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="chrome.css">
+<link rel="stylesheet" href="pages.css">
 <style>
 @font-face{font-family:"Newsreader Local";font-style:normal;font-display:swap;font-weight:200 800;
   src:url("assets/fonts/newsreader-latin-variable-normal.woff2") format("woff2-variations")}
@@ -17,74 +31,89 @@
   src:url("assets/fonts/newsreader-latin-variable-italic.woff2") format("woff2-variations")}
 @font-face{font-family:"Archivo Local";font-style:normal;font-display:swap;font-weight:100 900;
   src:url("assets/fonts/archivo-latin-variable-normal.woff2") format("woff2-variations")}
-:root{
-  --pine-900:#0B1F19;--pine:#14372D;--pine-700:#1D4A3C;
-  --paper:#FAF4E8;--paper-hi:#FDFAF1;--sage:#DCE6E0;
-  --gold:#B8923D;--gold-hi:#DFC99D;--gold-ink:#7A5E22;
-  --mute:#4A5D55;--hair:rgba(20,55,45,.16);
-  --serif:"Newsreader Local",Georgia,serif;
-  --sans:"Archivo Local",system-ui,-apple-system,sans-serif;
-  --r:3px;--wrap:1180px;--ease:cubic-bezier(.22,1,.36,1);
-}
-*,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--paper);color:var(--pine);
-  font-family:var(--serif);font-size:1.0625rem;line-height:1.7;
-  font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
-a{color:var(--gold-ink);text-underline-offset:2px}
-h1,h2,h3{margin:0;font-weight:400;line-height:1.15;letter-spacing:-.012em}
-p{margin:0 0 1.05rem}
-:focus-visible{outline:3px solid var(--pine);outline-offset:2px;border-radius:2px}
-.wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 clamp(1.15rem,4vw,2.5rem)}
-.skip{position:absolute;left:-9999px;background:var(--pine);color:var(--paper);padding:.85rem 1.25rem;z-index:200;font-family:var(--sans);font-size:.85rem}
-.skip:focus{left:.5rem;top:.5rem}
-.mast{background:var(--pine);color:var(--paper);padding:1.15rem 0}
-.mast a{color:var(--paper);text-decoration:none;font-family:var(--sans);
-  font-size:.78rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
-  display:inline-flex;align-items:center;gap:.6rem;min-height:44px}
-.mast a:hover{text-decoration:underline;text-underline-offset:4px}
+</style>
+<style>
+/* Long-form legal document styles. Everything else — tokens, chrome, footer,
+   typography — now comes from the shared stylesheets above, so these pages
+   carry the same header, footer and purchase path as the rest of the site. */
 .doc{max-width:74ch;margin:0 auto;padding:clamp(3rem,8vw,5.5rem) 0 clamp(4rem,9vw,7rem)}
-.eyebrow{font-family:var(--sans);font-size:.7rem;font-weight:600;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--gold-ink);display:flex;align-items:center;
-  gap:.85rem;margin:0 0 1.4rem}
-.eyebrow::after{content:"";flex:1;height:1px;background:var(--gold);opacity:.55;max-width:190px}
-.doc h1{font-size:clamp(2rem,5.4vw,3rem);margin-bottom:.7rem}
+.doc h1{font-size:clamp(2rem,5.4vw,3rem);margin-bottom:.7rem;font-weight:400;line-height:1.15;letter-spacing:-.012em}
 .doc-meta{font-family:var(--sans);font-size:.74rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--mute);margin-bottom:2.6rem}
 .doc h2{font-size:clamp(1.22rem,2.6vw,1.5rem);margin:2.7rem 0 .85rem;
-  padding-top:1.7rem;border-top:1px solid var(--hair)}
+  padding-top:1.7rem;border-top:1px solid var(--hair);font-weight:400;line-height:1.15}
 .doc h3{font-size:.98rem;margin:1.7rem 0 .5rem;font-weight:600;font-family:var(--sans);
   letter-spacing:.01em}
 .doc p,.doc li{color:var(--mute)}
 .doc strong{color:var(--pine);font-weight:600}
 .doc ul,.doc ol{padding-left:1.3rem;margin:0 0 1.15rem}
 .doc li{margin-bottom:.55rem}
-.lede{font-size:1.16rem;color:var(--pine);margin-bottom:1.6rem}
-.callout{background:var(--sage);border-left:2px solid var(--gold);
-  padding:1.15rem 1.35rem;margin:1.6rem 0;border-radius:0 var(--r) var(--r) 0}
+.doc a{color:var(--gold-ink);text-underline-offset:2px}
+.callout{background:var(--sage);padding:1.15rem 1.35rem;margin:1.6rem 0;border-radius:var(--r)}
 .callout p:last-child{margin-bottom:0}
 .callout p{color:var(--pine)}
-table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.9rem;font-size:.95rem}
-th,td{text-align:left;padding:.72rem .8rem;border-bottom:1px solid var(--hair);
+.doc table{width:100%;border-collapse:collapse;margin:1.2rem 0 1.9rem;font-size:.95rem}
+.doc th,.doc td{text-align:left;padding:.72rem .8rem;border-bottom:1px solid var(--hair);
   vertical-align:top;color:var(--mute)}
-th{font-family:var(--sans);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+.doc th{font-family:var(--sans);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--gold-ink);font-weight:600}
-.ftr{background:var(--pine-900);color:var(--paper);padding:3rem 0;font-size:.88rem}
-.ftr p{color:rgba(250,244,232,.72);max-width:80ch}
-.ftr a{color:var(--gold-hi)}
-@media (max-width:640px){table,thead,tbody,th,td,tr{display:block}
-  thead{position:absolute;left:-9999px}
-  td{border-bottom:none;padding:.25rem 0}
-  tr{border-bottom:1px solid var(--hair);padding:.8rem 0;display:block}
-  td::before{content:attr(data-l);display:block;font-family:var(--sans);font-size:.64rem;
+@media (max-width:640px){
+  .doc table,.doc thead,.doc tbody,.doc th,.doc td,.doc tr{display:block}
+  .doc thead{position:absolute;left:-9999px}
+  .doc td{border-bottom:none;padding:.25rem 0}
+  .doc tr{border-bottom:1px solid var(--hair);padding:.8rem 0;display:block}
+  .doc td::before{content:attr(data-l);display:block;font-family:var(--sans);font-size:.64rem;
     letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);margin-bottom:.15rem}}
 </style>
 <link rel="stylesheet" href="consent.css">
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://www.familyfindersbook.com/privacy-policy.html",
+      "url": "https://www.familyfindersbook.com/privacy-policy.html",
+      "name": "Privacy Policy | The Finder's Book",
+      "description": "What The Finder's Book collects, who processes it, how long it is kept, and your rights under GDPR and CCPA.",
+      "inLanguage": "en",
+      "isPartOf": { "@type": "WebSite", "name": "The Family Clarity Co.", "url": "https://www.familyfindersbook.com/" },
+      "publisher": { "@type": "Organization", "name": "The Family Clarity Co.", "url": "https://www.familyfindersbook.com/" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.familyfindersbook.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Privacy Policy", "item": "https://www.familyfindersbook.com/privacy-policy.html" }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="mast"><div class="wrap"><a href="/">&larr; The Finder's Book</a></div></header>
+<!-- CHROME:NAV:START — identical in every page. Guarded by scripts/check-chrome-drift.mjs -->
+<header class="hdr">
+  <div class="wrap hdr-in">
+    <a class="brand" href="/" aria-label="The Family Clarity Co. home">Family <em>Clarity</em> Co.</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="sitenav" aria-label="Open menu">
+      <span></span>
+    </button>
+    <nav class="nav" id="sitenav" aria-label="Main">
+      <a href="/">Home</a>
+      <a href="/about.html">About</a>
+      <a href="/order.html">Order</a>
+      <a href="/contact.html">Contact</a>
+      <a class="btn btn-primary drawer-cta" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="drawer" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
+      <p class="drawer-note">Instant download. One-time purchase, no subscription. <a href="/order.html">Compare all three editions</a>.</p>
+    </nav>
+    <a class="btn btn-primary hdr-cta" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="header" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
+  </div>
+</header>
+<div class="scrim" aria-hidden="true"></div>
+<!-- CHROME:NAV:END -->
 <main id="main"><div class="wrap"><article class="doc">
 <p class="eyebrow">How we handle your data</p>
 <h1>Privacy Policy</h1>
@@ -242,18 +271,57 @@ information will be emailed to subscribers before they take effect.</p>
 Email: <a href="mailto:info@familyfindersbook.com">info@familyfindersbook.com</a><br>
 We answer privacy requests within 30 days.</p>
 
-</article></div></main>
-<footer class="ftr"><div class="wrap">
-<p><strong style="color:var(--gold-hi)">This is not legal advice.</strong> The Finder's Book is a structured template for
-personal record-keeping. It is not a will, trust, contract, power of attorney, or advance directive.</p>
-<p style="margin-top:1rem">Questions: <a href="mailto:info@familyfindersbook.com">info@familyfindersbook.com</a> &middot;
-<a href="/refund-policy.html">Refund policy</a> &middot;
-<a href="/terms.html">Terms of use</a> &middot;
-<a href="/privacy-policy.html">Privacy policy</a></p>
-<p style="margin-top:1rem">Copyright &copy; 2026 Joanne Godfrey and Michael David Warren Jr.. All rights reserved.
-The Family Clarity System&trade; is a trademark of Joanne Godfrey and Michael David Warren Jr..</p>
-</div></footer>
+</article></div>
+<section class="band band-deep legal-cta">
+  <div class="wrap final-wrap">
+    <p class="eyebrow eyebrow-centered">Now you know how your data is handled</p>
+    <h2 class="h-lg">Nothing you write in the book ever reaches us.</h2>
+    <p class="lede final-lede">The PDFs are files on your device. They do not sync, phone home, or transmit anything. That is the whole design: the sensitive material stays with you, and the book only records where things are.</p>
+    <a class="btn btn-primary" href="/order.html" data-cta data-placement="privacy-order">See the three editions</a>
+    <p class="btn-note final-note">One-time purchase · Instant download · <a href="/#gap-check">Or start with the free Gap Check</a></p>
+  </div>
+</section>
+
+</main>
+<!-- CHROME:FOOTER:START — identical in every page. Guarded by scripts/check-chrome-drift.mjs -->
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr-grid">
+      <div>
+        <h2>The Finder's Book</h2>
+        <p class="footer-summary">The Family Clarity System™: a 49-page family emergency and legacy organizer by Joanne Godfrey and Michael David.</p>
+        <p class="ftr-nav-note">A pointer, not a vault. No passwords stored, ever.</p>
+      </div>
+      <div>
+        <h2>Site</h2>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="/order.html">Editions &amp; pricing</a></li>
+          <li><a href="/contact.html">Contact &amp; feedback</a></li>
+          <li><a href="/#gap-check">Free Gap Check</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Support</h2>
+        <ul>
+          <li><a href="/contact.html">Ask a question</a></li>
+          <li><a href="/refund-policy.html">Refund policy</a></li>
+          <li><a href="/terms.html">Terms of use</a></li>
+          <li><a href="/privacy-policy.html">Privacy policy</a></li>
+          <li><a href="/contact.html">Professional licensing</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ftr-legal">
+      <p><strong>This is not legal, medical, or financial advice.</strong> The Finder's Book is a structured template for personal record-keeping. It is not a will, trust, contract, power of attorney, or advance directive, and it confers no authority over any account, property, or medical decision. The legal documents your family will need are the originals signed and witnessed according to the law of your jurisdiction. Consult an attorney, licensed medical professional, or licensed financial advisor for questions about legal, medical, or financial effect.</p>
+      <p>Copyright © 2026 Joanne Godfrey and Michael David Warren Jr. All rights reserved. The Family Clarity System™ is a trademark of Joanne Godfrey and Michael David Warren Jr. The trade dress of this work, including its layout system, typographic treatment, and section architecture, is protected. Ultimate Digital Edition v1.2.3.</p>
+    </div>
+  </div>
+</footer>
+<!-- CHROME:FOOTER:END -->
 <script src="consent.js" defer></script>
 <script src="analytics.js" defer></script>
+<script src="chrome.js" defer></script>
 </body>
 </html>

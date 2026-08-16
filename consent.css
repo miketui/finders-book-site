@@ -1,8 +1,12 @@
 /* Optional analytics choice. Kept independent so legal pages can use it too. */
+/* Corner-anchored card, not a full-width bar. The banner is persistent and
+   does not auto-dismiss, so at 980px centred it sat across the pricing table
+   and the security doctrine at every scroll depth. Anchored bottom-right at
+   a fixed width it stays out of the reading column and away from price rows. */
 .consent-banner{
-  position:fixed; right:1rem; bottom:1rem; left:1rem; z-index:120;
-  display:flex; align-items:center; justify-content:space-between; gap:1.25rem;
-  max-width:980px; margin:0 auto; padding:1rem 1.1rem;
+  position:fixed; right:1rem; bottom:1rem; left:auto; z-index:120;
+  display:flex; flex-direction:column; align-items:stretch; gap:.9rem;
+  width:min(420px,calc(100vw - 2rem)); margin:0; padding:1rem 1.1rem;
   color:#FAF4E8; background:#0B1F19; border:1px solid rgba(250,244,232,.28);
   border-radius:6px; box-shadow:0 14px 45px rgba(0,0,0,.3);
   font-family:"Archivo Local",system-ui,-apple-system,sans-serif;
@@ -24,9 +28,15 @@
   min-height:40px;padding:.55rem .75rem;color:#FAF4E8;background:#14372D;
   border-color:rgba(250,244,232,.45);box-shadow:0 5px 18px rgba(0,0,0,.2)
 }
-@media (max-width:720px){
-  .consent-banner{align-items:stretch;flex-direction:column}
-  .consent-actions{display:grid;grid-template-columns:1fr 1fr}
+.consent-actions{display:grid;grid-template-columns:1fr 1fr}
+
+/* The sticky purchase bar occupies the bottom 74px below 860px on the pages
+   that carry it. The banner sits at z-index 120 and the purchase button at
+   80, so at bottom:1rem the banner covered the buy button outright on a
+   phone. Lift clear of it wherever the sticky bar exists. */
+@media (max-width:860px){
+  body:has(.sticky) .consent-banner{bottom:calc(74px + 1rem + env(safe-area-inset-bottom))}
+  body:has(.sticky) .consent-reopen{bottom:calc(74px + .75rem + env(safe-area-inset-bottom))}
 }
 @media (max-width:440px){
   .consent-actions{grid-template-columns:1fr}

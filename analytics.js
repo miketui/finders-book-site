@@ -6,10 +6,22 @@
 (function(){
   "use strict";
 
+  /* ---------- page dimension ----------
+     data-placement="header" and "drawer" fire from all eight pages, so
+     without this every header-CTA click landed in one undifferentiated
+     bucket and header performance could not be attributed to a page. */
+  var PAGE_ID = (function(){
+    try{
+      var path = (location.pathname || "/").replace(/\/index\.html$/i, "/").replace(/\.html$/i, "");
+      var id = path.replace(/^\/+/, "").replace(/\/+$/, "");
+      return id || "home";
+    }catch(e){ return "unknown"; }
+  })();
+
   /* ---------- shared tracking bus ---------- */
   function track(name, params){
     if (window.fbAnalyticsConsent !== "granted") return;
-    var p = Object.assign({page_variant:"v3.2"}, params || {});
+    var p = Object.assign({page_variant:"v3.2", page_id:PAGE_ID}, params || {});
     try{
       if (typeof window.va === "function") window.va("event", {name:name, data:p});
       if (typeof window.gtag === "function") window.gtag("event", name, p);

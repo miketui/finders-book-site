@@ -122,6 +122,104 @@
     </div>
   </section>
 
+  <!-- ============ PROOF BEFORE PRICE ============
+       This page previously reached three prices after 128 words and one
+       image, with every objection-handler sitting below the ask. The three
+       sections that follow — real pages, the security doctrine, and the three
+       questions a buyer actually asks first — exist so that nobody is shown a
+       price before they have seen the product and had their first objection
+       answered. Do not move the pricing table above this point. -->
+
+  <!-- PROOF 1 · real pages -->
+  <section class="band" id="real-pages">
+    <div class="wrap">
+      <div class="head-block">
+        <p class="eyebrow">Before you decide anything</p>
+        <h2 class="h-lg">Look at the actual pages.</h2>
+        <p class="lede">Four of the forty-nine, at full size. Select any page to open it. These are the real pages, not mockups.</p>
+      </div>
+      <div class="order-pages">
+        <button class="pg" type="button" data-full="assets/continuity-snapshot.webp" data-cap="Page 2: Continuity Snapshot">
+          <img src="assets/continuity-snapshot.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Continuity Snapshot page listing first person to call, backup, dependent caretaker and pet caretaker.">
+          <span class="pg-cap">Page 2 · Continuity Snapshot</span>
+        </button>
+        <button class="pg" type="button" data-full="assets/letter-to-finder.webp" data-cap="Page 6: A letter to the person who found this book">
+          <img src="assets/letter-to-finder.webp" width="900" height="1165" loading="lazy" decoding="async" alt="A written letter addressed to whoever finds the book, explaining what to do first.">
+          <span class="pg-cap">Page 6 · Letter to the finder</span>
+        </button>
+        <button class="pg" type="button" data-full="assets/levels-of-access.webp" data-cap="Pages 12–13: Levels of access and the access matrix">
+          <img src="assets/levels-of-access.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Access matrix assigning Now, Later, or Never permission levels to each trusted person.">
+          <span class="pg-cap">Pages 12–13 · The access matrix</span>
+        </button>
+        <button class="pg" type="button" data-full="assets/will-locator.webp" data-cap="Page 21: The will">
+          <img src="assets/will-locator.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Will locator page recording the executor, where the original is stored, and the attorney.">
+          <span class="pg-cap">Page 21 · The will</span>
+        </button>
+      </div>
+      <p class="btn-note"><a href="/#inside" data-cta data-placement="order-spread">See the full spread and all twelve page previews on the main page</a>.</p>
+    </div>
+  </section>
+
+  <!-- PROOF 2 · the security doctrine, the reason this costs money -->
+  <section class="band band-pine" id="order-security">
+    <div class="wrap">
+      <div class="head-block">
+        <p class="eyebrow">The question everyone asks first</p>
+        <h2 class="h-lg">A family map, <span class="ital">not a password vault.</span></h2>
+        <p class="lede">This is the difference between The Finder's Book and a free checklist, and it is the reason it can sit in a drawer safely. The book records who, what and where. Credentials stay in a separate secure system it points to.</p>
+      </div>
+      <div class="doctrine">
+        <div class="doc-panel">
+          <h3>What the book records</h3>
+          <ul class="doc-list doc-yes">
+            <li>Who to call first, and who backs them up</li>
+            <li>Where the signed originals are physically kept</li>
+            <li>Which institutions hold what, by name</li>
+            <li>Last four digits, for identification only</li>
+            <li>Who is named as executor, agent, or guardian</li>
+            <li>A pointer to the secure system that holds the secrets</li>
+          </ul>
+        </div>
+        <div class="doc-panel">
+          <h3>What the book never records</h3>
+          <ul class="doc-list doc-no">
+            <li><span>Passwords for any account</span></li>
+            <li><span>PINs for any card or device</span></li>
+            <li><span>Two-factor recovery codes</span></li>
+            <li><span>Full account numbers</span></li>
+            <li><span>Full Social Security numbers</span></li>
+            <li><span>Combinations to safes or storage units</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF 3 · the three objections that decide the sale, answered before the price -->
+  <section class="band" id="first-questions">
+    <div class="wrap">
+      <div class="head-block">
+        <p class="eyebrow">Answered before you see a price</p>
+        <h2 class="h-lg">The three things people ask before they buy.</h2>
+      </div>
+
+      <details class="q" data-faq open>
+        <summary>Is it safe to write this down at all?</summary>
+        <p>That depends entirely on what you write down, which is why the book is built as a pointer rather than a vault. It records which bank, not which password. Where the will is kept, not what it says. If the book is found by the wrong person, they learn that you bank somewhere and keep documents somewhere, not how to access either. Treat the completed book as private personal information and limit access to people you trust.</p>
+      </details>
+
+      <details class="q" data-faq open>
+        <summary>I have started organizers before and never finished them.</summary>
+        <p>Most people have, and it is usually a design failure rather than a discipline failure. This one front-loads four decisions that carry real weight in an emergency, so fifteen minutes produces something genuinely useful. The remaining pages are optional depth. A half-finished Finder's Book is still dramatically better than nothing, and the book says so on its own pages.</p>
+      </details>
+
+      <details class="q" data-faq open>
+        <summary>Which edition should I pick?</summary>
+        <p>If you know you will sit down and fill it in, Essentials is the document and it is complete on its own. If your honest concern is that it will be downloaded and forgotten, Ultimate exists for that specific problem: the five tools are about getting it started, found, and handed over. Choose the Family Bundle only if you are organizing for more than one household.</p>
+      </details>
+    </div>
+  </section>
+
   <!-- COMPARISON -->
   <section class="band band-hi" id="editions">
     <div class="wrap">
@@ -132,17 +230,20 @@
 
       <div class="tiers">
 
+        <!-- CANONICAL TIER SPEC — identical to the three lists in index.html.
+             If a deliverable changes, it changes in both places or nowhere.
+             Guarded by scripts/check-chrome-drift.mjs (tier parity). -->
         <article class="tier">
           <h3>Essentials</h3>
           <p class="tier-price"><span>$29</span></p>
           <p class="tier-for">For the person who wants the document and nothing else.</p>
           <ul class="ticks">
-            <li>The 49-page organizer</li>
-            <li>Fillable PDF</li>
-            <li>Printable PDF</li>
-            <li>Lifetime access to your files</li>
+            <li>49-page organizer: fillable PDF + print PDF</li>
+            <li>Start Here orientation page</li>
+            <li>Plain-language license and printing terms</li>
+            <li>Files you save and keep. No app, no account</li>
           </ul>
-          <a class="btn btn-ghost" href="https://payhip.com/b/eHcPG" data-checkout data-placement="order-compare" data-tier="essentials" data-price="29">Get Essentials: $29</a>
+          <a class="btn btn-ghost" href="https://payhip.com/b/eHcPG" data-checkout data-placement="order-essentials" data-tier="essentials" data-price="29">Get Essentials: $29</a>
         </article>
 
         <article class="tier tier-rec">
@@ -152,13 +253,10 @@
           <p class="tier-for">For the person who wants it finished, found, and actually used.</p>
           <ul class="ticks">
             <li>Everything in Essentials</li>
-            <li>Emergency fridge card</li>
-            <li>15-minute secure vault setup guide</li>
-            <li>Continuity check-in plan</li>
-            <li>Trusted person handoff scripts</li>
-            <li>Digital legacy link and QR guide</li>
+            <li>All five implementation tools: fridge card, secure vault setup, check-in plan, handoff scripts, digital legacy link + QR guide</li>
+            <li>File checksums so you can verify every download</li>
           </ul>
-          <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="order-compare" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
+          <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="order-ultimate" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
           <p class="btn-note">The five implementation tools are the difference between a binder that gets filled in and one that gets filed away.</p>
         </article>
 
@@ -168,10 +266,10 @@
           <p class="tier-for">For households organizing for more than one person.</p>
           <ul class="ticks">
             <li>Everything in Ultimate</li>
-            <li>Licensed for multiple family members</li>
-            <li>Suited to parents, siblings, and a shared plan</li>
+            <li>Family Coordination Guide</li>
+            <li>Licensed for up to three households</li>
           </ul>
-          <a class="btn btn-ghost" href="https://payhip.com/b/xPuv4" data-checkout data-placement="order-compare" data-tier="family_bundle" data-price="89">Get the Family Bundle: $89</a>
+          <a class="btn btn-ghost" href="https://payhip.com/b/xPuv4" data-checkout data-placement="order-bundle" data-tier="family_bundle" data-price="89">Get the Family Bundle: $89</a>
         </article>
 
       </div>
@@ -182,24 +280,10 @@
   <section class="band" id="questions">
     <div class="wrap">
       <div class="head-block">
-        <p class="eyebrow">Before you decide</p>
+        <p class="eyebrow">Everything else</p>
         <h2 class="h-lg">Know exactly what this does, and what it does not.</h2>
+        <p class="lede">The three questions people ask first are answered above, before the price. These are the rest.</p>
       </div>
-
-      <details class="q" data-faq>
-        <summary>Is it safe to write this down at all?</summary>
-        <p>That depends entirely on what you write down, which is why the book is built as a pointer rather than a vault. It records which bank, not which password. Where the will is kept, not what it says. If the book is found by the wrong person, they learn that you bank somewhere and keep documents somewhere — not how to access either.</p>
-      </details>
-
-      <details class="q" data-faq>
-        <summary>I have started organizers before and never finished them.</summary>
-        <p>Most people have, and it is usually a design failure rather than a discipline failure. This one front-loads four decisions that carry real weight in an emergency, so fifteen minutes produces something genuinely useful. The remaining pages are optional depth. A half-finished Finder's Book is still dramatically better than nothing, and the book says so on its own pages.</p>
-      </details>
-
-      <details class="q" data-faq>
-        <summary>Which edition should I pick?</summary>
-        <p>If you know you will sit down and fill it in, Essentials is the document and it is complete on its own. If your honest concern is that it will be downloaded and forgotten, Ultimate exists for that specific problem — the five tools are about getting it started, found, and handed over. Choose the Family Bundle only if you are organizing for more than one person.</p>
-      </details>
 
       <details class="q" data-faq>
         <summary>Is this a will, or does it replace legal documents?</summary>
@@ -282,6 +366,15 @@
   </div>
 </footer>
 <!-- CHROME:FOOTER:END -->
+
+<!-- page lightbox — required by the .pg buttons in #real-pages; motion.js
+     dereferences #lb without a null guard, so this markup must ship on any
+     page that carries a .pg button. -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Page preview" hidden>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Close preview">&times;</button>
+  <img id="lbImg" src="assets/cover.webp" width="1100" height="1423" alt="Product page preview">
+  <p class="lb-cap" id="lbCap"></p>
+</div>
 
 <script src="consent.js" defer></script>
 <script src="analytics.js" defer></script>
