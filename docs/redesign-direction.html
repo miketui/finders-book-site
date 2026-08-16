@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Book Comes Last</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Redesign direction for familyfindersbook.com: withhold the product for three screens, sell the anxiety and the relief first, then reveal the book as the answer.">
+<!--
+  ============================================================================
+  THE FINDER'S BOOK · REDESIGN DIRECTION — "The book comes last"
+  Companion to docs/redesign-mock.html (the live, interactive version)
+  Supersedes: Revamp Direction (Aug 2026) on sequence; inherits its palette,
+  type, motion-discipline and build-order findings unchanged.
+  ----------------------------------------------------------------------------
+  Not a shipping page: noindex, absent from sitemap.xml, absent from the
+  validation PAGES allowlist, not linked from site navigation.
+  ============================================================================
+-->
+<style>
+@font-face{font-family:"Newsreader Local";font-style:normal;font-display:swap;font-weight:200 800;
+  src:url("../assets/fonts/newsreader-latin-variable-normal.woff2") format("woff2-variations")}
+@font-face{font-family:"Newsreader Local";font-style:italic;font-display:swap;font-weight:200 800;
+  src:url("../assets/fonts/newsreader-latin-variable-italic.woff2") format("woff2-variations")}
+@font-face{font-family:"Archivo Local";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("../assets/fonts/archivo-latin-variable-normal.woff2") format("woff2-variations")}
+
+:root{
+  --pine-900:#0B1F19; --pine:#14372D; --pine-700:#1D4A3C;
+  --paper:#FAF4E8; --paper-hi:#FDFAF1; --sage:#DCE6E0;
+  --gold:#B8923D; --gold-hi:#DFC99D; --gold-ink:#7A5E22;
+  --mute:#4A5D55; --mute-pine:#A9BDB2;
+  --hair:rgba(20,55,45,.16); --hair-lt:rgba(250,244,232,.20);
+  --serif:"Newsreader Local",Georgia,"Times New Roman",serif;
+  --sans:"Archivo Local",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:3px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;overflow-x:clip;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--pine);
+  font-family:var(--serif);font-size:1.0625rem;line-height:1.66;
+  font-optical-sizing:auto;-webkit-font-smoothing:antialiased;overflow-x:clip;
+}
+h1,h2,h3,h4{margin:0;font-weight:400;line-height:1.1;letter-spacing:-.018em;text-wrap:balance}
+p{margin:0 0 1.05rem}
+ul,ol{margin:0;padding:0;list-style:none}
+a{color:inherit}
+strong{font-weight:600}
+em{font-style:italic}
+:focus-visible{outline:3px solid var(--pine-700);outline-offset:3px}
+
+.wrap{width:100%;max-width:960px;margin:0 auto;padding:0 clamp(1.2rem,5vw,2.5rem)}
+/* Measure is constrained on the children, not on the wrap, so every section
+   on the page shares one left edge regardless of its reading width. */
+.narrow > *{max-width:68ch}
+
+/* ---------- shared grammar, lifted from the live site ---------- */
+.eyebrow{
+  font-family:var(--sans);font-size:.66rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold-ink);display:flex;align-items:center;gap:.85rem;margin:0 0 1.3rem;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--gold);opacity:.5;max-width:180px}
+.on-dark .eyebrow{color:var(--gold-hi)}
+.on-dark .eyebrow::after{background:var(--gold-hi);opacity:.4}
+
+.sec{padding:clamp(3.4rem,7vw,6rem) 0}
+.on-dark{background:var(--pine);color:var(--paper)}
+.on-deep{background:var(--pine-900);color:var(--paper)}
+.on-sage{background:var(--sage)}
+.on-hi{background:var(--paper-hi)}
+.on-dark p,.on-deep p{color:var(--mute-pine)}
+.on-dark h2,.on-dark h3,.on-deep h2,.on-deep h3{color:var(--paper)}
+
+h2.t{font-size:clamp(1.75rem,3.6vw,2.6rem);line-height:1.1;letter-spacing:-.026em;margin-bottom:1.1rem}
+h3.s{font-size:clamp(1.16rem,1.9vw,1.4rem);margin-bottom:.55rem}
+.lede{font-size:clamp(1.06rem,1.5vw,1.2rem);line-height:1.6;color:var(--mute);max-width:62ch}
+.on-dark .lede{color:var(--mute-pine)}
+.tiny{font-family:var(--sans);font-size:.78rem;line-height:1.55;color:var(--mute)}
+.on-dark .tiny,.on-deep .tiny{color:var(--mute-pine)}
+.ital{font-style:italic;color:var(--pine-700)}
+.on-dark .ital{color:var(--gold-hi)}
+
+/* ---------- cover ---------- */
+.cover{background:var(--pine-900);color:var(--paper);padding:clamp(3.4rem,8vw,6.5rem) 0 clamp(2.6rem,5vw,4rem);position:relative;overflow:hidden}
+.cover::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(95% 70% at 78% 0%,rgba(184,146,61,.2),transparent 62%)}
+.cover .wrap{position:relative;z-index:2}
+.cover-kick{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;font-family:var(--sans);font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:2.6rem}
+.cover h1{font-size:clamp(2.5rem,6.6vw,4.6rem);line-height:.98;letter-spacing:-.038em;color:var(--paper);max-width:15ch}
+.cover h1 em{font-style:italic;color:var(--gold-hi)}
+.cover .lede{color:var(--mute-pine);margin-top:1.6rem;max-width:56ch;font-size:clamp(1.05rem,1.6vw,1.22rem)}
+
+/* ---------- scorecards ---------- */
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:3.4rem;border-top:1px solid var(--hair-lt)}
+.score{padding:1.5rem 1.4rem 0 0;border-right:1px solid var(--hair-lt)}
+.score:last-child{border-right:0}
+.score .k{font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.19em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:.7rem}
+.score .v{font-size:2.1rem;line-height:1;letter-spacing:-.03em;color:var(--paper);margin-bottom:.6rem;font-variant-numeric:tabular-nums}
+.score p{font-family:var(--sans);font-size:.76rem;line-height:1.5;color:var(--mute-pine);margin:0}
+
+/* ---------- the finding block ---------- */
+.find{border-top:1px solid var(--hair);padding:1.7rem 0}
+.find:first-of-type{border-top:2px solid var(--gold)}
+.find-hd{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem 1rem;margin-bottom:.6rem}
+.sev{
+  font-family:var(--sans);font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  padding:.26rem .5rem;border-radius:2px;color:var(--paper);background:var(--pine-700);
+}
+.sev-c{background:#7A2E22}
+.sev-s{background:var(--gold-ink)}
+.sev-m{background:var(--mute)}
+.find-loc{font-family:var(--sans);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.find h3{font-size:1.22rem;line-height:1.24;margin-bottom:.5rem}
+.find p{color:var(--mute);max-width:70ch;margin-bottom:0}
+.find p + p{margin-top:.7rem}
+.verdict{
+  font-family:var(--sans);font-size:.79rem;line-height:1.55;color:var(--pine);
+  border-left:2px solid var(--gold);padding-left:.9rem;margin-top:.9rem;max-width:66ch;
+}
+
+/* ---------- the act table ---------- */
+.tbl-scroll{overflow-x:auto;margin-top:2rem;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:660px}
+th,td{text-align:left;vertical-align:top;padding:.85rem 1.1rem .85rem 0;border-bottom:1px solid var(--hair)}
+th{
+  font-family:var(--sans);font-size:.6rem;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--gold-ink);border-bottom:1px solid var(--gold);
+}
+td{font-size:.95rem;line-height:1.5}
+td.was{color:var(--mute)}
+td.now{font-weight:600}
+td.why{color:var(--mute);font-family:var(--sans);font-size:.83rem}
+.on-dark th{color:var(--gold-hi);border-bottom-color:var(--gold-hi)}
+.on-dark td{border-bottom-color:var(--hair-lt)}
+.on-dark td.was,.on-dark td.why{color:var(--mute-pine)}
+
+/* ---------- the act sequence ---------- */
+.acts{display:grid;gap:0;margin-top:2.4rem;border-top:1px solid var(--hair-lt)}
+.act-row{display:grid;grid-template-columns:auto 8.5rem 1fr;gap:1.4rem;align-items:start;padding:1.05rem 0;border-bottom:1px solid var(--hair-lt)}
+.chip{width:2.1rem;height:2.1rem;border-radius:2px;display:grid;place-items:center;font-family:var(--sans);font-size:.66rem;font-weight:700;color:var(--paper);border:1px solid var(--hair-lt)}
+.g-deep{background:#0B1F19}.g-pine{background:#14372D}.g-sage{background:#DCE6E0;color:#14372D}
+.g-paper{background:#FAF4E8;color:#14372D}.g-hi{background:#FDFAF1;color:#14372D}
+.act-row .nm{font-size:1.02rem;color:var(--paper)}
+.act-row .jb{font-family:var(--sans);font-size:.81rem;line-height:1.5;color:var(--mute-pine)}
+.act-row .jb b{color:var(--gold-hi);font-weight:600}
+
+/* ---------- motion inventory ---------- */
+.motions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.4rem 2rem;margin-top:2.2rem}
+.motion{border-top:2px solid var(--gold);padding-top:.85rem}
+.motion .mn{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.4rem}
+.motion .mn b{font-family:var(--sans);font-size:.94rem;font-weight:700;color:var(--paper)}
+.motion .mn span{font-family:var(--sans);font-size:.7rem;color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.motion p{font-family:var(--sans);font-size:.76rem;line-height:1.55;color:var(--mute-pine);margin:0}
+.motion.new{border-top-color:var(--gold-hi)}
+.motion.new .mn b::after{content:" · new";font-weight:400;color:var(--gold-hi);letter-spacing:.06em}
+
+/* ---------- timeline ---------- */
+.timeline{display:grid;grid-template-columns:repeat(6,1fr);gap:.6rem;margin-top:1.8rem}
+.tl{border-top:2px solid var(--gold);padding-top:.6rem}
+.tl:nth-child(2){border-top-color:rgba(184,146,61,.8)}
+.tl:nth-child(3){border-top-color:rgba(184,146,61,.65)}
+.tl:nth-child(4){border-top-color:rgba(184,146,61,.5)}
+.tl:nth-child(5){border-top-color:rgba(184,146,61,.36)}
+.tl:nth-child(6){border-top-color:rgba(184,146,61,.24)}
+.tl b{display:block;font-family:var(--sans);font-size:.74rem;font-weight:700;color:var(--paper);margin-bottom:.25rem;font-variant-numeric:tabular-nums}
+.tl span{font-family:var(--sans);font-size:.7rem;line-height:1.45;color:var(--mute-pine)}
+
+/* ---------- rules / laws ---------- */
+.laws{counter-reset:law;margin-top:2rem;border-top:1px solid var(--hair)}
+.law{counter-increment:law;display:grid;grid-template-columns:2.4rem 1fr;gap:1.1rem;padding:1.05rem 0;border-bottom:1px solid var(--hair)}
+.law::before{content:counter(law,decimal-leading-zero);font-family:var(--sans);font-size:.72rem;font-weight:700;color:var(--gold-ink);padding-top:.28rem;font-variant-numeric:tabular-nums}
+.law b{display:block;font-family:var(--serif);font-weight:400;font-size:1.1rem;margin-bottom:.25rem}
+.law span{font-family:var(--sans);font-size:.83rem;line-height:1.55;color:var(--mute)}
+
+/* ---------- keep / kill ---------- */
+.kk{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.4rem,3vw,2.6rem);margin-top:2.2rem}
+.kk-col{border-top:2px solid var(--gold);padding-top:1rem}
+.kk-col h3{font-size:1.16rem;margin-bottom:.9rem}
+.kk-col li{position:relative;padding:.55rem 0 .55rem 1.6rem;border-bottom:1px solid var(--hair);font-size:.95rem;line-height:1.45}
+.kk-col li:last-child{border-bottom:0}
+.kk-keep li::before{content:"";position:absolute;left:0;top:1rem;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.kk-kill li::before{content:"";position:absolute;left:0;top:1.2rem;width:11px;height:1.5px;background:var(--mute);opacity:.8}
+.kk-kill li{color:var(--mute)}
+.kk-kill li s{text-decoration:line-through;text-decoration-color:rgba(74,93,85,.6)}
+
+/* ---------- steps ---------- */
+.steps{counter-reset:step;margin-top:2.2rem;border-top:1px solid var(--hair)}
+.step{counter-increment:step;display:grid;grid-template-columns:auto 1fr auto;gap:1.2rem;align-items:baseline;padding:1.1rem 0;border-bottom:1px solid var(--hair)}
+.step::before{content:counter(step);font-family:var(--sans);font-size:.74rem;font-weight:700;color:var(--gold-ink);min-width:1.3rem;font-variant-numeric:tabular-nums}
+.step b{display:block;font-family:var(--serif);font-weight:400;font-size:1.08rem;margin-bottom:.22rem}
+.step span{font-family:var(--sans);font-size:.83rem;line-height:1.55;color:var(--mute)}
+.step .files{font-family:var(--sans);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-ink);white-space:nowrap;padding-top:.2rem}
+
+/* ---------- guardrail panel ---------- */
+.rails{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem 2rem;margin-top:2rem}
+.rail{border-top:1px solid var(--hair-lt);padding-top:.85rem}
+.rail b{display:block;font-family:var(--sans);font-size:.63rem;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:.45rem}
+.rail p{font-family:var(--sans);font-size:.79rem;line-height:1.55;color:var(--mute-pine);margin:0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84em;color:var(--gold-ink);background:rgba(184,146,61,.11);padding:.1em .35em;border-radius:2px}
+.on-dark code,.on-deep code{color:var(--gold-hi);background:rgba(223,201,157,.12)}
+
+/* ---------- pullquote ---------- */
+.pull{
+  font-size:clamp(1.5rem,3.2vw,2.3rem);line-height:1.2;letter-spacing:-.024em;font-style:italic;
+  color:var(--pine-700);border-top:2px solid var(--gold);padding-top:1.2rem;margin:2.4rem 0 0;max-width:24ch;
+}
+.on-dark .pull{color:var(--gold-hi);border-top-color:var(--gold-hi)}
+
+/* ---------- links ---------- */
+.golink{
+  display:inline-flex;align-items:center;gap:.5rem;font-family:var(--sans);font-size:.86rem;font-weight:600;
+  color:var(--pine);border-bottom:1px solid var(--gold);padding-bottom:.16rem;margin-top:1.4rem;
+}
+.on-dark .golink,.on-deep .golink{color:var(--paper);border-bottom-color:var(--gold-hi)}
+
+.foot{padding:2.6rem 0 3.4rem;border-top:1px solid var(--hair)}
+
+@media (max-width:820px){
+  .scores{grid-template-columns:1fr}
+  .score{border-right:0;border-bottom:1px solid var(--hair-lt);padding-right:0;padding-bottom:1.2rem}
+  .score:last-child{border-bottom:0}
+  .motions,.kk,.rails{grid-template-columns:1fr}
+  .timeline{grid-template-columns:1fr 1fr}
+  .act-row{grid-template-columns:auto 1fr;gap:.9rem}
+  .act-row .jb{grid-column:1/-1}
+  .step{grid-template-columns:auto 1fr}
+  .step .files{grid-column:2;padding-top:.4rem;white-space:normal}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<!-- ===================== COVER ===================== -->
+<header class="cover">
+  <div class="wrap">
+    <p class="cover-kick"><span>The Finder's Book</span><span>familyfindersbook.com</span><span>Redesign direction · Aug 2026</span></p>
+    <h1>The book <em>comes last.</em></h1>
+    <p class="lede">The site currently opens by describing a product. It should open by describing a Tuesday morning that has already gone wrong. This document rewrites the sequence, not the words — and it deletes more than it adds.</p>
+
+    <div class="scores">
+      <div class="score">
+        <p class="k">What changes</p>
+        <p class="v">Sequence</p>
+        <p>Not the copy, not the funnel, not the schema. The same sentences, in a different order, at different sizes.</p>
+      </div>
+      <div class="score">
+        <p class="k">Section count</p>
+        <p class="v">15 → 11</p>
+        <p>Six existing bands merged or deleted. Two new ones added: the opening, and the product demo the hero was smothering.</p>
+      </div>
+      <div class="score">
+        <p class="k">Screens before the book</p>
+        <p class="v">0 → 4</p>
+        <p>Four statements hold the viewport before any product, price, image, or button exists on screen.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== THE ARGUMENT ===================== -->
+<section class="sec">
+  <div class="wrap narrow">
+    <p class="eyebrow">01 · The argument</p>
+    <h2 class="t">A product shot in the first screen is a claim. A question in the first screen is a wound.</h2>
+
+    <p>The previous direction document was right about almost everything and wrong about one thing: it kept the book in the hero. It moved the book, resized the book, and rotated the book — but the reader still met a product mockup in the first three hundred milliseconds, which is the same opening move as every other digital-product page on the internet.</p>
+
+    <p>The problem is not that the mockup is ugly. It is that a cover shown before a reason is <em>decoration</em>. The reader has no frame for it yet, so the eye treats it as an advertisement and starts looking for the exit. That is the actual source of the "busy, but not impactful" feeling: not the number of sections, but the fact that the reader is asked to <strong>evaluate a purchase</strong> before they have been given <strong>anything to feel</strong>.</p>
+
+    <p>Every page that reads expensive does the same thing first. It withholds. It puts atmosphere and a single sentence in front of you, refuses to sell for two or three screens, and only then names the thing it is selling. By the time the object appears, you have already agreed there is a problem — so the object arrives as an <em>answer</em> rather than an <em>offer</em>.</p>
+
+    <p>That is the entire change. The rotating book is not removed. It is <strong>moved</strong>, so it can be earned.</p>
+
+    <p class="pull">Shown early, the cover is an ad. Shown late, the same cover is a relief.</p>
+  </div>
+</section>
+
+<!-- ===================== WHAT THE REFERENCES ACTUALLY DO ===================== -->
+<section class="sec on-dark">
+  <div class="wrap">
+    <p class="eyebrow">02 · What the reference material actually does</p>
+    <h2 class="t">Three sources, one shared move.</h2>
+    <p class="lede">Read against each other, the two recordings and the existing motion mock are all doing versions of the same thing — and only one of them survives contact with this product.</p>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>Source</th><th>The move it makes</th><th>What to take, and what to leave</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="now">motionsites.ai —<br>“Urban Jungle”</td>
+            <td class="was">Full-bleed atmosphere with no product at all. Display type over the image. On scroll the image shrinks inward and a single centred manifesto sentence takes the screen, with serif italics carrying the emphasis. Logos arrive only at the bottom.</td>
+            <td class="why"><strong>Take the sequence wholesale.</strong> Atmosphere → one sentence → proof, with the product withheld. Take the italic-emphasis-inside-a-statement device; the site already owns it via <code>.ital</code>. Leave the photographic maximalism — this product's atmosphere is a dark room and a hairline, not a jungle.</td>
+          </tr>
+          <tr>
+            <td class="now">motionsites.ai —<br>“Book Hero”</td>
+            <td class="was">A receding row of book spines on a dark ground, presented as a hero template.</td>
+            <td class="why"><strong>Take the dark ground and the raking treatment; refuse the premise.</strong> A row of books says catalogue. This is one book, and its whole argument is that it is the <em>only</em> one. Singular object, singular light.</td>
+          </tr>
+          <tr>
+            <td class="now">mockey.ai —<br>3D book mockups</td>
+            <td class="was">Hardcover mockups, floating-book renders, and looping video mockups of a cover rotating in space.</td>
+            <td class="why"><strong>This is the trap.</strong> Those renders read as mockups precisely because they loop forever and float on a nowhere background. Take the 3D volume — spine, fore-edge, real shadow. Leave the loop and the float. See finding 06.</td>
+          </tr>
+          <tr>
+            <td class="now">Motion &amp; Experience Mock<br>(prior session)</td>
+            <td class="was">A two-panel splash gate — “Someone will have to look” — that parts like covers, then a hero containing the book, the headline, two buttons and a fact rail.</td>
+            <td class="why"><strong>The gate had the right sentence in the wrong container.</strong> A click-to-enter interstitial is a toll booth: it costs a measurable share of arrivals, cannot be indexed, and asks for a commitment before giving anything. Keep the line. Kill the gate. Act 0 delivers the same emotion through scroll, which costs nothing and can be abandoned at any moment.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FINDINGS ===================== -->
+<section class="sec">
+  <div class="wrap">
+    <p class="eyebrow">03 · Findings</p>
+    <h2 class="t">Seven, ordered by damage.</h2>
+    <p class="lede">Findings 02–05 restate the previous audit and still stand — they are listed in short form. Findings 01, 06 and 07 are new and are the reason this document exists.</p>
+
+    <div style="margin-top:2.4rem">
+
+      <article class="find">
+        <div class="find-hd"><span class="sev sev-c">Critical · new</span><span class="find-loc">index.html · document order</span></div>
+        <h3>The page has no first act, so the hero is doing two incompatible jobs</h3>
+        <p>The hero is simultaneously trying to create the emotional problem and present the commercial solution, inside one screen, at one weight. It contains an eyebrow, a 27-word headline, a 51-word lede, two buttons, a note with a third link, a fully populated Continuity Snapshot card with four written fields, a cover image, and a header purchase button — with a sticky purchase bar arriving underneath. That is <strong>five separate purchase-adjacent targets and eleven distinct reading destinations</strong> competing in the first viewport.</p>
+        <p>This is the real answer to "the eye wanders too much." The eye is not wandering because the design is cluttered in the decorative sense; it is wandering because nothing has been established as the single thing to look at, and there is no narrative reason to look at any of it yet.</p>
+        <p class="verdict"><strong>Fix:</strong> add Act 0 in front of everything. Four statements, each holding the full viewport, tied to scroll. No product, no price, no image, no button — the header CTA and sticky bar are suppressed until the book lands. Move the Snapshot card out of the hero entirely and give it its own act, where it becomes the product demo instead of hero furniture.</p>
+      </article>
+
+      <article class="find">
+        <div class="find-hd"><span class="sev sev-c">Critical · carried</span><span class="find-loc">index.html · 15 section bands</span></div>
+        <h3>Every band is the same size, so nothing is important</h3>
+        <p>Fifteen bands, each with <code>padding:clamp(4rem,9vw,7.5rem)</code> and the same eyebrow-plus-h2 head block. The page is a well-set list with no crescendo. Unchanged from the previous audit; the act structure in section 04 resolves it.</p>
+      </article>
+
+      <article class="find">
+        <div class="find-hd"><span class="sev sev-s">Serious · carried</span><span class="find-loc">.gallery · twelve .pg buttons</span></div>
+        <h3>Twelve page scans in a flat grid reads as a contact sheet</h3>
+        <p>The most persuasive assets on the site, presented at thumbnail scale and equal weight, so none of them is seen. Twelve equal images is zero images. Resolved by the Spread: five pages at roughly double the size, scroll-scrubbed, with the remaining seven preserved in an overlay.</p>
+      </article>
+
+      <article class="find">
+        <div class="find-hd"><span class="sev sev-s">Serious · amended</span><span class="find-loc">.h-xl · type scale</span></div>
+        <h3>Nothing is ever set large enough to be an image in its own right</h3>
+        <p>Newsreader is a display-capable serif used entirely at body-adjacent sizes. The previous direction proposed a display step and spent it on the hero headline. <strong>That was the wrong target.</strong> The hero headline is 27 words of keyword-bearing copy that cannot be cut, and at display scale it simply overflows.</p>
+        <p class="verdict"><strong>Amendment:</strong> add <code>--h-display: clamp(3.1rem, 8.4vw, 6.6rem)</code> and spend it in the two places where the line is genuinely short enough to become an image — <strong>Act 0's four statements</strong> and <strong>the Moment callout</strong>. The hero headline returns to the existing <code>.h-xl</code> step, intact.</p>
+      </article>
+
+      <article class="find">
+        <div class="find-hd"><span class="sev sev-m">Moderate · carried</span><span class="find-loc">.tiers, .tier-flag</span></div>
+        <h3>The pricing block is the one templated moment</h3>
+        <p>Three towers, centre one taller and inverted, a floating "Most complete" pill. The content is right; the shape is borrowed. Re-cut as ledger rows — the book's own grammar — with the recommended tier signalled by inversion and weight instead of a badge.</p>
+      </article>
+
+      <article class="find">
+        <div class="find-hd"><span class="sev sev-s">Serious · new</span><span class="find-loc">motion mock · @keyframes bookSpin</span></div>
+        <h3>An infinite rotation turns the object back into a mockup</h3>
+        <p>The prior mock spins the book on a 22-second linear loop, forever. Linear easing and infinite repetition are the two signatures the eye reads as <em>rendered asset</em> rather than <em>physical thing</em> — it is exactly what the mockey.ai video mockups do, and it is why they look like stock. A permanently rotating object also violates the one-motion-per-scroll-height rule by definition: it is always moving, so every other motion on the page competes with it.</p>
+        <p class="verdict"><strong>Fix:</strong> one earned rotation. The book rises 42px out of the dark and turns through 214° over 2600ms on the existing <code>cubic-bezier(.22,1,.36,1)</code> token, decelerating onto the three-quarter view — <strong>and then it stops.</strong> Afterwards it responds to the cursor with a ±14° parallax nudge and nothing else. A loop is a mockup; a landing is an object.</p>
+      </article>
+
+      <article class="find">
+        <div class="find-hd"><span class="sev sev-m">Moderate · new</span><span class="find-loc">index.html · page endings</span></div>
+        <h3>The page ends three times</h3>
+        <p>FAQ, then Gap Check, then final CTA — three consecutive closing gestures, each of which tells the reader the page is over. Two of them are then contradicted. The FAQ is objection handling, which belongs beside the free offer rather than standing as its own full-weight band.</p>
+        <p class="verdict"><strong>Fix:</strong> collapse the FAQ underneath the Gap Check. Same nine questions, same <code>FAQPage</code> JSON-LD, one band instead of two. The page then ends exactly once.</p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ACT 0 IN DETAIL ===================== -->
+<section class="sec on-deep">
+  <div class="wrap">
+    <p class="eyebrow">04 · Act 0, in detail</p>
+    <h2 class="t">Four sentences, and nothing else at all.</h2>
+    <p class="lede">Three questions that cannot be answered comfortably, then the relief. Each holds the full viewport. Progress is tied to scroll position rather than a timer, so the reader sets the pace and can stop on any sentence — or leave, which is also information.</p>
+
+    <div class="acts" style="margin-top:2.8rem">
+      <div class="act-row">
+        <span class="chip g-deep">01</span>
+        <span class="nm">The premise</span>
+        <span class="jb"><b>“At some point, someone will have to step in.”</b> Not a threat and not a statistic. A fact the reader already privately knows, said plainly, at a size that makes it impossible to skim past.</span>
+      </div>
+      <div class="act-row">
+        <span class="chip g-deep">02</span>
+        <span class="nm">The first cut</span>
+        <span class="jb"><b>“What would they actually <em>know?</em>”</b> The reader begins involuntarily auditing their own household. This is the moment the page stops being read and starts being experienced.</span>
+      </div>
+      <div class="act-row">
+        <span class="chip g-deep">03</span>
+        <span class="nm">The second cut</span>
+        <span class="jb"><b>“And what would they have to <em>search for?</em>”</b> Names the specific dread the product removes — not death, not grief, but <em>searching</em>. This is the word the entire offer is built on, and it has never appeared above the fold.</span>
+      </div>
+      <div class="act-row">
+        <span class="chip g-pine">04</span>
+        <span class="nm">The relief</span>
+        <span class="jb"><b>“There is one place that answers all three.”</b> Set <em>smaller</em> than the questions, deliberately: once the questions have done the work, the answer does not need to shout. It holds for 34% of the scroll travel — the longest beat in the sequence — and then the ground lifts from <code>#0B1F19</code> to <code>#14372D</code> and the book arrives.</span>
+      </div>
+    </div>
+
+    <h3 class="s" style="margin-top:3rem;color:var(--paper)">The one device that carries through</h3>
+    <p class="lede">A single gold hairline runs down the left edge of Act 0 and grows as you descend. It is the book's spine, drawn before the book exists — the only ornament permitted in the entire act, and the reason the reveal feels prepared rather than abrupt. It is also the existing <code>.eyebrow::after</code> rule, rotated: the site's signature tic, used structurally.</p>
+
+    <div class="rails" style="margin-top:2.6rem">
+      <div class="rail">
+        <b>Warm traffic never sees the full act</b>
+        <p>Any arrival carrying a <code>#anchor</code>, a returning session flag, or a retargeting <code>utm_medium</code> compresses Act 0 to a single 70vh statement before the reveal. Cold organic and direct traffic get the full sequence. You do not put three screens of anxiety in front of someone who is already reaching for a card.</p>
+      </div>
+      <div class="rail">
+        <b>It is never a trap</b>
+        <p>No scroll-jacking, no forced duration, no click-to-enter. A persistent <em>Skip</em> affordance sits in the corner, and the whole act is ordinary scroll — a flick reaches the book in under a second.</p>
+      </div>
+      <div class="rail">
+        <b>Reduced motion loses nothing</b>
+        <p>Under <code>prefers-reduced-motion</code> the sticky stage collapses to one static screen with all four lines stacked and legible. Same words, same order, no movement, roughly one viewport tall.</p>
+      </div>
+      <div class="rail">
+        <b>The document outline is untouched</b>
+        <p>Act 0's lines are <code>&lt;p&gt;</code> elements, not headings. The existing <code>&lt;h1&gt;</code> remains the first heading in the document and keeps its keyword copy verbatim, so the outline crawlers see is byte-identical to today's.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== THE ACT STRUCTURE ===================== -->
+<section class="sec on-dark">
+  <div class="wrap">
+    <p class="eyebrow">05 · The new sequence</p>
+    <h2 class="t">Eleven acts, with a real crescendo.</h2>
+    <p class="lede">The ground alternates deliberately rather than decoratively: the page starts in the dark, opens into paper, returns to the dark for the promise, and closes darker than it began — but with the book open.</p>
+
+    <div class="acts">
+      <div class="act-row"><span class="chip g-deep">0</span><span class="nm">The call</span><span class="jb">Four statements. No product. <b>New band.</b></span></div>
+      <div class="act-row"><span class="chip g-pine">I</span><span class="nm">The reveal</span><span class="jb">Headline, the book's one rotation, one CTA, and the old proof strip folded into the base as four hairline facts. <b>Absorbs 2 bands.</b></span></div>
+      <div class="act-row"><span class="chip g-hi">II</span><span class="nm">The moment</span><span class="jb">The strongest writing on the site, finally set large. Second and last use of the display step.</span></div>
+      <div class="act-row"><span class="chip g-paper">III</span><span class="nm">The snapshot</span><span class="jb">The Continuity Snapshot card at full scale, filling itself in. <b>New band — evicted from the hero.</b></span></div>
+      <div class="act-row"><span class="chip g-pine">IV</span><span class="nm">The doctrine</span><span class="jb">A family map, not a password vault. The "never records" column strikes itself out on entry.</span></div>
+      <div class="act-row"><span class="chip g-sage">V</span><span class="nm">The spread</span><span class="jb">Five real pages, scroll-scrubbed, sixth veiled. The one large gesture on the page.</span></div>
+      <div class="act-row"><span class="chip g-paper">VI</span><span class="nm">What arrives</span><span class="jb">Five tools and both formats as one ledger. <b>Merged from 2 bands.</b></span></div>
+      <div class="act-row"><span class="chip g-hi">VII</span><span class="nm">Trust</span><span class="jb">Three audiences, with creator transparency as the footer. <b>Merged from 2 bands.</b></span></div>
+      <div class="act-row"><span class="chip g-paper">VIII</span><span class="nm">The ledger</span><span class="jb">The 15-minute first pass answers the last objection, then three rows and one decision. <b>Merged from 2 bands.</b></span></div>
+      <div class="act-row"><span class="chip g-sage">IX</span><span class="nm">The free door</span><span class="jb">Gap Check, with the FAQ collapsed underneath it. <b>Merged from 2 bands.</b></span></div>
+      <div class="act-row"><span class="chip g-deep">X</span><span class="nm">The close</span><span class="jb">One closing screen, on the darkest ground on the site. The page ends once.</span></div>
+    </div>
+
+    <div class="tbl-scroll" style="margin-top:3rem">
+      <table>
+        <thead><tr><th>Today</th><th>Becomes</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="was">Hero + proof strip + journey strip</td><td class="now">Act 0, then one reveal</td><td class="why">Three stacked navigation devices before any content is three too many. The journey strip is a table of contents for a page nobody has agreed to read yet.</td></tr>
+          <tr><td class="was">Snapshot card inside the hero</td><td class="now">Act III, at full scale</td><td class="why">It is the product demo, and it was being used as hero decoration.</td></tr>
+          <tr><td class="was">The moment</td><td class="now">Kept — set larger, set alone</td><td class="why">Strongest writing on the site; give it the one remaining display moment.</td></tr>
+          <tr><td class="was">Security doctrine</td><td class="now">Kept — strike-through on entry</td><td class="why">The two-column yes/no list is the best structural idea on the page. Animate the refusal.</td></tr>
+          <tr><td class="was">Inside (12-up grid)</td><td class="now">Five staged pages, scrubbed</td><td class="why">Five seen beats twelve skimmed. The other seven move to a "see all 49" overlay — nothing is deleted.</td></tr>
+          <tr><td class="was">Bonuses + formats</td><td class="now">One "What arrives" ledger</td><td class="why">Both answer the same question. Six near-identical thumbnails were a second contact sheet.</td></tr>
+          <tr><td class="was">Who it's for + creators</td><td class="now">One trust band</td><td class="why">Two consecutive reassurance sections dilute each other.</td></tr>
+          <tr><td class="was">15-minute start</td><td class="now">Preface to pricing</td><td class="why">It answers the last real objection — "I will never finish this" — so it belongs immediately before the decision.</td></tr>
+          <tr><td class="was">Pricing (3 towers)</td><td class="now">Three ledger rows</td><td class="why">Rows match the book's grammar; towers match everyone else's.</td></tr>
+          <tr><td class="was">FAQ + gap check + final CTA</td><td class="now">Gap Check with FAQ under it, then one close</td><td class="why">The page currently ends three times.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MOTION ===================== -->
+<section class="sec on-deep">
+  <div class="wrap">
+    <p class="eyebrow">06 · The motion system</p>
+    <h2 class="t">Eight named motions. Everything else is still.</h2>
+    <p class="lede">Every one does a job. All easing uses the existing <code>cubic-bezier(.22,1,.36,1)</code> token, all of it stays gated behind <code>html.fx</code>, and all of it is neutralised under <code>prefers-reduced-motion</code>. Anything not on this list does not move.</p>
+
+    <div class="motions">
+      <div class="motion new">
+        <p class="mn"><b>Call</b><span>scrubbed · 4 statements</span></p>
+        <p>Act 0. Each statement mask-wipes up from below in three clipped lines, 70ms apart, and holds until scroll hands over to the next. The relief holds longest.</p>
+      </div>
+      <div class="motion new">
+        <p class="mn"><b>Reveal</b><span>2600ms · once</span></p>
+        <p>The book rises 42px and turns through 214°, decelerating onto the three-quarter view, then stops permanently. Replaces the infinite spin.</p>
+      </div>
+      <div class="motion">
+        <p class="mn"><b>Ink</b><span>900ms · 80ms/line</span></p>
+        <p>Hero headline, masked line reveal on the reveal's arrival. The sentence is written, not faded. SplitText, already loaded.</p>
+      </div>
+      <div class="motion">
+        <p class="mn"><b>Rule</b><span>720ms</span></p>
+        <p>Gold hairline draws left to right beside every eyebrow, and once across the full width of the reveal as the cover lifts. Already built — keep it.</p>
+      </div>
+      <div class="motion">
+        <p class="mn"><b>Write-in</b><span>550ms · 90ms stagger</span></p>
+        <p>Snapshot values arrive one at a time at a fractional rotation, so it reads as a hand rather than a form submit. The most persuasive four seconds on the site.</p>
+      </div>
+      <div class="motion">
+        <p class="mn"><b>Strike</b><span>340ms · 60ms stagger</span></p>
+        <p>Each forbidden item strikes itself through on entry. One column is being written; the other is being refused. Cheapest motion, highest trust return.</p>
+      </div>
+      <div class="motion">
+        <p class="mn"><b>Spread</b><span>scrubbed · pinned 120vh</span></p>
+        <p>Pages advance horizontally, tied directly to vertical scroll. No autoplay, no arrows, no dots. The one large gesture on the page.</p>
+      </div>
+      <div class="motion">
+        <p class="mn"><b>Settle</b><span>600ms · 14px</span></p>
+        <p>The existing fade-up, unchanged. It is the neutral, and its job is to go unnoticed.</p>
+      </div>
+    </div>
+
+    <h3 class="s" style="margin-top:3rem;color:var(--paper)">The reveal, in milliseconds</h3>
+    <div class="timeline">
+      <div class="tl"><b>0</b><span>Relief line wipes out</span></div>
+      <div class="tl"><b>120</b><span>Ground lifts <code>#0B1F19</code> → <code>#14372D</code></span></div>
+      <div class="tl"><b>200–920</b><span>Gold rule draws full width — the cover lifting</span></div>
+      <div class="tl"><b>350</b><span>Book rises and begins its single turn</span></div>
+      <div class="tl"><b>350–1250</b><span>Ink: headline writes in over the turn</span></div>
+      <div class="tl"><b>1050</b><span>CTA settles · <strong>never gated behind the rotation</strong></span></div>
+    </div>
+    <p class="tiny" style="margin-top:1.4rem;max-width:70ch">The book finishes turning at 2950ms and the fact rail completes at 1840ms. The header purchase button and the sticky bar become available at 3500ms — the first moment in the visit that a second purchase target exists anywhere on screen.</p>
+
+    <p class="pull" style="max-width:30ch">One scroll-height may contain at most one named motion. If Call, Ink, Write-in and Spread could ever share a screen, the page is performing instead of speaking.</p>
+  </div>
+</section>
+
+<!-- ===================== THE FOUR RULES ===================== -->
+<section class="sec on-sage">
+  <div class="wrap narrow">
+    <p class="eyebrow">07 · The rules that stop the eye wandering</p>
+    <h2 class="t">Four constraints. Every clutter decision is downstream of these.</h2>
+
+    <div class="laws">
+      <div class="law"><b>One focal point per screen</b><span>Nothing else may sit at the same visual weight. If two things on a screen are equally loud, neither is heard. This single rule is what removes the journey strip, evicts the Snapshot card from the hero, and cuts the hero from two buttons to one.</span></div>
+      <div class="law"><b>One named motion per scroll-height</b><span>Carried forward unchanged, but now enforceable — because nothing loops forever, there is no motion permanently competing for attention.</span></div>
+      <div class="law"><b>One purchase target per screen</b><span>The first screen currently offers five. From Act 0 through the reveal there is exactly zero, then exactly one. The header CTA and the sticky bar are suppressed until the book has landed.</span></div>
+      <div class="law"><b>Gold is a hairline, never a fill</b><span>Carried forward unchanged. Never a glow, never a button, never text on cream above 14px. The one place gold may become a plane is the strike-through, which is a mark, not a fill.</span></div>
+    </div>
+
+    <div class="kk">
+      <div class="kk-col kk-keep">
+        <h3>Do not touch</h3>
+        <ul>
+          <li>The palette. Pine, cream, sage, gold — exact hexes, re-weighted only in proportion.</li>
+          <li>Newsreader + Archivo, self-hosted as variable fonts.</li>
+          <li>The ruled field: small-caps label over a gold hairline. Amplify it, never replace it.</li>
+          <li>Every word of body copy, every FAQ answer, every legal disclaimer.</li>
+          <li>All three Payhip URLs, all <code>data-checkout</code> / <code>data-placement</code> / <code>data-tier</code> / <code>data-price</code> attributes.</li>
+          <li>The full JSON-LD graph, canonical, OG and Twitter tags, and the <code>&lt;h1&gt;</code> text.</li>
+          <li>The Gap Check form, its field names and ids, and <code>/api/gap-check-subscribe</code>.</li>
+          <li>The consent gate, the analytics bus, and the reduced-motion floor.</li>
+        </ul>
+      </div>
+      <div class="kk-col kk-kill">
+        <h3>Delete</h3>
+        <ul>
+          <li><s>The journey strip</s> — a four-link contents list for a page nobody has agreed to read.</li>
+          <li><s>The proof strip as a standalone band</s> — becomes the base of the reveal.</li>
+          <li><s>The hero's second button</s> — the preview link survives as a quiet text link, keeping its <code>hero-preview</code> event.</li>
+          <li><s>Seven of the twelve gallery thumbnails</s> — relocated to the overlay, not removed from the repo.</li>
+          <li><s>The six bonus thumbnails</s> — a second contact sheet at a smaller size.</li>
+          <li><s>The floating "Most complete" pill</s> — inversion and weight do the same job without the badge.</li>
+          <li><s>The infinite <code>bookSpin</code> loop</s> — replaced by one earned rotation.</li>
+          <li><s>Two of the three page endings.</s></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== WHAT DOES NOT MOVE ===================== -->
+<section class="sec on-dark">
+  <div class="wrap">
+    <p class="eyebrow">08 · The guarantee</p>
+    <h2 class="t">Nothing in here rewrites a page, a tag, a funnel, or a keyword.</h2>
+    <p class="lede">This is a re-sequencing and a subtraction. Stated precisely, so it can be checked against the diff.</p>
+
+    <div class="rails">
+      <div class="rail">
+        <b>Analytics and funnels</b>
+        <p>Every <code>data-placement</code> value in use today — <code>header</code>, <code>drawer</code>, <code>hero</code>, <code>hero-preview</code>, <code>start</code>, <code>pricing-essentials</code>, <code>pricing-ultimate</code>, <code>pricing-bundle</code>, <code>sticky</code>, <code>final</code> — survives on an element that still exists. <code>checkout_click</code>, <code>cta_click</code>, <code>faq_open</code>, <code>pricing_view</code> and <code>landing_view</code> fire unchanged, and UTM forwarding to Payhip is untouched. New placements may be <em>added</em>; none is renamed or removed.</p>
+      </div>
+      <div class="rail">
+        <b>SEO</b>
+        <p>Title, meta description, canonical, robots, OG, Twitter, and the entire JSON-LD graph including <code>Product</code>, <code>AggregateOffer</code> and all nine <code>FAQPage</code> entries are byte-identical. The <code>&lt;h1&gt;</code> keeps its exact keyword copy. Act 0 introduces no new headings, so the document outline crawlers see does not change.</p>
+      </div>
+      <div class="rail">
+        <b>Pages and routes</b>
+        <p>No page is added, renamed, or deleted. <code>about</code>, <code>order</code>, <code>contact</code> and the three policy pages are untouched, as is <code>sitemap.xml</code>. All work lands in <code>index.html</code>, <code>styles.css</code> and <code>motion.js</code>. No framework, no build step, no new dependency.</p>
+      </div>
+      <div class="rail">
+        <b>Commerce and legal</b>
+        <p>Three tiers, three prices, three Payhip endpoints, one consumer license, the same refund policy link, and the same security doctrine wording. The disclaimer block in the footer is verbatim.</p>
+      </div>
+      <div class="rail">
+        <b>Accessibility floor</b>
+        <p>Every contrast pairing already verified AA stays on the same tokens. Act 0 adds no keyboard trap and no focus loss; the skip link still lands on <code>#main</code>. The reduced-motion path is specified before the animated one, not after it.</p>
+      </div>
+      <div class="rail">
+        <b>Assets</b>
+        <p>No image is deleted. The seven page scans that leave the grid are re-homed in the overlay, and the six bonus renders remain available for <code>order.html</code> and social. The one new asset worth commissioning is a photograph — see below.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== IMAGERY ===================== -->
+<section class="sec">
+  <div class="wrap narrow">
+    <p class="eyebrow">09 · The one asset worth buying</p>
+    <h2 class="t">A photograph of the closed binder in a dark room.</h2>
+    <p>The site has no photography, only flat page renders. Act 0 raises the stakes of the reveal considerably, and the CSS book — accurate as it is — is still a render. One photograph would carry more weight than any amount of CSS: the printed binder, closed, on a dark surface, a single raking light from the upper left, deep shadow, shot at an angle so the page block is visible. Not floating. Not on white.</p>
+    <p>Two things make it work in this layout specifically. It must be shot on a dark ground so it composites into the pine without a cutout, and it must be shot with enough of the fore-edge visible that the object reads as having <em>volume</em> — that is what the CSS rotation is currently buying, and a photograph can buy it more cheaply and more convincingly.</p>
+    <p>If photography is not available, the mock's approach holds: the CSS object with a real cast shadow, one rotation, then stillness. What must never happen is stock family photography — smiling strangers would undo the credibility the copy has spent eleven acts earning.</p>
+    <p class="tiny" style="margin-top:1.6rem">Second and third priority, unchanged from the previous direction: a pen mid-word on the Continuity Snapshot page, cropped tight with no faces, as the anchor for Act III; and the closed binder on a kitchen table beside keys and a phone, overhead and uncomposed, to close Act X.</p>
+  </div>
+</section>
+
+<!-- ===================== BUILD ORDER ===================== -->
+<section class="sec on-hi">
+  <div class="wrap">
+    <p class="eyebrow">10 · Build order</p>
+    <h2 class="t">Seven steps. Each one shippable on its own.</h2>
+    <p class="lede">Ordered by impact, and sequenced so that the riskiest change ships first and alone, while the page is still measurable against its current baseline.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div></div>
+        <div><b>Act 0, behind a flag</b><span>Build the sticky four-statement stage with the skip affordance, the warm-traffic compression, and the reduced-motion collapse. Ship it to a traffic split before anything else changes, because it is the only step that can plausibly cost conversions — and the only one whose effect you will be able to read cleanly if it ships alone.</span></div>
+        <div class="files">index.html · styles.css · motion.js</div>
+      </div>
+      <div class="step">
+        <div></div>
+        <div><b>Rebuild the hero as the reveal</b><span>Delete the journey strip. Fold the proof strip into the hero base as four hairline facts. Cut to one CTA. Suppress the header CTA and sticky bar until 3500ms after the reveal fires. Replace the infinite spin with the single 214° landing.</span></div>
+        <div class="files">index.html · styles.css · motion.js</div>
+      </div>
+      <div class="step">
+        <div></div>
+        <div><b>Evict the Snapshot into Act III</b><span>Move the card out of the hero to its own band at full scale, and attach the Write-in stagger. This is the step that makes the hero breathe and gives the demo a stage.</span></div>
+        <div class="files">index.html · styles.css</div>
+      </div>
+      <div class="step">
+        <div></div>
+        <div><b>Add the display step and spend it twice</b><span><code>--h-display: clamp(3.1rem, 8.4vw, 6.6rem)</code>, applied to Act 0's statements and the Moment callout, and nowhere else. Trim the callout to thirteen words so it can carry the size.</span></div>
+        <div class="files">styles.css · index.html</div>
+      </div>
+      <div class="step">
+        <div></div>
+        <div><b>Restage the gallery</b><span>Five pages, pinned horizontal scrub, and a "see all 49" overlay holding the remaining seven. Keep every <code>data-full</code> lightbox binding intact inside the overlay.</span></div>
+        <div class="files">index.html · styles.css · motion.js</div>
+      </div>
+      <div class="step">
+        <div></div>
+        <div><b>Merge the four soft bands into two, re-cut pricing as rows</b><span>Bonuses + formats, then who + creators. Then the ledger: same three tiers, same prices, same Payhip links, same tracking attributes — only the shape changes. Drop the flag pill.</span></div>
+        <div class="files">index.html · styles.css</div>
+      </div>
+      <div class="step">
+        <div></div>
+        <div><b>Collapse the FAQ under the Gap Check, layer in Strike</b><span>One ending instead of three, with the <code>FAQPage</code> JSON-LD carried over untouched. Then the strike-through stagger on the doctrine's refusal column — the cheapest win left on the page.</span></div>
+        <div class="files">index.html · motion.js</div>
+      </div>
+    </div>
+
+    <h3 class="s" style="margin-top:3rem">What to measure</h3>
+    <p class="tiny" style="max-width:70ch">Step 1 is the only step with real downside risk, so it gets real instrumentation: scroll-depth to the reveal, skip-rate, and time-to-first-<code>checkout_click</code>, split against the current page. The success condition is not "Act 0 increases conversion" — it is <strong>"Act 0 does not reduce checkout clicks while increasing scroll depth past the pricing band."</strong> If skip-rate exceeds roughly a third of cold arrivals, cut Act 0 from four statements to two and re-measure before abandoning it.</p>
+  </div>
+</section>
+
+<!-- ===================== CLOSE ===================== -->
+<section class="sec on-deep">
+  <div class="wrap narrow">
+    <p class="eyebrow">The whole thing in one line</p>
+    <h2 class="t">Make the reader ask the question before you hand them the answer.</h2>
+    <p class="lede">Everything else in this document — the merges, the deletions, the single rotation, the ledger rows, the one display step — exists to protect that one sentence from competition.</p>
+    <a class="golink" href="redesign-mock.html">Open the interactive mock →</a>
+    <p class="tiny" style="margin-top:2.4rem">Companion file: <code>docs/redesign-mock.html</code>. Inherits and amends <em>Revamp Direction</em> (Aug 2026); supersedes <em>Motion &amp; Experience Mock</em> on opening sequence and on the book's rotation.</p>
+  </div>
+</section>
+
+<div class="foot">
+  <div class="wrap">
+    <p class="tiny">The Finder's Book · The Family Clarity Co. · Internal design direction. Not a shipping page: <code>noindex</code>, absent from <code>sitemap.xml</code>, absent from the validation allowlist, unlinked from site navigation.</p>
+  </div>
+</div>
+
+</body>
+</html>
