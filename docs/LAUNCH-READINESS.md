@@ -4,14 +4,14 @@ Last updated: 2026-08-15
 
 ## 1. Executive Status
 
-**NOT READY FOR LAUNCH**
+**READY FOR CONTROLLED SOFT LAUNCH (STEP 9)**
 
-The repaired code through PR #14 is merged and deployed, and PR #15's static
-plus rendered desktop/mobile jobs are green. Production is still not
-launch-ready because Payhip's live webhook/file settings cannot be read through
-the available connector, GA4 purchase attribution and Search Console submission
-are unverified, and MailerLite lifecycle suppression/exit rules plus overlapping
-workflow generations must be reconciled before any automation is activated.
+The Family purchase gate is PASS. A fresh Payhip Family order completed, the
+production webhook returned 200, MailerLite segmentation was exact, Family
+onboarding and Review Request were activated for new subscribers only, all five
+QA coupons were removed, and the Payhip support address was corrected across
+three product descriptions plus both refund-policy references. Full launch
+reporting still requires GA4 Key Event and Search Console verification.
 
 ## 2. Tool & Skill Usage
 
@@ -20,10 +20,10 @@ workflow generations must be reconciled before any automation is activated.
 | GitHub app / GitHub skill | yes | yes (`miketui`) | yes | yes | required | Repository identity, branches, PRs, runs, automated review, remote publishing after gate | PRs #12-#14 merged; PR #15 green and approved |
 | Local files and shell | yes | yes | yes | local branch | required | Forensics, edits, tests, clean install, commits | complete |
 | Composio | yes | yes | yes | limited | required | Confirm historical GitHub path and inspect Payhip toolkit | GitHub/Payhip connections active |
-| MailerLite app and authenticated browser | yes | yes (account `2202141`) | yes | yes | required | Domain, sender, groups, campaigns, automation configuration, dry runs and one approved test | Domain authenticated; 27 email steps standardized; one test queued; all workflows disabled |
+| MailerLite app and authenticated browser | yes | yes (account `2202141`) | yes | yes | required | Domain, sender, groups, campaigns, automation configuration, dry runs and approved activation | Family and Review active for new subscribers only; controlled Family segmentation passed |
 | Vercel app / verification skill | yes | yes | yes | deploy-capable | required | Project, domains, deployment, runtime errors, route responses | final `main` deployment READY and route-verified |
 | Payhip through Composio | yes | yes (`payhip_hafter-rosoli`) | payload/coupon only | limited | required | Discover actual capability | Cannot read products, files, or webhook settings |
-| Cloud browser | yes | yes | public pages | safe interactions | required | Production UI, Payhip pages/policy, PageSpeed | Public routes and products verified |
+| Cloud browser | yes | yes | authenticated dashboard and public pages | approved interactions | required | Payhip products, policy, checkout, order ledger, coupons, and MailerLite activation | Family QA passed; support copy corrected; QA coupons removed; workflows activated |
 | Google PageSpeed / Lighthouse | public | n/a | yes | no | required | Mobile/desktop performance, accessibility, SEO | mobile 93/96/100/100; desktop 99/96/100/100 |
 | GA4 Admin | no | no | no | no | required | Key Events, DebugView, Purchase | manual verification required |
 | SEO audit skill | yes | n/a | yes | local fixes | required | Metadata, canonicals, sitemap, robots, schema, links | repository checks pass |
@@ -48,9 +48,9 @@ workflow generations must be reconciled before any automation is activated.
 | FB-011 | P1 | MailerLite | Subject-update connector replaced three designed records with undesigned records | Connector action recreated email records rather than editing metadata in place | FIXED through the MailerLite editor; retained as an operational warning |
 | FB-012 | P1 | MailerLite | Lead workflow has no buyer/refund exclusions and no exit-on-removal | New workflow trigger is Leads only | FAIL / manual configuration required |
 | FB-013 | P1 | MailerLite | Old and new onboarding/nurture generations overlap | New simplified workflows were created without retiring old drafts | FAIL / reconciliation required |
-| FB-014 | P1 | MailerLite | Every automation is disabled | GO/activation intentionally remained off | BLOCKED until configuration and controlled test |
+| FB-014 | P1 | MailerLite | Required lifecycle automations were disabled | Activation intentionally remained gated | RESOLVED for Family Onboarding and Review Request; active for new subscribers only |
 | FB-015 | P1 | Analytics | GA4 `Purchase` and Key Events are unverified | Checkout completes on Payhip and GA4 Admin is unavailable | MANUAL VERIFICATION REQUIRED |
-| FB-016 | P1 | Payhip | Production webhook URL/events/secret and attached files cannot be read | Available Payhip connector lacks account/configuration reads | MANUAL VERIFICATION REQUIRED |
+| FB-016 | P1 | Payhip | Production purchase-webhook path was unproven | No successful live event had been observed | RESOLVED; controlled Family order returned webhook 200 and exact MailerLite routing |
 | FB-017 | P1 | Contact | Messages are stored in MailerLite but no verified internal support alert exists | No transactional email/queue notification provider | MANUAL VERIFICATION REQUIRED |
 | FB-018 | P2 | Security | Obsolete `/api/subscribe` duplicated the lead endpoint | Earlier endpoint was retained after signed delivery was added | FIXED / endpoint removed |
 | FB-019 | P2 | Security | Webhook token was optional and health shape could become public | Configuration treated the second factor as recommended | FIXED locally / fail closed |
@@ -70,7 +70,7 @@ workflow generations must be reconciled before any automation is activated.
 | FB-033 | P2 | Accessibility | Mobile 404 menu icon inherited pine on a pine hero | Over-hero toggle set only border, not foreground | FIXED locally for transparent and solid header states |
 | FB-034 | P1 | Mobile QA | Closed drawer created 343px document overflow on home and terms | Transformed off-canvas fixed drawer contributed to root scroll width | FIXED / PR #13 render CI PASS / deployed |
 | FB-035 | P2 | Render QA | 404 test required a mobile-only toggle on desktop | Viewport-specific assertion was not scoped | FIXED / PR #13 render CI PASS |
-| FB-036 | P1 | Identity | Public support address and MailerLite sender/reply-to were inconsistent | Legacy addresses remained across repository and two drafts | FIXED / regression guard, API verification, and MailerLite dry runs pass |
+| FB-036 | P1 | Identity | Public support address and MailerLite sender/reply-to were inconsistent | Legacy addresses remained across repository, Payhip, and drafts | FIXED / Payhip public pages, MailerLite dry runs, and repository guard verified |
 
 ## 4. Changes Made
 
@@ -614,6 +614,24 @@ The billing lock was resolved. Workflow `31880730311` executed normal runner
 steps and passed Static validation plus Rendered-page smoke test. No further
 billing action is required for this launch checklist.
 
+## 11A. Controlled Family purchase and Step 9 completion
+
+| Gate | Result |
+|---|---|
+| Fresh Family checkout | PASS — $89 discounted to $0 with approved QA coupon |
+| Payhip order ledger | PASS — Family product increased to 2 orders |
+| Download handoff | PASS — Payhip reported the download email sent |
+| Production webhook | PASS — POST 200 and `paid -> family_bundle` log |
+| MailerLite routing | PASS — Family Bundle Buyers + All Customers only |
+| Family onboarding | ACTIVE — new subscribers only; 0 in progress after activation |
+| Review Request | ACTIVE — new subscribers only; 0 in progress after activation |
+| Support-address correction | PASS — three product descriptions and two refund references |
+| QA coupon cleanup | PASS — all five deleted; Payhip shows 0 coupons |
+
+The connected Gmail account could not read the controlled purchase inbox, so
+Payhip's sent confirmation is recorded without fabricating independent receipt.
+Step 9 is approved to proceed as a monitored controlled soft launch.
+
 ## 12. Approval Gates
 
 ### APPROVAL GATE — MERGE TO MAIN
@@ -624,15 +642,15 @@ rendered-page CI and is authorized for merge and Vercel production verification.
 
 ### APPROVAL GATE — MAILERLITE ACTIVATION
 
-Not ready to request. Sender/domain/reply-to and one Contact test are complete,
-but suppression, exit logic, overlapping workflow reconciliation, plaintext,
-preheaders, DOI, and the test-subscriber isolation plan must pass first.
+APPROVED AND EXECUTED for Family Bundle Onboarding and Review Request on
+2026-08-15. Both use **No, only add new subscribers** and showed 0 in progress
+after activation. This is not blanket approval to activate inactive superseded
+or refund workflows.
 
 ## 13. Launch Blockers
 
 - P1: the Gap Check automation still reports editor-completion warnings and suppression/exit logic is absent.
 - P1: overlapping MailerLite nurture/onboarding workflows are not reconciled.
-- P1: production Payhip webhook configuration and attached files are not verified.
 - P1: GA4 Purchase attribution and Key Events are not verified.
 - P1: no internal contact-message alert or documented polling owner is verified.
 
@@ -674,15 +692,17 @@ preheaders, DOI, and the test-subscriber isolation plan must pass first.
 - [x] MailerLite groups and all nine workflows inventoried
 - [x] MailerLite domain authenticated and all 27 From/Reply-to identities standardized
 - [x] both campaign drafts standardized and left unscheduled/undesigned
-- [x] exactly one Contact Acknowledgement test queued; all nine workflows remain disabled
+- [x] controlled Family order, webhook 200, delivery handoff, and exact groups verified
 - [ ] queued Contact test receipt/content confirmed in the support inbox
 - [ ] Gap Check completion warnings cleared
 - [ ] buyer/refund exits configured
 - [ ] one onboarding/nurture generation chosen
-- [ ] Payhip webhook dashboard verified
-- [ ] controlled lead/purchase/refund/review test
+- [x] Payhip Family purchase-webhook path verified end to end
+- [x] controlled Family purchase and group-isolation test
+- [x] Family Bundle Onboarding and Review Request activation approved and completed
+- [x] all five QA coupons removed
+- [ ] controlled review timing/delivery observation after its configured delay
 - [ ] GA4 Purchase/Key Events verified
-- [ ] MailerLite activation approved
 
 ### Documentation
 

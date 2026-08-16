@@ -142,9 +142,10 @@ MailerLite dashboard on 2026-08-15. Account defaults, all 27 automation email
 steps, and both placeholder campaign drafts use From name `Joanne and Michael`
 and From/Reply-to `info@familyfindersbook.com`. A custom Reply-to override is not
 enabled on any automation step, so Reply-to inherits the verified From address.
-Exactly one Contact Acknowledgement test (`We have your message`) was queued to
-the support inbox. This test did not activate a workflow; all nine automations
-remain disabled.
+Controlled lifecycle QA completed on 2026-08-15. Six workflows are active:
+Contact Acknowledgement, Gap Check Lead Nurture, Essentials Onboarding, Ultimate
+Onboarding, Family Bundle Onboarding, and Review Request. Buyer Onboarding,
+Readiness Lead Nurture, and Refund Handling remain inactive.
 
 ### Groups
 
@@ -163,20 +164,21 @@ remain disabled.
 
 ### Automation inventory
 
-All nine workflows were disabled on 2026-08-15. Dry simulations completed
-without sending email, but disabled is not equivalent to launch-ready.
+Workflow states were reverified in the MailerLite dashboard on 2026-08-15.
+Family Bundle Onboarding and Review Request were activated with **No, only add
+new subscribers**, after successful dry simulations and controlled lifecycle QA.
 
 | Automation | ID | Current state | Decision before activation |
 |---|---|---|---|
 | Refund Handling | `194226711638836895` | disabled | Keep only if refund email is desired; webhook now performs cleanup |
-| Essentials Onboarding | `194226713836651864` | disabled | Candidate after plaintext/preheader and refund-exit QA |
-| Readiness Lead Nurture | `194226719223186795` | disabled | Supersede with the three-email Gap Check flow |
-| Ultimate Onboarding | `194226725902616321` | disabled | Candidate after plaintext/preheader and refund-exit QA |
-| Family Onboarding | `194226731545004025` | disabled | Candidate after plaintext/preheader and refund-exit QA |
-| Review Request | `194226737309025696` | disabled | Add exit/condition for Refunded before activation |
-| Gap Check Lead Nurture | `195847295840814845` | disabled/editor warnings | Clear step-completion warnings and add buyer/refund suppression |
-| Buyer Onboarding | `195847299585279235` | disabled | Do not activate beside tier-specific onboarding; lacks refund exclusion |
-| Contact Acknowledgement | `195847302637684408` | disabled; one approved test queued | Confirm test receipt/content and internal alert ownership |
+| Essentials Onboarding | `194226713836651864` | active | Tier-specific onboarding |
+| Readiness Lead Nurture | `194226719223186795` | inactive | Superseded by the three-email Gap Check flow |
+| Ultimate Onboarding | `194226725902616321` | active | Tier-specific onboarding |
+| Family Bundle Onboarding | `194226731545004025` | active; new subscribers only | Controlled Family QA passed |
+| Review Request | `194226737309025696` | active; new subscribers only | Refunded exclusion and exit behavior verified |
+| Gap Check Lead Nurture | `195847295840814845` | active | Monitor confirmed-lead entry and suppression behavior |
+| Buyer Onboarding | `195847299585279235` | inactive | Keep inactive beside tier-specific onboarding |
+| Contact Acknowledgement | `195847302637684408` | active | Monitor acknowledgements and internal alert ownership |
 
 Preferred sender: `Joanne and Michael`.
 Preferred From and reply-to: `info@familyfindersbook.com`.
@@ -211,6 +213,28 @@ Retained MailerLite screenshots of the prior designs:
 
 Do not use the connector's subject-only update action on a designed automation
 again. Use the MailerLite editor or a capability that can preserve/apply HTML.
+
+## Controlled Family purchase and Step 9 gate — 2026-08-15
+
+- A fresh $0 Family Bundle QA order completed in Payhip for the controlled test
+  identity using the owner-only 100% coupon.
+- Payhip showed the Family product at 2 orders and displayed the new $0.00 Free
+  transaction.
+- Vercel production logged `POST /api/payhip-webhook` 200 and
+  `[payhip] paid -> family_bundle` for the event.
+- MailerLite created an active API subscriber in exactly Family Bundle Buyers and
+  All Customers; no Leads, Refunded, Essentials, Ultimate, or Review Requested
+  membership was present.
+- Payhip confirmed its download page email was sent. Receipt in that separate
+  inbox was not independently readable through the connected Gmail account.
+- The support address was corrected to `info@familyfindersbook.com` in all three
+  Payhip product descriptions and both refund-policy references; public pages
+  were rechecked after save.
+- All five owner-only QA coupons were permanently removed after approval. Payhip
+  then displayed `Coupons 0` and `0 coupons added`.
+- Family Bundle Onboarding and Review Request were activated for new subscribers
+  only and renamed without the draft/do-not-enable labels. Both showed 0 in
+  progress immediately after activation.
 
 ## Analytics
 
