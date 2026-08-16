@@ -36,33 +36,43 @@ confirmation click as a real funnel stage and monitor it.
 The Leads group reported `unconfirmed_count: 2` — one was the QA test address
 (since removed), the other is a real lead who never confirmed.
 
-## 2. Payhip webhook has no observed successful delivery
+## 2. Payhip webhook and Family purchase are proven
 
-Vercel production runtime logs, 7-day window: `/api/payhip-webhook` received 9
-requests — **8 x 405** (audit GET probes) and **1 x 401** (a token-less POST,
-logged as `[payhip] rejected: bad or missing URL token`, i.e. the fail-closed
-path behaving correctly). No legitimate Payhip event reached the endpoint.
+A fresh controlled Family Bundle order completed successfully on 2026-08-15.
 
-This does not prove misconfiguration — no sale may have occurred in the window —
-but the Payhip -> Vercel -> MailerLite path has never been observed succeeding
-end to end. Countervailing evidence that a sale happened at some point: All
-Customers = 1 and Essentials Buyers = 1, matching GA4 `purchase` = 1.
-
-Until a signed event returns 200, treat purchase segmentation as unproven.
-
-## 3. Live list size
-
-| Group | Subscribers |
+| Check | Verified result |
 |---|---|
-| Leads | 2 |
-| All Customers | 1 |
-| Essentials Buyers | 1 |
-| Ultimate / Family Bundle / Refunded / Review Requested | 0 |
-| Contact: Presale Question / Reader Feedback / Licensing | 0 |
+| Payhip checkout | $89 subtotal, -$89 QA discount, $0 total |
+| Payhip order ledger | Family Bundle increased to 2 orders; new $0.00 Free transaction shown |
+| Delivery page | Download page email reported sent to the controlled Family test inbox |
+| Vercel webhook | `POST /api/payhip-webhook` returned 200 |
+| Routing log | `[payhip] paid -> family_bundle` |
+| MailerLite subscriber | active; source `api` |
+| Correct groups | Family Bundle Buyers and All Customers only |
+| Incorrect groups | none: Leads, Refunded, Essentials, Ultimate, Review Requested absent |
 
-Account total: 5. The launch segment resolves to 2 real people, which is why the
-three FB-LAUNCH campaigns remain unscheduled drafts — the sequence can only be
-spent once.
+This supersedes the earlier “no observed successful delivery” finding. The
+Payhip -> Vercel -> MailerLite Family purchase path is now proven end to end.
+The connected Gmail inbox was not the controlled purchase inbox, so Payhip's
+sent confirmation is recorded without claiming independent inbox receipt.
+
+## 3. Controlled Family subscriber state
+
+The controlled Family test subscriber was verified immediately after the order:
+
+| Property | Result |
+|---|---|
+| Status | active |
+| Source | API |
+| Family Bundle Buyers | present |
+| All Customers | present |
+| Leads | absent |
+| Refunded | absent |
+| Essentials Buyers | absent |
+| Ultimate Buyers | absent |
+| Review Requested | absent |
+
+This is the required exact segmentation result for the Family purchase QA gate.
 
 ## 4. Contact alerting is solved
 
@@ -100,19 +110,29 @@ in the Vercel dashboard. Records currently at the apex that must not be removed:
 Multiple TXT records coexist at the same name, so adding a Google verification
 TXT does not disturb SPF, DMARC or MailerLite.
 
-## 7. Automation activation order, with blast radius
+## 7. Automation activation and Step 9 state
 
-With **"only add new subscribers"** selected, each of these enrols nobody today:
+Family Bundle Onboarding and Review Request were dry-simulated with no warnings,
+then activated in the MailerLite dashboard with **No, only add new subscribers**.
+Both were renamed to remove their draft/do-not-enable labels.
 
-| Workflow | Trigger group | In group | Safe now? |
-|---|---|---|---|
-| Ultimate Onboarding | Ultimate Buyers | 0 | yes, no effect |
-| Family Bundle Onboarding | Family Bundle Buyers | 0 | yes, no effect |
-| Essentials Onboarding | Essentials Buyers | 1 | yes, existing buyer excluded |
-| Review Request | All Customers | 1 | yes, existing customer excluded |
-| Refund Handling | Refunded | 0 | only if a customer-facing refund email is wanted; the webhook already handles cleanup |
-| Readiness Lead Nurture | Leads | 2 | **keep disabled** — superseded, would double-send |
-| Buyer Onboarding (generic) | any tier | 2 | **keep disabled** — superseded, lacks refund exclusion |
+| Workflow | State after verification | In progress |
+|---|---|---:|
+| Family Bundle Onboarding | active; new subscribers only | 0 |
+| Review Request | active; new subscribers only | 0 |
+| Essentials Onboarding | active | 0 |
+| Ultimate Onboarding | active | 0 |
+| Gap Check Lead Nurture | active | 0 |
+| Contact Acknowledgement | active | 0 |
+| Buyer Onboarding | inactive; keep off | 0 |
+| Readiness Lead Nurture | inactive; superseded | 0 |
+| Refund Handling | inactive | 0 |
 
-Safe to activate is not the same as proven: these sequences have never run end to
-end, and the webhook that populates their trigger groups is unverified (section 2).
+Payhip support-address corrections were publicly reverified across all three
+product descriptions and both refund-policy references. After explicit approval,
+all five owner-only 100% QA coupons were permanently deleted. Payhip displayed
+`Coupons 0` and `0 coupons added`.
+
+Step 8's Family gate is PASS. Step 9 may proceed as a controlled soft launch,
+with order totals, webhook 200 responses, Payhip delivery, and MailerLite group
+membership monitored for every early order.
