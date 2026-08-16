@@ -61,6 +61,11 @@
 <!-- v3.2 ELEVATION: motion opt-in, runs before first paint -->
 <script>(function(){try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.className+=" fx";}}catch(e){}})();</script>
 
+<!-- Act 0 "Skip intro" works even if motion.js never loads: a delegated
+     listener registered here, in <head>, needs no dependency on the
+     element existing yet or on the tail script executing at all. -->
+<script>(function(){try{document.addEventListener("click",function(e){var t=e.target;while(t&&t.id!=="callSkip"){t=t.parentElement;}if(!t)return;var r=document.getElementById("reveal");if(r&&r.scrollIntoView){r.scrollIntoView({behavior:"smooth",block:"start"});}});}catch(e){}})();</script>
+
 </head>
 <body>
 
@@ -90,57 +95,89 @@
 <main id="main">
 <span id="top"></span>
 
-<!-- ============ HERO ============ -->
-<section class="hero">
+<!-- ============ ACT 0 · THE CALL ============
+     Four scroll-scrubbed statements. No product, no price, no image,
+     no purchase target. Paragraphs only — the single page heading stays
+     in the reveal below. Collapses to one static screen under reduced motion.
+     Warm/anchor/returning traffic is compressed to one statement by
+     motion.js (adds html.call-compress before first paint). -->
+<section id="call" class="call" aria-label="Introduction">
+  <div class="call-stage">
+    <div class="call-glow" aria-hidden="true"></div>
+    <div class="call-spine" id="callSpine" aria-hidden="true"></div>
+    <div class="call-lines">
+      <p class="call-line" data-slot="0">
+        <span class="clip"><i>At some point,</i></span>
+        <span class="clip"><i>someone will have</i></span>
+        <span class="clip"><i>to step in.</i></span>
+      </p>
+      <p class="call-line" data-slot="1">
+        <span class="clip"><i>What would</i></span>
+        <span class="clip"><i>they actually</i></span>
+        <span class="clip"><i><em>know?</em></i></span>
+      </p>
+      <p class="call-line" data-slot="2">
+        <span class="clip"><i>And what would</i></span>
+        <span class="clip"><i>they have to</i></span>
+        <span class="clip"><i><em>search for?</em></i></span>
+      </p>
+      <p class="call-line call-turn" data-slot="3">
+        <span class="clip"><i>There is one place</i></span>
+        <span class="clip"><i>that answers <em>all three.</em></i></span>
+      </p>
+    </div>
+    <p class="call-hint" id="callHint" aria-hidden="true">Scroll</p>
+    <button type="button" class="call-skip" id="callSkip">Skip intro</button>
+  </div>
+</section>
+
+<!-- ============ ACT I · THE REVEAL (HERO) ============
+     Keeps class "hero" so the sticky-CTA logic and hero hooks resolve.
+     The single page heading and the .lede are never opacity-gated: their
+     entrance is clip-mask / transform only, so they read as visible at
+     load for the render smoke test and with the CDN blocked. -->
+<section class="hero reveal" id="reveal">
+  <div class="reveal-rule" aria-hidden="true"></div>
   <div class="wrap hero-grid">
-    <div>
+    <div class="reveal-copy">
       <p class="eyebrow">The Finder's Book · Family emergency binder</p>
-      <h1 class="h-xl">A family emergency binder that gives loved ones <span class="ital">one clear place to start.</span></h1>
+      <h1 class="h-xl reveal-h1"><span class="rl"><i>A family emergency binder that gives loved ones </i></span><span class="rl"><i class="ital">one clear place to start.</i></span></h1>
       <p class="lede">The Finder's Book organizes who to call, what matters, and where important records live across 49 fillable and printable pages. It uses pointers instead of passwords, so your family gets a map without turning the binder into a credential vault.</p>
       <div class="btn-row">
         <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="hero" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
-        <a class="btn btn-ghost" href="#inside" data-scroll-cta data-placement="hero-preview">Preview 12 real pages</a>
+        <a class="btn btn-ghost" href="#inside" data-scroll-cta data-placement="hero-preview">Preview real pages</a>
       </div>
       <p class="btn-note">Instant digital download · Fillable and print PDFs · Five implementation tools · <a href="#pricing">Compare all editions</a></p>
     </div>
 
-    <!-- signature moment: the book's page 2, rendered live -->
-    <div class="snap">
-      <div class="snap-top">
-        <div>
-          <p class="snap-head">Page 2 · Example entries</p>
-          <h2 class="snap-title">Continuity Snapshot</h2>
-          <p class="snap-sub">A first-page handoff with four answers a trusted person can act on.</p>
+    <!-- the object arrives here, ~2.5 screens in: one earned rotation, then still -->
+    <div class="stage" aria-hidden="false">
+      <div class="book3d" id="book">
+        <div class="book-face book-front">
+          <img class="hero-cover" src="assets/cover.webp" width="1100" height="1423" fetchpriority="high" decoding="async" alt="Cover of The Finder's Book Ultimate Digital Edition.">
         </div>
-        <img class="hero-cover" src="assets/cover.webp" width="1100" height="1423" fetchpriority="high" decoding="async" alt="Cover of The Finder's Book Ultimate Digital Edition.">
+        <div class="book-face book-back">
+          <div>
+            <p class="bk-kicker">The Family Clarity System</p>
+            <div class="bk-rule"></div>
+            <p class="bk-copy">One place that records who to call, what matters, and where things are kept.</p>
+          </div>
+          <div>
+            <p class="bk-foot">No passwords. No PINs. No account numbers.</p>
+            <div class="bk-rule bk-rule-dim"></div>
+            <p class="bk-kicker bk-kicker-wide">49 pages · Ultimate Digital Edition</p>
+          </div>
+        </div>
+        <div class="book-spine"><span>The Finder's Book</span></div>
+        <div class="book-edge"></div>
+        <div class="book-shadow" aria-hidden="true"></div>
       </div>
-      <div class="snap-grid">
-        <div class="rfield writein">
-          <span class="rfield-label">First person to call</span>
-          <span class="rfield-value">Dana · 555 0147</span>
-        </div>
-        <div class="rfield writein">
-          <span class="rfield-label">Backup person to call</span>
-          <span class="rfield-value">Marcus · 555 0182</span>
-        </div>
-        <div class="rfield writein">
-          <span class="rfield-label">Child / dependent caretaker</span>
-          <span class="rfield-value">Aunt Ruth · next door</span>
-        </div>
-        <div class="rfield writein">
-          <span class="rfield-label">Pet caretaker</span>
-          <span class="rfield-value">Dana · keys in blue dish</span>
-        </div>
-      </div>
-      <p class="snap-foot">No passwords. No PINs. No account numbers. Only the pointers a trusted person actually needs.</p>
     </div>
   </div>
-</section>
 
-<!-- ============ FACTUAL PROOF ============ -->
-<section class="proof-strip" aria-label="Product at a glance">
+  <!-- proof strip, folded into the hero base as four hairline facts -->
   <div class="wrap">
-    <ul class="proof-list">
+    <ul class="fact-rail" aria-label="Product at a glance">
       <li><strong>49 sequential pages</strong><span>Matched internal page references</span></li>
       <li><strong>Two formats included</strong><span>Fillable PDF plus print PDF</span></li>
       <li><strong>Credentials stay separate</strong><span>Pointers, never passwords or PINs</span></li>
@@ -149,16 +186,7 @@
   </div>
 </section>
 
-<section class="journey-strip" aria-label="Quick path through this page">
-  <div class="wrap journey-links">
-    <a href="#inside">1 · Preview real pages</a>
-    <a href="#start">2 · Start in 15 minutes</a>
-    <a href="#pricing">3 · Choose your edition</a>
-    <a href="#gap-check">4 · Take the free Gap Check</a>
-  </div>
-</section>
-
-<!-- ============ THE MOMENT ============ -->
+<!-- ============ ACT II · THE MOMENT ============ -->
 <section class="band band-hi">
   <div class="wrap">
     <div class="head-block">
@@ -189,7 +217,49 @@
   </div>
 </section>
 
-<!-- ============ SECURITY DOCTRINE ============ -->
+<!-- ============ ACT III · THE SNAPSHOT ============
+     The product demo, evicted from the hero to its own act. -->
+<section class="band" id="snapshot">
+  <div class="wrap">
+    <div class="snap-layout">
+      <div class="snap-intro">
+        <p class="eyebrow">Page 2 · Continuity Snapshot</p>
+        <h2 class="h-lg snap-h">Four answers a trusted person can act on <span class="ital">tonight.</span></h2>
+        <p class="lede">The first page anyone opens. No passwords, no PINs, no account numbers — only the pointers someone actually needs in the first hour.</p>
+      </div>
+      <div class="snap">
+        <div class="snap-top">
+          <div>
+            <p class="snap-head">Page 2 · Example entries</p>
+            <h3 class="snap-title">Continuity Snapshot</h3>
+            <p class="snap-sub">A first-page handoff with four answers a trusted person can act on.</p>
+          </div>
+        </div>
+        <div class="snap-grid">
+          <div class="rfield writein">
+            <span class="rfield-label">First person to call</span>
+            <span class="rfield-value">Dana · 555 0147</span>
+          </div>
+          <div class="rfield writein">
+            <span class="rfield-label">Backup person to call</span>
+            <span class="rfield-value">Marcus · 555 0182</span>
+          </div>
+          <div class="rfield writein">
+            <span class="rfield-label">Child / dependent caretaker</span>
+            <span class="rfield-value">Aunt Ruth · next door</span>
+          </div>
+          <div class="rfield writein">
+            <span class="rfield-label">Pet caretaker</span>
+            <span class="rfield-value">Dana · keys in blue dish</span>
+          </div>
+        </div>
+        <p class="snap-foot">No passwords. No PINs. No account numbers. Only the pointers a trusted person actually needs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ACT IV · SECURITY DOCTRINE ============ -->
 <section class="band band-pine" id="security">
   <div class="wrap">
     <div class="head-block">
@@ -227,64 +297,58 @@
   </div>
 </section>
 
-<!-- ============ INSIDE ============ -->
+<!-- ============ ACT V · THE SPREAD (INSIDE) ============
+     Five staged pages, scroll-scrubbed; the other seven live in the
+     "see all 49" overlay. Every page scan stays a .pg lightbox button. -->
 <section class="band" id="inside">
   <div class="wrap">
     <div class="head-block">
       <p class="eyebrow">Real pages from the actual book</p>
-      <h2 class="h-lg">One organized map for the people you trust.</h2>
-      <p class="lede">Forty-nine sequential pages with matched internal page references. Select any page to see it full size.</p>
+      <h2 class="h-lg">Five real pages. Not the whole book.</h2>
+      <p class="lede">Scroll to move through the spread. Five pages open. The rest stay closed until the book is yours. Select any page to see it full size.</p>
     </div>
+  </div>
 
-    <div class="gallery">
-      <button class="pg" type="button" data-full="assets/continuity-snapshot.webp" data-cap="Page 2: Continuity Snapshot">
+  <div class="spread-viewport">
+    <div class="spread-track" id="spreadTrack">
+      <button class="pg spread-pg" type="button" data-full="assets/continuity-snapshot.webp" data-cap="Page 2: Continuity Snapshot">
         <img src="assets/continuity-snapshot.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Continuity Snapshot page listing first person to call, backup, dependent caretaker and pet caretaker.">
-        <span class="pg-cap">Continuity Snapshot</span>
+        <span class="pg-cap">Page 2 · Continuity Snapshot</span>
       </button>
-      <button class="pg" type="button" data-full="assets/letter-to-finder.webp" data-cap="Page 6: A letter to the person who found this book">
+      <button class="pg spread-pg" type="button" data-full="assets/letter-to-finder.webp" data-cap="Page 6: A letter to the person who found this book">
         <img src="assets/letter-to-finder.webp" width="900" height="1165" loading="lazy" decoding="async" alt="A written letter addressed to whoever finds the book, explaining what to do first.">
-        <span class="pg-cap">Letter to the finder</span>
+        <span class="pg-cap">Page 6 · Letter to the finder</span>
       </button>
-      <button class="pg" type="button" data-full="assets/documents-locator.webp" data-cap="Page 9: My most important documents">
+      <button class="pg spread-pg" type="button" data-full="assets/documents-locator.webp" data-cap="Page 9: My most important documents">
         <img src="assets/documents-locator.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Document locator page recording where each signed original is kept.">
-        <span class="pg-cap">Document locator</span>
+        <span class="pg-cap">Page 9 · Document locator</span>
       </button>
-      <button class="pg" type="button" data-full="assets/trusted-people.webp" data-cap="Page 11: My two trusted people">
-        <img src="assets/trusted-people.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page for naming two trusted people with their contact details and roles.">
-        <span class="pg-cap">Two trusted people</span>
-      </button>
-      <button class="pg" type="button" data-full="assets/levels-of-access.webp" data-cap="Pages 12–13: Levels of access and the access matrix">
+      <button class="pg spread-pg" type="button" data-full="assets/levels-of-access.webp" data-cap="Pages 12–13: Levels of access and the access matrix">
         <img src="assets/levels-of-access.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Access matrix assigning Now, Later, or Never permission levels to each trusted person.">
-        <span class="pg-cap">The access matrix</span>
+        <span class="pg-cap">Pages 12–13 · The access matrix</span>
       </button>
-      <button class="pg" type="button" data-full="assets/important-people.webp" data-cap="Page 10: The most important people">
-        <img src="assets/important-people.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page listing the most important people to notify and how to reach them.">
-        <span class="pg-cap">People to notify</span>
-      </button>
-      <button class="pg" type="button" data-full="assets/will-locator.webp" data-cap="Page 21: The will">
+      <button class="pg spread-pg" type="button" data-full="assets/will-locator.webp" data-cap="Page 21: The will">
         <img src="assets/will-locator.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Will locator page recording the executor, where the original is stored, and the attorney.">
-        <span class="pg-cap">The will</span>
+        <span class="pg-cap">Page 21 · The will</span>
       </button>
-      <button class="pg" type="button" data-full="assets/security-doctrine.webp" data-cap="Page 5: What this book holds, and what it does not">
-        <img src="assets/security-doctrine.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page listing what never belongs in the book, including passwords, PINs and recovery codes.">
-        <span class="pg-cap">What never goes in</span>
-      </button>
-      <button class="pg" type="button" data-full="assets/credit-cards.webp" data-cap="Page 31: Credit cards">
-        <img src="assets/credit-cards.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Credit card page recording issuer and last four digits only.">
-        <span class="pg-cap">Cards, last four only</span>
-      </button>
-      <button class="pg" type="button" data-full="assets/email-accounts.webp" data-cap="Page 39: Email accounts">
-        <img src="assets/email-accounts.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Email accounts page explaining why email is the key to other accounts.">
-        <span class="pg-cap">Email + digital life</span>
-      </button>
-      <button class="pg" type="button" data-full="assets/letter-to-loved-one.webp" data-cap="Page 47: A letter to whoever is reading this book">
-        <img src="assets/letter-to-loved-one.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Personal letter page addressed to a partner, child, sibling or caregiver.">
-        <span class="pg-cap">Letter to a loved one</span>
-      </button>
-      <button class="pg" type="button" data-full="assets/how-to-use.webp" data-cap="Page 4: How to use this book">
-        <img src="assets/how-to-use.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Instructions page describing how to use and return to the book over time.">
-        <span class="pg-cap">How to use it</span>
-      </button>
+      <div class="spread-veil">
+        <button class="veil-btn" type="button" id="veilBtn" aria-haspopup="dialog" aria-controls="allPages">
+          <img src="assets/important-people.webp" width="900" height="1165" loading="lazy" decoding="async" alt="A further page from the book, shown deliberately blurred.">
+          <span class="veil-over">
+            <span class="veil-k">Pages 22 to 49</span>
+            <span class="veil-t">The other forty-four open when the book is yours.</span>
+            <span class="veil-a">See all 49 pages</span>
+          </span>
+        </button>
+        <span class="pg-cap">People · access · money · property · digital life</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="spread-meter">
+      <p>Five of forty-nine shown</p>
+      <div class="meter"><i id="spreadBar"></i></div>
     </div>
 
     <div class="cols-4 inside-sections">
@@ -296,7 +360,7 @@
   </div>
 </section>
 
-<!-- ============ 15-MINUTE START ============ -->
+<!-- ============ ACT VI · 15-MINUTE START ============ -->
 <section class="band band-sage" id="start">
   <div class="wrap">
     <div class="head-block">
@@ -322,13 +386,13 @@
         <p>Page 5 plus Bonus 2. Where the secrets live, and who can reach them.</p>
       </div>
     </div>
-    <div class="btn-row">
+    <div class="btn-row start-cta">
       <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="start" data-tier="ultimate" data-price="49">Get Ultimate and begin: $49</a>
     </div>
   </div>
 </section>
 
-<!-- ============ BONUSES ============ -->
+<!-- ============ ACT VII · WHAT ARRIVES (bonuses + formats merged) ============ -->
 <section class="band">
   <div class="wrap">
     <div class="head-block">
@@ -362,11 +426,24 @@
         <div><h3>Plus · Start Here + License</h3><p>A one-page orientation, plain-language printing and license terms, and checksums so you can verify every file you downloaded.</p></div>
       </div>
     </div>
+
+    <div class="fmt">
+      <div class="card">
+        <h3 class="h-md">Fillable edition</h3>
+        <p class="small">Standard AcroForm fields. Type directly into the PDF, save, and reopen. Best on a laptop or desktop in Adobe Acrobat Reader or another AcroForm-compatible reader.</p>
+        <p class="small no-bottom-margin"><strong>Before you start:</strong> save a working copy, type a test entry, close it, and reopen to confirm your reader preserves entries, particularly on mobile.</p>
+      </div>
+      <div class="card">
+        <h3 class="h-md">Print edition</h3>
+        <p class="small">The same 49 pages, laid out for handwriting. Print at home or at a copy shop, then keep the completed pages in a binder or another agreed location.</p>
+        <p class="small no-bottom-margin">You can use both: type the account and contact pages, then handwrite the personal letters.</p>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ============ WHO ============ -->
-<section class="band band-hi">
+<!-- ============ ACT VIII · TRUST (who + creators merged) ============ -->
+<section class="band band-hi" id="creators">
   <div class="wrap">
     <div class="head-block">
       <p class="eyebrow">Who it is built for</p>
@@ -386,40 +463,7 @@
         <p>When one person holds most of the household knowledge, this makes the essentials easier to share after a marriage, home purchase, birth, diagnosis, or move.</p>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ============ FORMATS ============ -->
-<section class="band">
-  <div class="wrap">
-    <div class="head-block">
-      <p class="eyebrow">Two editions, identical content</p>
-      <h2 class="h-lg">Type it or write it. Both are included.</h2>
-    </div>
-    <div class="fmt">
-      <div class="card">
-        <h3 class="h-md">Fillable edition</h3>
-        <p class="small">Standard AcroForm fields. Type directly into the PDF, save, and reopen. Best on a laptop or desktop in Adobe Acrobat Reader or another AcroForm-compatible reader.</p>
-        <p class="small no-bottom-margin"><strong>Before you start:</strong> save a working copy, type a test entry, close it, and reopen to confirm your reader preserves entries, particularly on mobile.</p>
-      </div>
-      <div class="card">
-        <h3 class="h-md">Print edition</h3>
-        <p class="small">The same 49 pages, laid out for handwriting. Print at home or at a copy shop, then keep the completed pages in a binder or another agreed location.</p>
-        <p class="small no-bottom-margin">You can use both: type the account and contact pages, then handwrite the personal letters.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ CREATOR TRANSPARENCY ============ -->
-<section class="band band-pine" id="creators">
-  <div class="wrap creator-grid">
-    <div class="head-block">
-      <p class="eyebrow">Created with clear boundaries</p>
-      <h2 class="h-lg">An organizer should help your family find the right next step, not pretend to replace a professional.</h2>
-      <p class="lede">The Finder's Book was created by Joanne Godfrey and Michael David as a structured personal-record system. Its job is intentionally narrow: organize your directions, document locations, and trusted contacts in plain language.</p>
-    </div>
-    <div>
+    <div class="trust-foot">
       <div class="rfield">
         <span class="rfield-label">Created by</span>
         <p class="rfield-value">Joanne Godfrey and Michael David</p>
@@ -432,61 +476,62 @@
         <span class="rfield-label">What it is not</span>
         <p class="rfield-value">Professional advice, legal authority, or a place to store credentials.</p>
       </div>
-      <p class="small creator-note">Legal, medical, financial, and account-access decisions remain with qualified professionals and the documents or provider settings that govern them. Questions before buying? <a href="mailto:info@familyfindersbook.com">Email support</a>.</p>
     </div>
+    <p class="small creator-note">The Finder's Book was created by Joanne Godfrey and Michael David as a structured personal-record system. Legal, medical, financial, and account-access decisions remain with qualified professionals and the documents or provider settings that govern them. Questions before buying? <a href="mailto:info@familyfindersbook.com">Email support</a>.</p>
   </div>
 </section>
 
-<!-- ============ PRICING ============ -->
+<!-- ============ ACT IX · THE LEDGER (pricing) ============
+     Three ledger rows. Same three tiers, same prices, same Payhip
+     links and data-* attributes. Recommended tier signalled by
+     inversion and weight — no floating pill. -->
 <section class="band band-hi" id="pricing">
   <div class="wrap">
     <div class="head-block pricing-head">
       <p class="eyebrow">Choose your edition</p>
-      <h2 class="h-lg">Start with the complete handoff system.</h2>
+      <h2 class="h-lg">Three editions. One decision.</h2>
       <p class="lede">One-time purchase. Delivered as files you can save and keep. No subscription.</p>
     </div>
-    <div class="tiers">
+    <div class="tiers ledger">
       <div class="tier">
-        <p class="tier-name">Essentials</p>
         <p class="tier-price"><sup>$</sup>29</p>
-        <p class="tier-desc">The core organizer, without the implementation tools.</p>
-        <ul class="tier-list">
-          <li>49-page fillable edition</li>
-          <li>49-page print edition</li>
-          <li>Start Here orientation</li>
-          <li>Files you can save and keep</li>
-        </ul>
+        <div class="tier-body">
+          <p class="tier-name">Essentials</p>
+          <p class="tier-desc">The core organizer, without the implementation tools.</p>
+          <ul class="tier-list">
+            <li>49-page fillable + print editions</li>
+            <li>Start Here orientation</li>
+            <li>Files you can save and keep</li>
+          </ul>
+        </div>
         <a class="btn btn-ghost" href="https://payhip.com/b/eHcPG" data-checkout data-placement="pricing-essentials" data-tier="essentials" data-price="29">Get Essentials: $29</a>
       </div>
 
       <div class="tier tier-lead">
-        <span class="tier-flag">Most complete</span>
-        <p class="tier-name">Ultimate</p>
         <p class="tier-price"><sup>$</sup>49</p>
-        <p class="tier-desc">Everything in Essentials, plus the five tools that make the book findable and usable.</p>
-        <ul class="tier-list">
-          <li>49-page fillable + print editions</li>
-          <li>Bonus 1: Emergency Fridge Card</li>
-          <li>Bonus 2: 15-Minute Secure Vault Setup</li>
-          <li>Bonus 3: Continuity Check-In Plan</li>
-          <li>Bonus 4: Trusted Person Handoff Scripts</li>
-          <li>Bonus 5: Digital Legacy Link + QR Guide</li>
-          <li>License terms + file checksums</li>
-        </ul>
+        <div class="tier-body">
+          <p class="tier-name">Ultimate · recommended</p>
+          <p class="tier-desc">Everything in Essentials, plus the five tools that make the book findable and usable.</p>
+          <ul class="tier-list">
+            <li>49-page fillable + print editions</li>
+            <li>All five implementation tools</li>
+            <li>License terms + file checksums</li>
+          </ul>
+        </div>
         <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="pricing-ultimate" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
       </div>
 
       <div class="tier">
-        <p class="tier-name">Family Bundle</p>
         <p class="tier-price"><sup>$</sup>89</p>
-        <p class="tier-desc">For coordinating more than one household, such as a parent's and your own.</p>
-        <ul class="tier-list">
-          <li>Everything in Ultimate</li>
-          <li>Family Coordination Guide</li>
-          <li>Licensed for multiple households</li>
-          <li>Print copies for each household</li>
-          <li>Ideal for adult children and siblings</li>
-        </ul>
+        <div class="tier-body">
+          <p class="tier-name">Family Bundle</p>
+          <p class="tier-desc">For coordinating more than one household, such as a parent's and your own.</p>
+          <ul class="tier-list">
+            <li>Everything in Ultimate</li>
+            <li>Family Coordination Guide</li>
+            <li>Licensed for multiple households</li>
+          </ul>
+        </div>
         <a class="btn btn-ghost" href="https://payhip.com/b/xPuv4" data-checkout data-placement="pricing-bundle" data-tier="bundle" data-price="89">Get the Family Bundle: $89</a>
       </div>
     </div>
@@ -497,56 +542,9 @@
   </div>
 </section>
 
-<!-- ============ FAQ ============ -->
-<section class="band" id="faq">
-  <div class="wrap">
-    <div class="head-block centered-head">
-      <p class="eyebrow eyebrow-centered">Before you buy</p>
-      <h2 class="h-lg">Know exactly what this does, and what it does not.</h2>
-    </div>
-    <div class="faq">
-      <details>
-        <summary>Is this a will, or does it replace one?</summary>
-        <div class="faq-body"><p>No. The Finder's Book is a personal record, not a legal instrument. It is not a will, trust, contract, power of attorney, or advance directive, and it gives nobody authority over your accounts or medical decisions. What it does is record where those signed originals are kept and who is named in them, so the documents you already have can be found and used. If a question arises about legal effect, consult an attorney licensed in your jurisdiction.</p></div>
-      </details>
-      <details>
-        <summary>Isn't putting all of this in one place dangerous?</summary>
-        <div class="faq-body"><p>Any completed organizer should be treated as private personal information. The Finder's Book reduces exposure by excluding passwords, PINs, recovery codes, safe combinations, and full account or Social Security numbers. It uses last four digits for identification and points to a separate secure system for credentials. Store it according to what you choose to include and limit access to people you trust.</p></div>
-      </details>
-      <details>
-        <summary>Do I have to complete all 49 pages for it to help?</summary>
-        <div class="faq-body"><p>No. Begin with the Continuity Snapshot, two trusted people, your document locations, and a pointer to your secure system. Set a 15-minute timer for the first pass, then return after a marriage, birth, diagnosis, move, or change in work. The real value is having a clearer starting point, not filling every blank at once.</p></div>
-      </details>
-      <details>
-        <summary>Will the fillable PDF work on my computer?</summary>
-        <div class="faq-body"><p>It uses standard AcroForm fields and works in Adobe Acrobat Reader and other AcroForm-compatible readers on Windows and macOS. Desktop or laptop is strongly recommended. Some mobile PDF apps do not preserve saved entries, so save a working copy and test one entry before filling anything in. If you would rather not use a computer at all, the print edition contains the same 49 pages.</p></div>
-      </details>
-      <details>
-        <summary>How is this different from a free checklist or a cheap printable?</summary>
-        <div class="faq-body"><p>Three things. First, the security architecture uses pointers rather than credentials, with a per-person access matrix of Now, Later, and Never. Second, the first-hour guidance includes a letter written to whoever opens the book. Third, the fillable and print editions match, the sequential page references align, and the Ultimate edition includes five implementation tools. It is designed around handoff quality, not the biggest page count.</p></div>
-      </details>
-      <details>
-        <summary>My parent does not want to talk about this. What do I do?</summary>
-        <div class="faq-body"><p>Start smaller than the whole conversation. Ask who they would want called first, then where the signed documents are kept. You can frame the task as reducing guesswork for the people they trust. The book opens with a practical snapshot rather than a will for exactly that reason.</p></div>
-      </details>
-      <details>
-        <summary>Is this only an end-of-life planner?</summary>
-        <div class="faq-body"><p>No. It can support end-of-life organization, but it is also designed for hospitalization, incapacity, caregiving transitions, household handoffs, and living alone. It helps people find contacts and records. It does not replace the legal, medical, or financial documents that govern decisions.</p></div>
-      </details>
-      <details>
-        <summary>What exactly do I receive, and when?</summary>
-        <div class="faq-body"><p>Immediately after purchase you receive a download containing the 49-page fillable PDF, the 49-page print PDF, a Start Here orientation page, plain-language license and printing terms, file checksums, and, with the Ultimate and Family editions, all five bonus PDFs. Everything is delivered as files you can save and keep. There is no app or subscription.</p></div>
-      </details>
-      <details>
-        <summary>Can I use this with my clients?</summary>
-        <div class="faq-body"><p>Not under the consumer license. Attorney, advisor, coach, employer, nonprofit, institutional, commercial, co-branding, sublicensing, and white-label uses, including use as a client handout or lead magnet, require a separate written license. <a href="mailto:info@familyfindersbook.com">Contact us</a> for terms.</p></div>
-      </details>
-    </div>
-  </div>
-</section>
-
-<!-- ============ FINAL CTA ============ -->
-<!-- ============ FREE RESOURCE: FAMILY READINESS GAP CHECK ============ -->
+<!-- ============ ACT X · THE FREE DOOR (Gap Check + FAQ) ============
+     One ending: FAQ collapses under the Gap Check instead of standing
+     as its own band. Same nine questions, same FAQPage JSON-LD. -->
 <section class="band gap" id="gap-check">
   <div class="wrap">
     <div class="gap-grid">
@@ -592,9 +590,55 @@
         </p>
       </div>
     </div>
+
+    <div class="faq-wrap" id="faq">
+      <div class="head-block centered-head faq-head">
+        <p class="eyebrow eyebrow-centered">Before you buy</p>
+        <h2 class="h-lg">Know exactly what this does, and what it does not.</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Is this a will, or does it replace one?</summary>
+          <div class="faq-body"><p>No. The Finder's Book is a personal record, not a legal instrument. It is not a will, trust, contract, power of attorney, or advance directive, and it gives nobody authority over your accounts or medical decisions. What it does is record where those signed originals are kept and who is named in them, so the documents you already have can be found and used. If a question arises about legal effect, consult an attorney licensed in your jurisdiction.</p></div>
+        </details>
+        <details>
+          <summary>Isn't putting all of this in one place dangerous?</summary>
+          <div class="faq-body"><p>Any completed organizer should be treated as private personal information. The Finder's Book reduces exposure by excluding passwords, PINs, recovery codes, safe combinations, and full account or Social Security numbers. It uses last four digits for identification and points to a separate secure system for credentials. Store it according to what you choose to include and limit access to people you trust.</p></div>
+        </details>
+        <details>
+          <summary>Do I have to complete all 49 pages for it to help?</summary>
+          <div class="faq-body"><p>No. Begin with the Continuity Snapshot, two trusted people, your document locations, and a pointer to your secure system. Set a 15-minute timer for the first pass, then return after a marriage, birth, diagnosis, move, or change in work. The real value is having a clearer starting point, not filling every blank at once.</p></div>
+        </details>
+        <details>
+          <summary>Will the fillable PDF work on my computer?</summary>
+          <div class="faq-body"><p>It uses standard AcroForm fields and works in Adobe Acrobat Reader and other AcroForm-compatible readers on Windows and macOS. Desktop or laptop is strongly recommended. Some mobile PDF apps do not preserve saved entries, so save a working copy and test one entry before filling anything in. If you would rather not use a computer at all, the print edition contains the same 49 pages.</p></div>
+        </details>
+        <details>
+          <summary>How is this different from a free checklist or a cheap printable?</summary>
+          <div class="faq-body"><p>Three things. First, the security architecture uses pointers rather than credentials, with a per-person access matrix of Now, Later, and Never. Second, the first-hour guidance includes a letter written to whoever opens the book. Third, the fillable and print editions match, the sequential page references align, and the Ultimate edition includes five implementation tools. It is designed around handoff quality, not the biggest page count.</p></div>
+        </details>
+        <details>
+          <summary>My parent does not want to talk about this. What do I do?</summary>
+          <div class="faq-body"><p>Start smaller than the whole conversation. Ask who they would want called first, then where the signed documents are kept. You can frame the task as reducing guesswork for the people they trust. The book opens with a practical snapshot rather than a will for exactly that reason.</p></div>
+        </details>
+        <details>
+          <summary>Is this only an end-of-life planner?</summary>
+          <div class="faq-body"><p>No. It can support end-of-life organization, but it is also designed for hospitalization, incapacity, caregiving transitions, household handoffs, and living alone. It helps people find contacts and records. It does not replace the legal, medical, or financial documents that govern decisions.</p></div>
+        </details>
+        <details>
+          <summary>What exactly do I receive, and when?</summary>
+          <div class="faq-body"><p>Immediately after purchase you receive a download containing the 49-page fillable PDF, the 49-page print PDF, a Start Here orientation page, plain-language license and printing terms, file checksums, and, with the Ultimate and Family editions, all five bonus PDFs. Everything is delivered as files you can save and keep. There is no app or subscription.</p></div>
+        </details>
+        <details>
+          <summary>Can I use this with my clients?</summary>
+          <div class="faq-body"><p>Not under the consumer license. Attorney, advisor, coach, employer, nonprofit, institutional, commercial, co-branding, sublicensing, and white-label uses, including use as a client handout or lead magnet, require a separate written license. <a href="mailto:info@familyfindersbook.com">Contact us</a> for terms.</p></div>
+        </details>
+      </div>
+    </div>
   </div>
 </section>
 
+<!-- ============ CLOSE ============ -->
 <section class="band band-deep" id="final-cta">
   <div class="wrap final-wrap">
     <p class="eyebrow eyebrow-centered">One last thing</p>
@@ -604,6 +648,52 @@
     <p class="btn-note final-note">Instant download · Fillable + print · 5 bonuses · One-time payment · <a href="#pricing">See all editions</a></p>
   </div>
 </section>
+
+<!-- ============ ALL 49 PAGES OVERLAY ============
+     Holds the seven page scans that left the spread. Every one is a
+     .pg lightbox button, so no page scan is removed and the lightbox
+     keeps working across all twelve. -->
+<div class="allpages" id="allPages" role="dialog" aria-modal="true" aria-label="All pages from the book" hidden>
+  <div class="allpages-in">
+    <div class="allpages-hd">
+      <div>
+        <h2 class="h-md">The pages that did not make the spread</h2>
+        <p class="tiny">Nothing was removed. The remaining page scans live here, so the assets keep working without turning the page into a contact sheet.</p>
+      </div>
+      <button class="allpages-close" type="button" id="allPagesClose" aria-label="Close all pages">&times;</button>
+    </div>
+    <div class="allpages-grid">
+      <button class="pg" type="button" data-full="assets/trusted-people.webp" data-cap="Page 11: My two trusted people">
+        <img src="assets/trusted-people.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page for naming two trusted people with their contact details and roles.">
+        <span class="pg-cap">Page 11 · Two trusted people</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/important-people.webp" data-cap="Page 10: The most important people">
+        <img src="assets/important-people.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page listing the most important people to notify and how to reach them.">
+        <span class="pg-cap">Page 10 · People to notify</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/security-doctrine.webp" data-cap="Page 5: What this book holds, and what it does not">
+        <img src="assets/security-doctrine.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Page listing what never belongs in the book, including passwords, PINs and recovery codes.">
+        <span class="pg-cap">Page 5 · What never goes in</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/credit-cards.webp" data-cap="Page 31: Credit cards">
+        <img src="assets/credit-cards.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Credit card page recording issuer and last four digits only.">
+        <span class="pg-cap">Page 31 · Cards, last four only</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/email-accounts.webp" data-cap="Page 39: Email accounts">
+        <img src="assets/email-accounts.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Email accounts page explaining why email is the key to other accounts.">
+        <span class="pg-cap">Page 39 · Email + digital life</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/letter-to-loved-one.webp" data-cap="Page 47: A letter to whoever is reading this book">
+        <img src="assets/letter-to-loved-one.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Personal letter page addressed to a partner, child, sibling or caregiver.">
+        <span class="pg-cap">Page 47 · Letter to a loved one</span>
+      </button>
+      <button class="pg" type="button" data-full="assets/how-to-use.webp" data-cap="Page 4: How to use this book">
+        <img src="assets/how-to-use.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Instructions page describing how to use and return to the book over time.">
+        <span class="pg-cap">Page 4 · How to use it</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 </main>
 

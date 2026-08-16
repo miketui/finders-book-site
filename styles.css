@@ -630,3 +630,240 @@ html.fx .lb.on img{transform:scale(1);opacity:1}
     border-right:1px solid var(--hair);
   }
 }
+
+/* ============================================================
+   THE FINDER'S BOOK — v4.1 ACT-ZERO REDESIGN LAYER
+   Additive. Reuses every v3 token. The page is now sequenced as
+   the book being opened: Act 0 withholds the product for four
+   scroll-scrubbed statements, then the reveal earns the object.
+   Single visual world of the existing palette; no new tokens
+   except one display step used exactly twice on the page.
+   Motion stays opt-in (html.fx) and reduced-motion safe. The
+   <h1> and .lede are NEVER opacity-gated — their entrance is
+   clip-mask / transform only — so above-the-fold content reads
+   as visible at load, with or without GSAP.
+   ============================================================ */
+:root{ --h-display:clamp(3.1rem,8.4vw,6.6rem); }
+
+/* ---------- ACT 0 · THE CALL ----------
+   Structural layout (tall sticky scrub vs. compact static block) is
+   chosen via html.fx — set synchronously in <head>, before first paint,
+   exactly like .book3d and every other entrance animation on this site —
+   so there is no post-paint layout switch and therefore no CLS.
+   Content visibility is a separate, narrower guarantee: html.js marks
+   the instant motion.js begins executing (its first statement, so this
+   happens within microseconds once the script tag is reached). Until
+   that marker exists — the page has no JS at all, or motion.js failed
+   outright — the first line stays visible by default rather than the
+   whole section going blank. Once html.js is present, JS's own
+   .is-on toggling takes over completely. */
+.call{position:relative;background:var(--pine-900);color:var(--paper);padding:clamp(4rem,10vw,7rem) 0}
+.call-stage{position:relative;display:block;padding:0 clamp(1.5rem,7vw,7rem)}
+html.fx .call{height:460vh;padding:0}
+html.fx .call-stage{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 clamp(1.5rem,7vw,7rem)}
+.call-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 0%,rgba(184,146,61,.13),transparent 62%)}
+.call-spine{position:absolute;left:clamp(1.5rem,4vw,3.4rem);top:0;width:1px;background:var(--gold);opacity:.55;height:0}
+.call-lines{position:relative;width:100%;max-width:min(1020px,92vw);margin:0 auto;text-align:center}
+.call-line{max-width:26ch;margin:0 auto 2rem;font-family:var(--serif);font-weight:400;font-size:clamp(1.7rem,4vw,2.6rem);line-height:1.15;letter-spacing:-.026em;color:var(--paper);text-align:left}
+.call-line:last-child{margin-bottom:0}
+.call-line em{font-style:italic;color:var(--gold-hi)}
+.call-line .clip{display:inline}
+.call-line .clip i{font-style:normal}
+html.fx .call-line{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);max-width:15ch;margin-left:auto;margin-right:auto;text-align:center;font-size:var(--h-display);line-height:.96;letter-spacing:-.038em;opacity:0;visibility:hidden}
+html.fx .call-line.is-on{opacity:1;visibility:visible}
+/* The narrow content-visibility safety net described above. Toggling
+   opacity/visibility on an already off-flow, absolutely-positioned
+   element is a compositing change only — it moves nothing else on the
+   page, so it carries no CLS cost either way. */
+html.fx:not(.js) .call-line[data-slot="0"]{opacity:1;visibility:visible}
+html.fx .call-line .clip{display:block;overflow:hidden}
+html.fx .call-line .clip i{display:block;transform:translateY(104%);transition:transform .82s var(--ease)}
+html.fx .call-line.is-on .clip i{transform:translateY(0)}
+html.fx .call-line .clip:nth-child(2) i{transition-delay:.07s}
+html.fx .call-line .clip:nth-child(3) i{transition-delay:.14s}
+html.fx .call-turn{font-size:clamp(1.9rem,4.2vw,3.2rem);letter-spacing:-.026em;max-width:20ch}
+.call-hint{position:absolute;left:0;right:0;bottom:2.2rem;text-align:center;font-family:var(--sans);font-size:.62rem;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-pine);opacity:.75;transition:opacity .4s var(--ease)}
+.call-hint.gone{opacity:0}
+html:not(.fx) .call-hint{display:none}
+.call-skip{position:absolute;top:clamp(1rem,2.5vw,1.6rem);right:clamp(1rem,3vw,2rem);font-family:var(--sans);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-hi);background:transparent;border:1px solid rgba(223,201,157,.4);border-radius:var(--r);padding:.5rem .85rem;cursor:pointer;min-height:40px}
+.call-skip:hover{background:rgba(223,201,157,.1)}
+/* Warm / returning / anchored traffic: one statement, not four. */
+html.call-compress.fx .call{height:100vh}
+html.call-compress.fx .call-line:not([data-slot="3"]){display:none}
+html.call-compress.fx .call-line[data-slot="3"]{opacity:1;visibility:visible}
+html.call-compress.fx .call-line[data-slot="3"] .clip i{transform:none}
+html.call-compress .call-hint{display:none}
+
+/* ---------- ACT I · THE REVEAL ---------- */
+.reveal{position:relative}
+.reveal-rule{position:absolute;left:0;right:0;top:0;height:1px;background:var(--gold);transform:scaleX(0);transform-origin:left center}
+.reveal.is-revealed .reveal-rule{transform:scaleX(1);transition:transform .72s .2s var(--ease)}
+.reveal .hero-grid{align-items:center}
+/* the headline: opacity always 1; lines mask-reveal via inner transform */
+.reveal-h1{overflow:visible}
+.reveal-h1 .rl{display:block;overflow:hidden}
+.reveal-h1 .rl i{display:block;font-style:normal}
+.reveal-h1 .rl i.ital{font-style:italic;color:var(--gold-hi)}
+html.fx .reveal-h1 .rl i{transform:translateY(105%)}
+html.fx .reveal.is-revealed .reveal-h1 .rl i{transform:translateY(0);transition:transform .9s var(--ease)}
+html.fx .reveal.is-revealed .reveal-h1 .rl:nth-child(2) i{transition-delay:.08s}
+/* cta + book are opacity-gated only when fx is on (never the h1/lede) */
+html.fx .reveal .btn-row,html.fx .reveal .btn-note{opacity:0;transform:translateY(14px)}
+html.fx .reveal.is-revealed .btn-row{opacity:1;transform:none;transition:opacity .6s .95s var(--ease),transform .6s .95s var(--ease)}
+html.fx .reveal.is-revealed .btn-note{opacity:1;transform:none;transition:opacity .6s 1.1s var(--ease),transform .6s 1.1s var(--ease)}
+
+/* the object: one earned rotation, then still */
+.stage{position:relative;display:flex;justify-content:center;perspective:1700px;perspective-origin:50% 44%}
+.book3d{position:relative;width:clamp(190px,21vw,282px);aspect-ratio:1100/1423;transform-style:preserve-3d;transform:rotateY(-18deg)}
+html.fx .book3d{opacity:0;transform:rotateY(196deg) translateY(42px)}
+html.fx .reveal.is-revealed .book3d{opacity:1;transform:rotateY(-18deg) translateY(0);transition:transform 2.6s .35s var(--ease),opacity .9s .35s var(--ease)}
+.book-face{position:absolute;inset:0;backface-visibility:hidden}
+.book-front{transform:translateZ(11px);border-radius:2px 3px 3px 2px}
+.book-front img{width:100%;height:100%;object-fit:cover;border-radius:2px 3px 3px 2px;box-shadow:0 0 0 1px rgba(250,244,232,.14);transform:none}
+.book-back{transform:rotateY(180deg) translateZ(11px);border-radius:3px 2px 2px 3px;background:var(--pine);box-shadow:0 0 0 1px rgba(250,244,232,.14) inset;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(.9rem,1.5vw,1.4rem)}
+.bk-kicker{font-family:var(--sans);font-size:.48rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi);margin:0}
+.bk-kicker-wide{letter-spacing:.14em}
+.bk-rule{height:1px;background:var(--gold);opacity:.6;margin:.6rem 0 .8rem}
+.bk-rule-dim{background:rgba(250,244,232,.2);opacity:1;margin:.5rem 0}
+.bk-copy{font-size:.76rem;line-height:1.45;color:var(--paper);margin:0}
+.bk-foot{font-family:var(--sans);font-size:.5rem;line-height:1.5;color:var(--mute-pine);margin:0}
+.book-spine{position:absolute;left:0;top:0;bottom:0;width:22px;transform-origin:left center;transform:rotateY(-90deg) translateZ(11px);background:linear-gradient(90deg,var(--pine-900),var(--pine) 45%,var(--pine-900));display:flex;align-items:center;justify-content:center}
+.book-spine span{font-family:var(--sans);font-size:.45rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-hi);writing-mode:vertical-rl;white-space:nowrap}
+.book-edge{position:absolute;right:0;top:0;bottom:0;width:22px;transform-origin:right center;transform:rotateY(90deg) translateZ(11px);background:repeating-linear-gradient(90deg,var(--paper) 0 1.5px,#E4DAC6 1.5px 3px)}
+.book-shadow{position:absolute;left:-16%;right:-16%;bottom:-32px;height:40px;filter:blur(8px);background:radial-gradient(58% 100% at 50% 0%,rgba(0,0,0,.65),transparent 72%)}
+html.fx .book-shadow{opacity:0}
+html.fx .reveal.is-revealed .book-shadow{opacity:1;transition:opacity 1s 1.2s var(--ease)}
+
+/* proof strip folded into the hero base */
+.fact-rail{list-style:none;margin:clamp(2rem,4vw,3rem) 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--hair-lt);position:relative;z-index:2}
+.fact-rail li{padding:1.3rem clamp(.9rem,1.6vw,1.4rem);border-right:1px solid var(--hair-lt)}
+.fact-rail li:first-child{padding-left:0}
+.fact-rail li:last-child{border-right:0}
+.fact-rail strong{display:block;font-weight:400;font-size:1.02rem;color:var(--paper);margin-bottom:.15rem}
+.fact-rail span{font-family:var(--sans);font-size:.7rem;color:var(--mute-pine);line-height:1.45}
+@media (max-width:760px){
+  .fact-rail{grid-template-columns:1fr 1fr}
+  .fact-rail li{border-bottom:1px solid var(--hair-lt)}
+  .fact-rail li:nth-child(2){border-right:0}
+  .fact-rail li:nth-child(3){padding-left:0}
+}
+
+/* ---------- ACT III · THE SNAPSHOT ---------- */
+.snap-layout{display:grid;grid-template-columns:.92fr 1.08fr;gap:clamp(2rem,5vw,4rem);align-items:center}
+@media (max-width:820px){.snap-layout{grid-template-columns:1fr;gap:2.2rem}}
+.snap-h{max-width:16ch;margin-bottom:1.1rem}
+#snapshot .snap{background:var(--paper-hi)}
+/* write-in: values arrive one at a time when the card is seen */
+html.fx #snapshot .snap-grid .rfield-value{opacity:0;transform:translateY(7px) rotate(-.45deg)}
+html.fx #snapshot.is-written .snap-grid .rfield-value{opacity:1;transform:none;transition:opacity .55s var(--ease),transform .55s var(--ease)}
+html.fx #snapshot.is-written .writein:nth-of-type(1) .rfield-value{transition-delay:.10s}
+html.fx #snapshot.is-written .writein:nth-of-type(2) .rfield-value{transition-delay:.19s}
+html.fx #snapshot.is-written .writein:nth-of-type(3) .rfield-value{transition-delay:.28s}
+html.fx #snapshot.is-written .writein:nth-of-type(4) .rfield-value{transition-delay:.37s}
+
+/* ---------- ACT IV · STRIKE on the doctrine ---------- */
+.doc-no li span{position:relative}
+html.fx .doc-no li span{text-decoration:none}
+html.fx .doc-no li span::after{content:"";position:absolute;left:0;right:0;top:53%;height:1px;background:var(--mute-pine);transform:scaleX(0);transform-origin:left center}
+html.fx #security.is-struck .doc-no li span::after{transform:scaleX(1);transition:transform .34s var(--ease)}
+html.fx #security.is-struck .doc-no li:nth-child(1) span::after{transition-delay:.05s}
+html.fx #security.is-struck .doc-no li:nth-child(2) span::after{transition-delay:.11s}
+html.fx #security.is-struck .doc-no li:nth-child(3) span::after{transition-delay:.17s}
+html.fx #security.is-struck .doc-no li:nth-child(4) span::after{transition-delay:.23s}
+html.fx #security.is-struck .doc-no li:nth-child(5) span::after{transition-delay:.29s}
+html.fx #security.is-struck .doc-no li:nth-child(6) span::after{transition-delay:.35s}
+html.fx #security.is-struck .doc-no li:nth-child(7) span::after{transition-delay:.41s}
+
+/* ---------- ACT V · THE SPREAD ---------- */
+.spread-viewport{overflow:hidden;padding-left:max(calc((100vw - var(--wrap))/2),clamp(1.15rem,4vw,2.5rem));margin-top:.5rem}
+.spread-track{display:flex;gap:clamp(1rem,2.2vw,1.9rem);will-change:transform}
+.spread-track > *{margin:0;flex:0 0 clamp(215px,25vw,325px)}
+.spread-pg img{aspect-ratio:900/1165}
+.spread-veil{position:relative}
+.veil-btn{border:0;padding:0;background:none;cursor:pointer;display:block;width:100%;position:relative;overflow:hidden;border-radius:var(--r);box-shadow:var(--shadow-sm)}
+.veil-btn img{width:100%;aspect-ratio:900/1165;object-fit:cover;filter:blur(9px) saturate(.66);transform:scale(1.07)}
+.veil-over{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,55,45,.34),rgba(20,55,45,.88));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.3rem;gap:.55rem}
+.veil-k{font-family:var(--sans);font-size:.56rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi)}
+.veil-t{font-size:1.1rem;line-height:1.25;color:var(--paper)}
+.veil-a{font-family:var(--sans);font-size:.7rem;font-weight:600;color:var(--paper);border-bottom:1px solid rgba(250,244,232,.5);padding-bottom:.12rem;margin-top:.3rem}
+.spread-meter{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;padding-top:2rem;margin-top:1.5rem}
+.spread-meter p{font-family:var(--sans);font-size:.76rem;letter-spacing:.05em;color:var(--mute);margin:0}
+.meter{flex:1;min-width:110px;max-width:240px;height:2px;background:var(--hair);position:relative}
+.meter i{position:absolute;inset:0 auto 0 0;width:0;background:var(--gold);display:block}
+
+/* ---------- ALL 49 OVERLAY ---------- */
+.allpages{position:fixed;inset:0;z-index:160;background:rgba(11,31,25,.96);overflow:auto;padding:clamp(1.2rem,4vw,3rem);display:none}
+.allpages:not([hidden]){display:block}
+.allpages-in{max-width:1080px;margin:0 auto}
+.allpages-hd{display:flex;align-items:flex-start;gap:1.5rem;margin-bottom:2rem}
+.allpages-hd h2{color:var(--paper);margin-bottom:.5rem}
+.allpages-hd .tiny{color:var(--mute-pine);max-width:56ch}
+.allpages-close{margin-left:auto;background:var(--paper);color:var(--pine);border:0;border-radius:50%;width:44px;height:44px;font-size:1.4rem;line-height:1;cursor:pointer;font-family:var(--sans);flex:0 0 auto}
+.allpages-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1.2rem}
+.allpages-grid .pg-cap{color:var(--mute-pine)}
+
+/* ---------- ACT VI · start CTA ---------- */
+.start-cta{justify-content:flex-start;margin-top:clamp(2rem,4vw,3rem)}
+
+/* ---------- ACT VIII · trust footer ---------- */
+.trust-foot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:clamp(1.4rem,3vw,2.4rem);margin-top:clamp(2.5rem,4vw,3.4rem);padding-top:1.6rem;border-top:1px solid var(--hair)}
+@media (max-width:760px){.trust-foot{grid-template-columns:1fr}}
+#creators .creator-note{max-width:76ch;margin-top:1.6rem}
+
+/* ---------- ACT IX · THE LEDGER (pricing rows) ----------
+   .tiers.ledger (0,2,0) beats the base .tiers grid (0,1,0) unconditionally. */
+.tiers.ledger{display:block;grid-template-columns:none;align-items:stretch}
+.ledger .tier{display:grid;grid-template-columns:120px 1fr auto;gap:1.5rem;align-items:center;background:transparent;border:0;border-top:1px solid var(--hair);border-radius:0;padding:1.7rem 0}
+.ledger .tier:first-child{border-top:0}
+.ledger .tier-lead{background:var(--pine);color:var(--paper);border-radius:var(--r);border-top:0;padding:1.9rem 1.5rem;margin:.6rem 0;box-shadow:var(--shadow)}
+.ledger .tier-price{font-size:2rem;margin-bottom:0}
+.ledger .tier-lead .tier-price{font-size:2.55rem;color:var(--paper)}
+.ledger .tier-body{min-width:0}
+.ledger .tier-name{margin-bottom:.4rem}
+.ledger .tier-desc{margin-bottom:.7rem;min-height:0}
+.ledger .tier-list{margin:0;font-size:.84rem}
+.ledger .tier-list li{border-bottom:0;padding:.18rem 0 .18rem 1.1rem}
+.ledger .tier-list li::before{top:.72rem;width:5px;height:5px}
+.ledger .tier .btn{width:auto;white-space:nowrap}
+.ledger .tier-lead .btn{background:var(--paper);color:var(--pine);border-color:var(--paper)}
+@media (max-width:720px){
+  .ledger .tier{grid-template-columns:auto 1fr;gap:.4rem 1.2rem}
+  .ledger .tier .btn{grid-column:1/-1;margin-top:.9rem;width:100%}
+  .ledger .tier-price{align-self:start}
+}
+
+/* ---------- ACT X · gap + faq in one band ---------- */
+.faq-wrap{margin-top:clamp(3.5rem,7vw,5.5rem)}
+.faq-head{margin-bottom:clamp(2rem,4vw,3rem)}
+
+/* ---------- reduced motion / no-fx safety net for the redesign ----------
+   Everything resolves to its final, legible, static state. html.fx is
+   never set when prefers-reduced-motion is on at parse time, so the base
+   (non-.fx) rules above already apply — this block is belt-and-braces
+   only, for the case where the OS preference changes dynamically after
+   html.fx was already set at load. */
+@media (prefers-reduced-motion:reduce){
+  html.fx .call{height:auto;padding:clamp(4rem,10vw,7rem) 0}
+  html.fx .call-stage{position:static;height:auto;display:block;padding:0 clamp(1.5rem,7vw,7rem)}
+  html.fx .call-lines{max-width:26ch;text-align:left}
+  html.fx .call-line{position:static;transform:none;opacity:1;visibility:visible;margin:0 0 2rem;font-size:clamp(1.7rem,4vw,2.6rem);max-width:26ch;text-align:left}
+  html.fx .call-line .clip i{transform:none}
+  .call-hint,.call-skip{display:none}
+  .call-spine{height:100%!important}
+  html.fx .reveal-h1 .rl i,html.fx .reveal .btn-row,html.fx .reveal .btn-note,
+  html.fx .book3d,html.fx .book-shadow,
+  html.fx #snapshot .snap-grid .rfield-value{opacity:1!important;transform:none!important}
+  html.fx .book3d{transform:rotateY(-18deg)!important}
+  .reveal-rule{transform:scaleX(1)!important}
+  html.fx .doc-no li span::after{transform:scaleX(1)!important}
+  html.fx .doc-no li span{text-decoration:line-through;text-decoration-color:rgba(169,189,178,.55)}
+}
+
+/* ---------- header CTA suppressed until the book is revealed ----------
+   Only affects index (where #call exists). JS toggles body.in-call during
+   Act 0; if JS never runs, the CTA simply stays visible (safe default). */
+.in-call .hdr-cta{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s var(--ease),visibility .4s}
+.hdr-cta{transition:opacity .4s var(--ease)}
+/* the reveal's own eyebrow rule draws with the reveal, not on generic scroll */
+html.fx .reveal .eyebrow::after{transform:scaleX(0)}
+html.fx .reveal.is-revealed .eyebrow::after{transform:scaleX(1);transition:transform .72s .3s var(--ease)}
