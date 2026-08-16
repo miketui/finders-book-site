@@ -1,10 +1,27 @@
 # Implementation brief — Act Zero redesign, live site port
 
+**Status: shipped.** This is now a historical planning document, kept
+for the rationale and the preservation list. Two things below describe
+the plan rather than what happened — noted inline rather than silently
+left stale:
+
+- **Rollout.** Pass 1 ("Act 0 behind a flag, measured alone") was
+  superseded by an explicit decision to ship all four passes directly
+  to `main` in one change, made at the time of shipping. No feature
+  flag or A/B split exists in the code. The header-CTA/`#sticky`
+  suppression is scroll-position-driven (`body.in-call`, tied to
+  whether `#reveal` has fired) rather than the originally-specified
+  fixed 3500ms timer — this adapts to how fast a given visitor
+  scrolls rather than assuming one duration for everyone.
+- **Files touched.** `vercel.json` was also touched: two new inline
+  scripts in `index.html`'s `<head>` (the Act 0 `<html class="js">`-
+  independent Skip handler) required two new `'sha256-…'` entries in
+  the CSP `script-src`. No new external host was added — the
+  preservation guarantee below is about hosts, not about the CSP
+  string being literally unmodified.
+
 Source of truth: `docs/redesign-direction.html` (rationale) and
 `docs/redesign-mock.html` (working markup, CSS and motion logic).
-This brief is the execute-ready instruction for porting that mock into
-the shipping site. Paste it back to me verbatim to kick off the work,
-or edit it first if you want to change scope.
 
 ## Non-negotiable preservation list
 

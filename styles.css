@@ -774,8 +774,16 @@ html.fx #security.is-struck .doc-no li:nth-child(5) span::after{transition-delay
 html.fx #security.is-struck .doc-no li:nth-child(6) span::after{transition-delay:.35s}
 html.fx #security.is-struck .doc-no li:nth-child(7) span::after{transition-delay:.41s}
 
-/* ---------- ACT V · THE SPREAD ---------- */
-.spread-viewport{overflow:hidden;padding-left:max(calc((100vw - var(--wrap))/2),clamp(1.15rem,4vw,2.5rem));margin-top:.5rem}
+/* ---------- ACT V · THE SPREAD ----------
+   Native horizontal scroll is the default and the only thing that makes
+   pages 2-5 and the "see all 49" trigger reachable under reduced motion
+   or any script failure — nothing else moves .spread-track in that case.
+   Only once html.fx.js confirms the whole Act sequence is bound (not
+   just that the file started — see the ACT 0 note above) does the JS
+   transform-scrub take over, and only then is overflow clipped so the
+   two mechanisms never fight each other. */
+.spread-viewport{overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-padding-left:1rem;padding-left:max(calc((100vw - var(--wrap))/2),clamp(1.15rem,4vw,2.5rem));margin-top:.5rem}
+html.fx.js .spread-viewport{overflow-x:hidden}
 .spread-track{display:flex;gap:clamp(1rem,2.2vw,1.9rem);will-change:transform}
 .spread-track > *{margin:0;flex:0 0 clamp(215px,25vw,325px)}
 .spread-pg img{aspect-ratio:900/1165}
