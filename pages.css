@@ -185,6 +185,23 @@ html.fx .cf-row textarea{ transition:border-color var(--dur-1) var(--ease) }
 .aud p{ margin:0 }
 
 /* ============================================================
+   6b. ORDER — proof before price
+   Real page scans lifted onto the order page so nobody is shown a
+   price before they have seen the product. Reuses .pg from styles.css.
+   ============================================================ */
+.order-pages{
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(1rem,2.5vw,2rem); margin:clamp(2rem,4vw,3rem) 0 1.5rem;
+}
+@media (max-width:900px){ .order-pages{ grid-template-columns:repeat(2,minmax(0,1fr)) } }
+@media (max-width:460px){ .order-pages{ grid-template-columns:1fr } }
+
+/* The three pre-price questions ship open, so they need to read as answered
+   copy rather than as collapsed controls competing with the tier table. */
+#first-questions .q[open] summary{ color:var(--pine) }
+#order-security .doctrine{ margin-top:clamp(2rem,4vw,3rem) }
+
+/* ============================================================
    7. REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion:reduce){

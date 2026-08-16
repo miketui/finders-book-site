@@ -57,10 +57,19 @@
   display:flex; align-items:center; gap:var(--s-4);
   min-height:var(--hdr-h);
 }
-.brand{ margin-right:auto }
+.brand{
+  margin-right:auto;
+  display:inline-flex; align-items:center; min-height:44px;
+  font-family:var(--serif); font-size:1.02rem;
+  text-decoration:none; letter-spacing:-.01em; white-space:nowrap;
+}
+.brand em{ font-style:italic }
 .hdr .brand,
 .hdr .nav a{ color:var(--pine) }
 .hdr .brand em{ color:var(--gold-ink) }
+/* Header button sizing — moved here from styles.css so every header rule
+   lives in one file. See the note at the old location. */
+.hdr .btn{ padding:.66rem 1.15rem; font-size:.84rem; min-height:44px }
 
 /* -- over-hero mode: only on pages that opt in with .hdr-over -- */
 .hdr-over .hdr{
@@ -88,8 +97,13 @@
 html.fx .hdr{ transition:transform var(--dur-2) var(--ease) }
 html.fx .hdr.tuck{ transform:translate3d(0,-100%,0) }
 
-/* -- active page + active section -- */
-.nav a{ position:relative }
+/* -- nav links: base typography (previously duplicated in styles.css) -- */
+.nav a{
+  position:relative;
+  display:inline-flex; align-items:center; min-height:44px;
+  font-family:var(--sans); font-size:.84rem;
+  text-decoration:none; transition:color .2s;
+}
 .nav a::after{
   content:""; position:absolute; left:0; right:0; bottom:-4px; height:2px;
   background:var(--gold); transform:scaleX(0); transform-origin:left center;

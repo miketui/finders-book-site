@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="hdr-over">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -143,9 +143,13 @@
       <p class="eyebrow">The Finder's Book · Family emergency binder</p>
       <h1 class="h-xl reveal-h1"><span class="rl"><i>A family emergency binder that gives loved ones </i></span><span class="rl"><i class="ital">one clear place to start.</i></span></h1>
       <p class="lede">The Finder's Book organizes who to call, what matters, and where important records live across 49 fillable and printable pages. It uses pointers instead of passwords, so your family gets a map without turning the binder into a credential vault.</p>
+      <!-- Value before price: at this point the reader has seen ~140 words and no
+           page of the actual book. The primary action is therefore the proof, not
+           the purchase. Every CTA below this point, once the book has been shown,
+           leads with the price. -->
       <div class="btn-row">
-        <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="hero" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
-        <a class="btn btn-ghost" href="#inside" data-scroll-cta data-placement="hero-preview">Preview real pages</a>
+        <a class="btn btn-primary" href="#inside" data-scroll-cta data-placement="hero-preview">See real pages from the book</a>
+        <a class="btn btn-ghost" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="hero" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
       </div>
       <p class="btn-note">Instant digital download · Fillable and print PDFs · Five implementation tools · <a href="#pricing">Compare all editions</a></p>
     </div>
@@ -294,6 +298,15 @@
       </div>
     </div>
     <p class="tiny security-note">Treat the completed book as private personal information. Store it according to what you choose to include, limit access to people you trust, and keep passwords, PINs, recovery codes, and complete account identifiers in a separate secure system. Bonus 2 explains how the two systems work together.</p>
+
+    <!-- Second Gap Check entry point. The primary one sits at 86% page depth,
+         which almost nobody reaches. This one sits where the reader's question
+         has just shifted from "is this safe?" to "do I actually need it?" -->
+    <div class="gap-inline">
+      <p class="gap-inline-q">Not sure whether your family would find any of this today?</p>
+      <p class="gap-inline-a">The free Family Readiness Gap Check is twelve questions and about four minutes. You score it yourself. No purchase.</p>
+      <a class="btn btn-ghost" href="#gap-check" data-scroll-cta data-placement="security-gapcheck">Take the free Gap Check</a>
+    </div>
   </div>
 </section>
 
@@ -493,15 +506,20 @@
       <p class="lede">One-time purchase. Delivered as files you can save and keep. No subscription.</p>
     </div>
     <div class="tiers ledger">
+      <!-- CANONICAL TIER SPEC — the single source of truth for what each SKU
+           contains. order.html carries the identical three lists. If a
+           deliverable changes, it changes in both places or nowhere.
+           Guarded by scripts/check-chrome-drift.mjs (tier parity). -->
       <div class="tier">
         <p class="tier-price"><sup>$</sup>29</p>
         <div class="tier-body">
           <p class="tier-name">Essentials</p>
           <p class="tier-desc">The core organizer, without the implementation tools.</p>
           <ul class="tier-list">
-            <li>49-page fillable + print editions</li>
-            <li>Start Here orientation</li>
-            <li>Files you can save and keep</li>
+            <li>49-page organizer: fillable PDF + print PDF</li>
+            <li>Start Here orientation page</li>
+            <li>Plain-language license and printing terms</li>
+            <li>Files you save and keep. No app, no account</li>
           </ul>
         </div>
         <a class="btn btn-ghost" href="https://payhip.com/b/eHcPG" data-checkout data-placement="pricing-essentials" data-tier="essentials" data-price="29">Get Essentials: $29</a>
@@ -513,9 +531,9 @@
           <p class="tier-name">Ultimate · recommended</p>
           <p class="tier-desc">Everything in Essentials, plus the five tools that make the book findable and usable.</p>
           <ul class="tier-list">
-            <li>49-page fillable + print editions</li>
-            <li>All five implementation tools</li>
-            <li>License terms + file checksums</li>
+            <li>Everything in Essentials</li>
+            <li>All five implementation tools: fridge card, secure vault setup, check-in plan, handoff scripts, digital legacy link + QR guide</li>
+            <li>File checksums so you can verify every download</li>
           </ul>
         </div>
         <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="pricing-ultimate" data-tier="ultimate" data-price="49">Get the Ultimate System: $49</a>
@@ -529,10 +547,10 @@
           <ul class="tier-list">
             <li>Everything in Ultimate</li>
             <li>Family Coordination Guide</li>
-            <li>Licensed for multiple households</li>
+            <li>Licensed for up to three households</li>
           </ul>
         </div>
-        <a class="btn btn-ghost" href="https://payhip.com/b/xPuv4" data-checkout data-placement="pricing-bundle" data-tier="bundle" data-price="89">Get the Family Bundle: $89</a>
+        <a class="btn btn-ghost" href="https://payhip.com/b/xPuv4" data-checkout data-placement="pricing-bundle" data-tier="family_bundle" data-price="89">Get the Family Bundle: $89</a>
       </div>
     </div>
     <p class="tiny pricing-license">
@@ -738,7 +756,7 @@
 <!-- sticky mobile CTA -->
 <aside class="sticky" id="sticky" aria-label="Purchase The Finder's Book">
   <div class="sticky-txt"><b>The Finder's Book · $49</b>Fillable + print · Five tools</div>
-  <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="sticky" data-tier="ultimate" data-price="49">Get it now</a>
+  <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="sticky" data-tier="ultimate" data-price="49">Get Ultimate · $49</a>
 </aside>
 
 <!-- page lightbox -->
@@ -752,14 +770,19 @@
 <script src="analytics.js" defer></script>
 <script src="chrome.js" defer></script>
 
-<!-- GSAP + ScrollTrigger + SplitText (v3.13+, all free post-Webflow acquisition) -->
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/SplitText.min.js"></script>
-<!-- Lenis smooth scroll -->
-<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<!-- GSAP 3.13.0 + ScrollTrigger + SplitText, and Lenis 1.3.11 smooth scroll.
+     Self-hosted from /assets/vendor/ rather than a CDN: these four files sit on
+     the critical path of the page that takes payment, so they must not depend on
+     a third party's uptime, and they must not be able to ship new code without a
+     deploy. Version-pinned by filename provenance, defer-loaded so none of them
+     can block the parser, and motion.js follows in document order after them.
+     motion.js degrades completely if any of the four fail to execute. -->
+<script defer src="assets/vendor/gsap.min.js"></script>
+<script defer src="assets/vendor/ScrollTrigger.min.js"></script>
+<script defer src="assets/vendor/SplitText.min.js"></script>
+<script defer src="assets/vendor/lenis.min.js"></script>
 
-<script src="motion.js"></script>
+<script defer src="motion.js"></script>
 
 <script type="application/ld+json">
 {

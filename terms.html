@@ -26,19 +26,26 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
+<!-- CHROME:NAV:START — identical in every page. Guarded by scripts/check-chrome-drift.mjs -->
 <header class="hdr">
   <div class="wrap hdr-in">
     <a class="brand" href="/" aria-label="The Family Clarity Co. home">Family <em>Clarity</em> Co.</a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="sitenav" aria-label="Open menu"><span></span></button>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="sitenav" aria-label="Open menu">
+      <span></span>
+    </button>
     <nav class="nav" id="sitenav" aria-label="Main">
       <a href="/">Home</a>
       <a href="/about.html">About</a>
       <a href="/order.html">Order</a>
       <a href="/contact.html">Contact</a>
+      <a class="btn btn-primary drawer-cta" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="drawer" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
+      <p class="drawer-note">Instant download. One-time purchase, no subscription. <a href="/order.html">Compare all three editions</a>.</p>
     </nav>
+    <a class="btn btn-primary hdr-cta" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="header" data-tier="ultimate" data-price="49">Get Ultimate: $49</a>
   </div>
 </header>
-
+<div class="scrim" aria-hidden="true"></div>
+<!-- CHROME:NAV:END -->
 <main id="main">
   <div class="wrap">
     <article class="doc">
@@ -89,14 +96,56 @@
       <p><a href="/privacy-policy.html">Privacy Policy</a> · <a href="/refund-policy.html">Refund Policy</a> · <a href="/contact.html">Contact</a></p>
     </article>
   </div>
+
+<section class="band band-deep legal-cta">
+  <div class="wrap final-wrap">
+    <p class="eyebrow eyebrow-centered">The short version</p>
+    <h2 class="h-lg">Buy it once, keep the files, use them in your own household.</h2>
+    <p class="lede final-lede">Professional, institutional, co-branded and white-label uses require a separate written license. Everything else is yours to print, fill in, and keep.</p>
+    <a class="btn btn-primary" href="/order.html" data-cta data-placement="terms-order">See the three editions</a>
+    <p class="btn-note final-note">One-time purchase · Instant download · <a href="/contact.html">Ask about a professional license</a></p>
+  </div>
+</section>
+
 </main>
 
+<!-- CHROME:FOOTER:START — identical in every page. Guarded by scripts/check-chrome-drift.mjs -->
 <footer class="ftr">
   <div class="wrap">
-    <p>The Finder's Book — The Family Clarity System™</p>
-    <p><a href="/privacy-policy.html">Privacy</a> · <a href="/refund-policy.html">Refund policy</a> · <a href="/terms.html">Terms</a></p>
+    <div class="ftr-grid">
+      <div>
+        <h2>The Finder's Book</h2>
+        <p class="footer-summary">The Family Clarity System™: a 49-page family emergency and legacy organizer by Joanne Godfrey and Michael David.</p>
+        <p class="ftr-nav-note">A pointer, not a vault. No passwords stored, ever.</p>
+      </div>
+      <div>
+        <h2>Site</h2>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="/order.html">Editions &amp; pricing</a></li>
+          <li><a href="/contact.html">Contact &amp; feedback</a></li>
+          <li><a href="/#gap-check">Free Gap Check</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Support</h2>
+        <ul>
+          <li><a href="/contact.html">Ask a question</a></li>
+          <li><a href="/refund-policy.html">Refund policy</a></li>
+          <li><a href="/terms.html">Terms of use</a></li>
+          <li><a href="/privacy-policy.html">Privacy policy</a></li>
+          <li><a href="/contact.html">Professional licensing</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ftr-legal">
+      <p><strong>This is not legal, medical, or financial advice.</strong> The Finder's Book is a structured template for personal record-keeping. It is not a will, trust, contract, power of attorney, or advance directive, and it confers no authority over any account, property, or medical decision. The legal documents your family will need are the originals signed and witnessed according to the law of your jurisdiction. Consult an attorney, licensed medical professional, or licensed financial advisor for questions about legal, medical, or financial effect.</p>
+      <p>Copyright © 2026 Joanne Godfrey and Michael David Warren Jr. All rights reserved. The Family Clarity System™ is a trademark of Joanne Godfrey and Michael David Warren Jr. The trade dress of this work, including its layout system, typographic treatment, and section architecture, is protected. Ultimate Digital Edition v1.2.3.</p>
+    </div>
   </div>
 </footer>
+<!-- CHROME:FOOTER:END -->
 <script src="consent.js" defer></script>
 <script src="analytics.js" defer></script>
 <script src="chrome.js" defer></script>
