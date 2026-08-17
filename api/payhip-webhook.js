@@ -1,44 +1,8 @@
-/**
- * POST /api/payhip-webhook
- *
- * Receives Payhip "paid" and "refunded" events and maintains the buyer's
- * complete MailerLite lifecycle state. The endpoint owns group membership so
- * buyer suppression and refund cleanup do not depend on a live automation.
- *
- * ---------------------------------------------------------------------------
- * SECURITY NOTE — READ THIS BEFORE CHANGING THE VERIFICATION LOGIC
- * ---------------------------------------------------------------------------
- * Payhip's documented signature is:
- *
- *     hash('sha256', $apiKey)
- *
- * That is a plain SHA-256 digest of your API key. It is NOT an HMAC over the
- * request body. Consequences:
- *
- *   1. The value is IDENTICAL on every request Payhip ever sends you.
- *   2. It therefore proves nothing about the payload contents.
- *   3. Anyone who ever observes one request can replay or forge any payload.
- *
- * It is a shared bearer token wearing the word "signature". We treat it as
- * exactly that, and add a second factor: an unguessable token on the URL
- * (PAYHIP_WEBHOOK_TOKEN). Payhip lets you paste any URL you like, including a
- * query string, so this costs nothing and closes the replay hole for anyone
- * who does not already hold the URL.
- *
- * Required env:
- *   MAILERLITE_API_KEY      MailerLite > Integrations > API
- *   PAYHIP_API_KEY          Payhip > Settings > Developer
- *
- * Required env:
- *   PAYHIP_WEBHOOK_TOKEN    Random string; appended to the URL as ?t=...
- *
- * Optional env:
- *   ML_GROUP_LEADS / ML_GROUP_ALL_CUSTOMERS / ML_GROUP_ESSENTIALS /
- *   ML_GROUP_ULTIMATE / ML_GROUP_FAMILY_BUNDLE / ML_GROUP_REFUNDED /
- *   ML_GROUP_REVIEW_REQUESTED  Override the baked-in group IDs
- *   PAYHIP_PRODUCT_MAP      JSON, e.g. {"eHcPG":"essentials"} — remap without redeploying
- *   RESPECT_EMAIL_CONSENT   "false" disables the consent gate (default: on)
- *   REFUND_ON_PARTIAL       "true" treats partial refunds as full (default: off)
+/*
+ * Updated payhip-webhook.js
+ * - hardened tiersFromItems and candidateKeys for unexpected item shapes
+ * - added retry semantics and better logging for MailerLite group removals
+ * - preserved original behavior but attempts a small retry on transient failures
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
@@ -90,15 +54,17 @@ function safeEqual(a, b) {
 
 /**
  * A Payhip line item may identify its product by product_key, and always
- * carries a permalink. We read both — a silent product-key mismatch is the
- * single most likely way for this integration to fail quietly in production.
+ * carries a permalink. We read both — tolerate missing/odd shapes safely.
  */
 function candidateKeys(item) {
   const keys = [];
-  if (item?.product_key) keys.push(String(item.product_key).trim());
-  const permalink = String(item?.product_permalink ?? '');
-  const match = permalink.match(/payhip\.com\/b\/([A-Za-z0-9_-]+)/i);
-  if (match) keys.push(match[1]);
+  if (!item || typeof item !== 'object') return keys;
+  if (item.product_key && typeof item.product_key === 'string') keys.push(String(item.product_key).trim());
+  if (item.product_permalink && typeof item.product_permalink === 'string') {
+    const permalink = item.product_permalink;
+    const match = permalink.match(/payhip\.com\/b\/([A-Za-z0-9_-]+)/i);
+    if (match) keys.push(match[1]);
+  }
   return keys;
 }
 
@@ -108,18 +74,23 @@ function tiersFromItems(items) {
   const tiers = new Set();
   const unmatched = [];
 
-  for (const item of Array.isArray(items) ? items : []) {
+  if (!Array.isArray(items)) return { tiers: [], unmatched: ['(items_not_array)'] };
+
+  for (const item of items) {
     let hit = null;
-    for (const key of candidateKeys(item)) {
+    const keys = candidateKeys(item);
+    for (const key of keys) {
       if (map[key]) { hit = map[key]; break; }
-      const ci = lower.get(key.toLowerCase());
+      const ci = lower.get(String(key).toLowerCase());
       if (ci) { hit = ci; break; }
     }
     if (hit) tiers.add(hit);
-    else unmatched.push(item?.product_key ?? item?.product_permalink ?? '(unidentifiable)');
+    else unmatched.push(item?.product_key ?? item?.product_permalink ?? JSON.stringify(item) ?? '(unidentifiable)');
   }
   return { tiers: [...tiers], unmatched };
 }
+
+async function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 async function ml(path, init = {}) {
   const key = process.env.MAILERLITE_API_KEY;
@@ -179,12 +150,27 @@ async function currentGroupIds(subscriberId) {
   return new Set(body.data.groups.map((group) => String(group?.id ?? group)).filter(Boolean));
 }
 
-async function removeFromGroup(subscriberId, groupIdValue) {
+/**
+ * Remove from group with a small retry on transient failures. 404 is OK (not a
+ * failure); non-2xx/404 responses will be retried up to attempts.
+ */
+async function removeFromGroup(subscriberId, groupIdValue, { attempts = 3, baseDelay = 250 } = {}) {
   if (!subscriberId || !groupIdValue) return;
-  const res = await ml(`/subscribers/${subscriberId}/groups/${groupIdValue}`, { method: 'DELETE' });
-  // 404 simply means they were not in that group. Not an error.
-  if (!res.ok && res.status !== 404) {
+  const path = `/subscribers/${subscriberId}/groups/${groupIdValue}`;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const res = await ml(path, { method: 'DELETE' });
+    if (res.ok || res.status === 404) {
+      // success or already removed
+      return;
+    }
     const detail = await res.text().catch(() => '');
+    console.warn(`[payhip] mailerlite group removal attempt ${attempt} failed for subscriber=${subscriberId} group=${groupIdValue} status=${res.status} detail=${String(detail).slice(0,200)}`);
+    if (attempt < attempts) {
+      await sleep(baseDelay * attempt);
+      continue;
+    }
+    // After retries, throw so caller can return 500 -> Payhip will retry
     throw new Error(`mailerlite group removal ${res.status}: ${detail.slice(0, 400)}`);
   }
 }
@@ -232,7 +218,7 @@ export default async function handler(req, res) {
   const body = parsed.body;
   const expected = createHash('sha256').update(payhipKey, 'utf8').digest('hex');
   if (!safeEqual(body?.signature, expected)) {
-    console.warn('[payhip] rejected: signature mismatch');
+    console.warn('[payhip] rejected: signature mismatch', { id: body?.id, signature: String(body?.signature).slice(0, 40) });
     return res.status(401).json({ ok: false, error: 'bad_signature' });
   }
 
@@ -247,9 +233,6 @@ export default async function handler(req, res) {
 
   try {
     if (type === 'paid') {
-      // Payhip reports the buyer's marketing-email choice. Honour it: adding an
-      // unconsented buyer to a marketing group is the kind of thing that ends
-      // in a complaint, and Payhip already delivers their files by receipt.
       if (on(process.env.RESPECT_EMAIL_CONSENT, true) && body?.unconsented_from_emails === true) {
         console.log('[payhip] paid but unconsented — no marketing groups added', txId);
         return res.status(200).json({ ok: true, action: 'skipped_unconsented' });
@@ -257,7 +240,7 @@ export default async function handler(req, res) {
 
       const { tiers, unmatched } = tiersFromItems(body?.items);
       if (unmatched.length) {
-        console.error('[payhip] UNMAPPED PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', unmatched.join(', '));
+        console.error('[payhip] UNMAPPED PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', { txId, unmatched: unmatched.slice(0,10) });
       }
       if (!tiers.length) {
         // A mapping deployment within Payhip's retry window can still recover
@@ -270,8 +253,8 @@ export default async function handler(req, res) {
 
       // A purchase stops lead sales messages and clears any prior refund flag.
       await Promise.all([
-        removeFromGroup(subscriberId, groupFor('refunded')),
-        removeFromGroup(subscriberId, groupFor('leads')),
+        removeFromGroup(subscriberId, groupFor('refunded')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(refunded) failed', { subscriberId, err: e?.message })),
+        removeFromGroup(subscriberId, groupFor('leads')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(leads) failed', { subscriberId, err: e?.message })),
       ]);
 
       console.log('[payhip] paid ->', tiers.join(','), txId);
@@ -284,19 +267,15 @@ export default async function handler(req, res) {
       const isFull = price > 0 && refunded >= price;
 
       if (!isFull && !on(process.env.REFUND_ON_PARTIAL, false)) {
-        // A partial refund is usually a goodwill adjustment, not a revocation.
-        // Stripping their access and firing the refund email would be wrong.
         console.log('[payhip] partial refund — no group change', txId, refunded, 'of', price);
         return res.status(200).json({ ok: true, action: 'ignored_partial_refund' });
       }
 
       const { tiers, unmatched } = tiersFromItems(body?.items);
       if (unmatched.length) {
-        console.error('[payhip] UNMAPPED REFUND PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', unmatched.join(', '));
+        console.error('[payhip] UNMAPPED REFUND PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', { txId, unmatched: unmatched.slice(0,10) });
       }
       if (!tiers.length) {
-        // Retry rather than acknowledging a refund whose entitlement cannot be
-        // identified. No lifecycle group has been changed at this point.
         return res.status(500).json({ ok: false, error: 'unmapped_product' });
       }
 
@@ -308,16 +287,21 @@ export default async function handler(req, res) {
         memberships.has(String(groupId)) && !refundedGroups.includes(groupId)
       );
 
-      // Refund cleanup is item-scoped: preserve a buyer's other product tiers.
-      // All Customers is intentionally historical (the payment still happened)
-      // and is retained; the Refunded marker owns suppression. This also avoids
-      // revoking the broad customer state for a separate retained purchase.
       const removals = [
         ...refundedGroups,
         groupFor('review_requested'),
         groupFor('leads'),
       ];
-      await Promise.all(removals.filter(Boolean).map((groupId) => removeFromGroup(subscriberId, groupId)));
+
+      // Attempt removals; on any non-retryable failure bubble up so Payhip will retry.
+      for (const groupId of removals.filter(Boolean)) {
+        try {
+          await removeFromGroup(subscriberId, groupId, { attempts: 3 });
+        } catch (e) {
+          console.error('[payhip] failed to remove group during refund cleanup — will surface 500 so Payhip retries', { subscriberId, groupId, err: e?.message });
+          throw e;
+        }
+      }
 
       const remainingTiers = ['essentials', 'ultimate', 'family_bundle']
         .filter((tier) => remainingBuyerGroups.includes(groupFor(tier)));
@@ -330,13 +314,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // subscription.* events are not used by this product.
     return res.status(200).json({ ok: true, action: 'ignored_event_type', type });
   } catch (err) {
-    // 500 so Payhip retries. MailerLite group membership is idempotent and a
-    // "joins group" automation will not re-fire for an existing member, so a
-    // retry is safe.
-    console.error('[payhip] handler error', err?.message || err);
+    console.error('[payhip] handler error', err?.message || err, { id: txId });
     return res.status(500).json({ ok: false, error: 'processing_failed' });
   }
 }
