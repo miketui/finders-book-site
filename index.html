@@ -61,11 +61,6 @@
 <!-- v3.2 ELEVATION: motion opt-in, runs before first paint -->
 <script>(function(){try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: no-preference)").matches){document.documentElement.className+=" fx";}}catch(e){}})();</script>
 
-<!-- Act 0 "Skip intro" works even if motion.js never loads: a delegated
-     listener registered here, in <head>, needs no dependency on the
-     element existing yet or on the tail script executing at all. -->
-<script>(function(){try{document.addEventListener("click",function(e){var t=e.target;while(t&&t.id!=="callSkip"){t=t.parentElement;}if(!t)return;var r=document.getElementById("reveal");if(r&&r.scrollIntoView){r.scrollIntoView({behavior:"smooth",block:"start"});}});}catch(e){}})();</script>
-
 </head>
 <body>
 
@@ -127,7 +122,7 @@
       </p>
     </div>
     <p class="call-hint" id="callHint" aria-hidden="true">Scroll</p>
-    <button type="button" class="call-skip" id="callSkip">Skip intro</button>
+    <a class="call-skip" id="callSkip" href="#reveal">Skip intro</a>
   </div>
 </section>
 

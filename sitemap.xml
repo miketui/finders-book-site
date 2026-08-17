@@ -2,21 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.familyfindersbook.com/</loc>
-    <lastmod>2026-08-01</lastmod><changefreq>monthly</changefreq><priority>1.0</priority>
+    <lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.familyfindersbook.com/order.html</loc>
-    <lastmod>2026-08-01</lastmod><changefreq>monthly</changefreq><priority>0.9</priority>
+    <lastmod>2026-08-17</lastmod><changefreq>monthly</changefreq><priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.familyfindersbook.com/about.html</loc>
-    <lastmod>2026-08-01</lastmod><changefreq>yearly</changefreq><priority>0.6</priority>
+    <lastmod>2026-08-17</lastmod><changefreq>yearly</changefreq><priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.familyfindersbook.com/contact.html</loc>
-    <lastmod>2026-08-01</lastmod><changefreq>yearly</changefreq><priority>0.5</priority>
+    <lastmod>2026-08-17</lastmod><changefreq>yearly</changefreq><priority>0.5</priority>
   </url>
-  <url><loc>https://www.familyfindersbook.com/refund-policy.html</loc><lastmod>2026-07-31</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://www.familyfindersbook.com/privacy-policy.html</loc><lastmod>2026-07-31</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://www.familyfindersbook.com/terms.html</loc><lastmod>2026-08-15</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.familyfindersbook.com/refund-policy.html</loc><lastmod>2026-08-17</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.familyfindersbook.com/privacy-policy.html</loc><lastmod>2026-08-17</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.familyfindersbook.com/terms.html</loc><lastmod>2026-08-17</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

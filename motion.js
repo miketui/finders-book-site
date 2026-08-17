@@ -33,6 +33,20 @@
   var reduced = false;
   try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
 
+  /* The native anchor remains the no-JS/failure fallback. When the motion
+     layer is healthy, route the same action through Lenis if it is active so
+     two independent scroll controllers never fight over the destination. */
+  var smoothScroller = null;
+  function scrollToTarget(target){
+    if (!target) return;
+    if (smoothScroller && typeof smoothScroller.scrollTo === "function"){
+      smoothScroller.scrollTo(target, { duration: 0.85, immediate: reduced });
+      return;
+    }
+    var top = target.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: top, behavior: reduced ? "auto" : "smooth" });
+  }
+
   /* ============================================================
      0. ACT-0 COMPRESSION — warm traffic does not need the full intro.
      Any deep-link (#anchor), a returning visitor, or paid/retargeting
@@ -217,9 +231,13 @@
        transform (styles.css, html.fx.js .spread-viewport). */
     docEl.classList.add("js");
 
-    /* #callSkip's real handler is the delegated one in <head> — it has to
-       work even when this file never loads, so it owns the click. Do not
-       bind it a second time here. */
+    var callSkip = document.getElementById("callSkip");
+    if (callSkip && reveal){
+      callSkip.addEventListener("click", function(e){
+        e.preventDefault();
+        scrollToTarget(reveal);
+      });
+    }
 
     /* The book answers the cursor once revealed, and never spins again. */
     var book = document.getElementById("book");
@@ -310,6 +328,7 @@
         var lenis = null;
         if (!compactMotion && typeof Lenis !== "undefined"){
           lenis = new Lenis({ lerp: 0.09, duration: 1.2, smoothWheel: true, wheelMultiplier: 1, touchMultiplier: 1.5 });
+          smoothScroller = lenis;
           lenis.on("scroll", ScrollTrigger.update);
           gsap.ticker.add(function(time){ lenis.raf(time * 1000); });
           gsap.ticker.lagSmoothing(0);
