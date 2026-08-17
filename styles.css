@@ -713,7 +713,10 @@ html.fx .call-turn{font-size:clamp(1.9rem,4.2vw,3.2rem);letter-spacing:-.026em;m
 .call-hint{position:absolute;left:0;right:0;bottom:2.2rem;text-align:center;font-family:var(--sans);font-size:.62rem;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-pine);opacity:.75;transition:opacity .4s var(--ease)}
 .call-hint.gone{opacity:0}
 html:not(.fx) .call-hint{display:none}
-.call-skip{position:absolute;top:clamp(1rem,2.5vw,1.6rem);right:clamp(1rem,3vw,2rem);display:inline-flex;align-items:center;font-family:var(--sans);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--gold-hi);background:transparent;border:1px solid rgba(223,201,157,.4);border-radius:var(--r);padding:.5rem .85rem;cursor:pointer;min-height:44px}
+/* Skip control: kept below the fixed header band. Placed inside it, the
+   transparent header wrap intercepted the click on desktop and overlapped the
+   mobile nav toggle, which is how a visible, enabled control did nothing. */
+.call-skip{position:absolute;top:calc(var(--hdr-h) + clamp(.75rem,2vw,1.25rem));right:clamp(1rem,3vw,2rem);z-index:5;display:inline-flex;align-items:center;font-family:var(--sans);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--gold-hi);background:transparent;border:1px solid rgba(223,201,157,.4);border-radius:var(--r);padding:.5rem .85rem;cursor:pointer;min-height:44px}
 .call-skip:hover{background:rgba(223,201,157,.1)}
 /* Warm / returning / anchored traffic: one statement, not four. */
 html.call-compress.fx .call{height:100vh}

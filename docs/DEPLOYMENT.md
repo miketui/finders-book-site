@@ -22,8 +22,14 @@
 
 - `MAILERLITE_API_KEY`
 - `PAYHIP_API_KEY`
-- `PAYHIP_WEBHOOK_TOKEN`
+- `PAYHIP_WEBHOOK_TOKEN` (or `PAYHIP_WEBHOOK_TOKENS` as a JSON array during a
+  rotation — see `docs/OPERATIONS.md`)
 - `GAP_CHECK_TOKEN_SECRET`
+
+Optional, and inert until set:
+
+- `GA4_MEASUREMENT_ID`, `GA4_API_SECRET` — server-side GA4 `purchase`/`refund`
+- `CONTACT_NOTIFY_WEBHOOK_URL` — owner alert for inbound contact messages
 
 Never commit their values. Vercel applies variable changes to new deployments, so redeploy after editing them.
 
@@ -35,9 +41,10 @@ Use the private token stored in Vercel:
 https://www.familyfindersbook.com/api/health?t=YOUR_PRIVATE_TOKEN
 ```
 
-Expected result: `ok: true`, with all four secrets reported as present. The
-endpoint also reports non-secret group IDs and a short fingerprint, never the
-secret values themselves.
+Expected result: `ok: true`, with every required secret reported as present, the
+deployed commit, and behaviour flags including `ga4_purchase_reporting` and
+`contact_owner_alert`. The response reports presence only — never secret values,
+group IDs, product-map contents, signatures, or subscriber data.
 
 ## Payhip webhook
 
@@ -68,5 +75,8 @@ The webhook owns lifecycle membership:
 npm run validate
 npm run test:render
 ```
+
+After deploying a change that touches checkout, forms, the webhook, or
+analytics, work through [`PRODUCTION-VERIFICATION.md`](PRODUCTION-VERIFICATION.md).
 
 Then confirm the homepage, policy pages, lead magnet, lead form, Payhip checkout links, purchase routing, and refund routing.

@@ -1,0 +1,122 @@
+# Operations runbook
+
+What to watch, what to ignore, and what to do when something breaks. Written for
+a low-volume serverless site with four API routes — deliberately proportionate:
+Vercel's own logs and alerts plus this page, not an observability platform.
+
+Last verified: 2026-08-17.
+
+## The five things worth an alert
+
+| Signal | Where | Why it matters | First action |
+|---|---|---|---|
+| Any 5xx burst on `/api/*` | Vercel → Logs, filter status ≥ 500 | Purchases and leads are being dropped | Open the log line, read the `[payhip]` / `[gap-check]` / `[contact]` prefix |
+| `unmapped_product` in webhook logs | Vercel logs, search `UNMAPPED` | A buyer paid and received no entitlement group | Compare the logged key against the product map in `api/payhip-webhook.js` |
+| `502`/`503` from `/api/contact` or `/api/gap-check-subscribe` | Vercel logs | MailerLite is down or the API key expired | Check `/api/health`, then MailerLite status |
+| Sustained `429` from one route | Vercel logs | Either abuse or a genuine traffic spike | If abuse, add a Vercel Firewall rule; the in-process limiter is best-effort only |
+| GA4 purchases stop while Payhip sales continue | GA4 vs Payhip dashboard | Revenue attribution is blind again | `/api/health` → `behaviour.ga4_purchase_reporting` |
+
+Nothing else needs to page anyone.
+
+## What is expected noise, not an outage
+
+Seven days of runtime counts observed in the 2026-08-17 audit: 57 × 401,
+18 × 405, 7 × 400, 1 × 403, 16 × 200, no 5xx cluster. Led by `/api/health` (57).
+
+- **401 on `/api/health` and `/api/payhip-webhook`** — these routes are
+  token-gated and publicly addressable. Unauthenticated probes are the normal
+  background noise of the internet and mean the gate is working.
+- **405** — wrong method against a route that only accepts one. Same story.
+- **400 `malformed_json`** — a scanner posting junk.
+
+Treat a *change in shape* as the signal: 401s from a single IP in the thousands,
+or a 401 immediately after you rotated a token (that one is yours).
+
+## The DEP0169 warning
+
+Vercel records ~25 occurrences per 7 days of:
+
+```
+[DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized …
+```
+
+across `/api/gap-check-download`, `/api/payhip-webhook`, and `/api/health`.
+
+**This is not application code.** No `url.parse()` call exists anywhere in this
+repository (`grep -rn "url.parse" .`), and the routes it names have nothing in
+common except that they are Vercel Node functions. It is the platform's own
+request wrapper. It is a deprecation notice, not an error, not a vulnerability
+with a call path in this codebase, and it does not affect responses.
+
+Action: leave it. Re-check after Vercel bumps its Node runtime wrapper. Do not
+"fix" it by suppressing Node warnings — that would hide real ones.
+
+## Rollback
+
+Every production deployment in Vercel is a rollback candidate.
+
+1. Vercel → Project `finders-book-v34` → Deployments.
+2. Find the last known-good production deployment (check `githubCommitSha`).
+3. Instant Rollback.
+4. Confirm `https://www.familyfindersbook.com/api/health?t=…` reports the
+   expected `deployment.commit`.
+
+Last-known-good at the time of writing: `a6e220e` (PR #22 merge), deployed
+2026-08-17.
+
+Rolling back the site does **not** roll back MailerLite group membership. If a
+bad webhook deploy mis-assigned groups, fix membership in MailerLite directly.
+
+## Config verification after any env change
+
+Vercel applies environment variables to *new* builds only. After editing one,
+redeploy, then:
+
+```text
+https://www.familyfindersbook.com/api/health?t=YOUR_PRIVATE_TOKEN
+```
+
+It reports presence and behaviour flags only — never values, IDs, map contents,
+signatures, or subscriber data.
+
+Read `behaviour.ga4_purchase_reporting` and `behaviour.contact_owner_alert` to
+confirm the two optional integrations are actually live.
+
+## Webhook token rotation, without downtime
+
+1. Set `PAYHIP_WEBHOOK_TOKENS` to a JSON array holding **both** the old and new
+   token: `["old-token","new-token"]`.
+2. Redeploy. Both tokens now authenticate.
+3. Update the webhook URL in Payhip to the new token.
+4. Confirm a delivery succeeds (Payhip → webhook log, or a controlled purchase).
+5. Reduce the array to the new token alone, or move it back to
+   `PAYHIP_WEBHOOK_TOKEN`, and redeploy.
+
+`/api/health` reports `webhook_token_mode` so you can tell which mode is live.
+
+## Where revenue reporting can break
+
+`api/payhip-webhook.js` sends GA4 `purchase` and `refund` through the
+Measurement Protocol (`lib/ga4.js`). Known limits, by design:
+
+- **It is off unless `GA4_MEASUREMENT_ID` and `GA4_API_SECRET` are both set.**
+  Silence is the default so previews and tests never write to the property.
+- **Server events do not join the visitor's browser session.** Payhip does not
+  forward the GA4 client id, so a purchase is attributed to a synthetic client
+  derived from the transaction id. Campaign-level attribution therefore comes
+  from the landing-page events and UTMs, not from the purchase event itself.
+- **Deduplication is GA4's**, keyed on `transaction_id`. A Payhip redelivery of
+  the same order re-sends the same id and does not create a second purchase.
+- **A GA4 outage never fails a webhook.** The call is time-limited, its failure
+  is logged, and the order still returns 200. This is deliberate: analytics must
+  not make Payhip retry a delivery that already succeeded.
+
+## Support ownership
+
+`/contact.html` promises "a person reads these". The route stores every message
+in its own MailerLite group *and*, when `CONTACT_NOTIFY_WEBHOOK_URL` is set,
+posts the message to an alerting endpoint so answering does not depend on
+remembering to open MailerLite.
+
+Assign, in writing: who answers, and within how long. An unowned promise is the
+failure mode here, not the code.

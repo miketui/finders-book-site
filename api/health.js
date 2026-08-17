@@ -61,8 +61,14 @@ export default function handler(req, res) {
       PAYHIP_API_KEY: Boolean(process.env.PAYHIP_API_KEY),
       PAYHIP_WEBHOOK_TOKEN: tokens.length > 0,
       GAP_CHECK_TOKEN_SECRET: Boolean(process.env.GAP_CHECK_TOKEN_SECRET),
+      GA4_MEASUREMENT_ID: Boolean(process.env.GA4_MEASUREMENT_ID),
+      GA4_API_SECRET: Boolean(process.env.GA4_API_SECRET),
     },
     behaviour: {
+      // Server-side revenue reporting is off until both GA4 values are set, so
+      // this flag answers "why is GA4 recording clicks but no purchases?".
+      ga4_purchase_reporting: Boolean(process.env.GA4_MEASUREMENT_ID && process.env.GA4_API_SECRET),
+      contact_owner_alert: Boolean(process.env.CONTACT_NOTIFY_WEBHOOK_URL),
       respect_email_consent: process.env.RESPECT_EMAIL_CONSENT !== 'false',
       refund_on_partial: process.env.REFUND_ON_PARTIAL === 'true',
       lead_status: process.env.MAILERLITE_SUBSCRIBER_STATUS || 'unconfirmed',

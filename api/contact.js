@@ -31,7 +31,11 @@
  *   ML_GROUP_CONTACT_FEEDBACK     optional, defaults to the live group
  *   ML_GROUP_CONTACT_LICENSING    optional, defaults to the live group
  *   MAILERLITE_SUBSCRIBER_STATUS  "unconfirmed" (default) or "active"
+ *   CONTACT_NOTIFY_WEBHOOK_URL    optional; alerts the owner so replying does
+ *                                 not depend on remembering to check MailerLite
  */
+
+import { notifyOwner } from '../lib/notify.js';
 
 const ML_API = 'https://connect.mailerlite.com/api/subscribers';
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
@@ -187,6 +191,9 @@ export default async function handler(req, res) {
     // 200 = existing subscriber updated, 201 = created, 422 = already present.
     // All three mean the message is on file and a person can reply to it.
     if (upstream.status === 200 || upstream.status === 201 || upstream.status === 422) {
+      // Best effort by design: the message is already on file, so a failed
+      // alert is a monitoring problem, not the sender's problem.
+      await notifyOwner({ kind, name, email, message });
       return res.status(200).json({ ok: true, kind });
     }
 

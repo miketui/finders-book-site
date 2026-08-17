@@ -45,6 +45,19 @@
     }
     var top = target.getBoundingClientRect().top + window.scrollY;
     window.scrollTo({ top: top, behavior: reduced ? "auto" : "smooth" });
+    if (reduced) return;
+    /* A scrubbed ScrollTrigger interrupts a native smooth scroll partway: on
+       phones the Skip control consistently stopped 77px short, leaving the
+       headline tucked under the header. Re-assert the position once the
+       animation has had time to finish — and only while we are clearly still
+       aiming at the same place, so a visitor who scrolled somewhere else in
+       the meantime never gets yanked back. */
+    window.setTimeout(function(){
+      var drift = target.getBoundingClientRect().top;
+      if (Math.abs(drift) > 2 && Math.abs(drift) < 240){
+        window.scrollTo({ top: window.scrollY + drift, behavior: "auto" });
+      }
+    }, 900);
   }
 
   /* ============================================================
@@ -233,6 +246,11 @@
 
     var callSkip = document.getElementById("callSkip");
     if (callSkip && reveal){
+      /* The href="#reveal" on this control is the no-JS path and is left
+         intact; once the sequence is bound, scrollToTarget owns the movement
+         because it routes through Lenis when Lenis is driving the page and
+         corrects for the scrub interrupting a native smooth scroll when it
+         is not. */
       callSkip.addEventListener("click", function(e){
         e.preventDefault();
         scrollToTarget(reveal);

@@ -97,7 +97,12 @@ const BASE = EXTERNAL || `http://localhost:${PORT}`;
 
 console.log(`\nsmoke-render  ->  ${BASE}\n`);
 
-const browser = await chromium.launch();
+// Sandboxes that ship a pre-installed Chromium (and pin PLAYWRIGHT_BROWSERS_PATH)
+// often carry a different build number than the npm package expects. CI installs
+// its own browser and ignores this.
+const browser = await chromium.launch(
+  process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {}
+);
 let failures = 0;
 
 for (const viewport of VIEWPORTS) {
@@ -311,16 +316,43 @@ console.log('\n  analytics consent');
 }
 
 // --- 7. Skip Intro must reach the offer across input/motion modes ---
+// The failure this guards against is not "the handler is wrong". On 2026-08-17
+// the control was visible, enabled, and unclickable: it rendered underneath the
+// fixed header wrap on desktop and under the nav toggle on mobile, so every
+// click landed on the header instead. Hit-testing the control's own centre is
+// what catches that; asserting the scroll position alone does not.
 console.log('\n  Skip Intro');
 for (const viewport of VIEWPORTS) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
-    reducedMotion: viewport.name === 'mobile' ? 'reduce' : 'no-preference',
   });
   const page = await context.newPage();
   await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
-  await page.locator('#callSkip').click();
-  await page.waitForTimeout(viewport.name === 'mobile' ? 100 : 1200);
+  await page.waitForTimeout(600);
+
+  const hit = await page.evaluate(() => {
+    const el = document.getElementById('callSkip');
+    if (!el) return { found: false };
+    const rect = el.getBoundingClientRect();
+    const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return {
+      found: true,
+      reachable: Boolean(target && (target === el || el.contains(target))),
+      blockedBy: target ? `${target.tagName.toLowerCase()}.${target.className}`.slice(0, 60) : 'nothing',
+    };
+  });
+  if (!hit.found || !hit.reachable) {
+    console.log(`    FAIL  ${viewport.name} Skip Intro is not clickable — the click lands on ${hit.blockedBy}`);
+    failures++;
+  } else {
+    console.log(`    ok    ${viewport.name} Skip Intro receives its own clicks`);
+  }
+
+  await page.locator('#callSkip').click({ timeout: 5000 }).catch((e) => {
+    console.log(`    FAIL  ${viewport.name} Skip Intro click failed: ${e.message.split('\n')[0]}`);
+    failures++;
+  });
+  await page.waitForTimeout(1200);
   const position = await page.evaluate(() => ({
     hash: location.hash,
     y: window.scrollY,
@@ -335,11 +367,40 @@ for (const viewport of VIEWPORTS) {
   await context.close();
 }
 
+// Reduced motion collapses Act 0 to a single screen, so there is deliberately
+// nothing to skip. What must hold is that the offer is reachable anyway.
+{
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
+  await page.waitForTimeout(600);
+  const state = await page.evaluate(() => {
+    const reveal = document.getElementById('reveal');
+    const h1 = document.querySelector('h1');
+    return {
+      revealFromTop: reveal ? Math.round(reveal.getBoundingClientRect().top + window.scrollY) : null,
+      h1Visible: h1 ? parseFloat(getComputedStyle(h1).opacity) > 0.9 : false,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  // One screen of introduction, not four-plus viewports of forced scrolling.
+  const withinOneScreen = state.revealFromTop !== null && state.revealFromTop <= state.viewportHeight * 1.5;
+  if (!withinOneScreen || !state.h1Visible) {
+    console.log(`    FAIL  reduced motion still gates the offer (${JSON.stringify(state)})`);
+    failures++;
+  } else {
+    console.log(`    ok    reduced motion puts the offer within one screen (${state.revealFromTop}px)`);
+  }
+  await context.close();
+}
+
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
   await page.locator('#callSkip').click();
+  // html has scroll-behavior:smooth, so the jump is animated even without JS.
+  await page.waitForTimeout(800);
   const position = await page.evaluate(() => ({ hash: location.hash, y: window.scrollY }));
   if (position.hash !== '#reveal' || position.y < 100) {
     console.log(`    FAIL  no-JS Skip Intro fallback failed (${JSON.stringify(position)})`);
@@ -378,6 +439,50 @@ console.log('\n  no-GSAP resilience (blocks the CDN, simulates failure)');
     failures += errs.length;
   } else {
     console.log('    ok    no JS errors with the CDN blocked');
+  }
+  await context.close();
+}
+
+// --- 9. weight budgets ---
+// Page weight only ever grows by accident. These ceilings sit roughly 25% above
+// the measured cost of the current design, so an added library or an unoptimised
+// image trips the build instead of quietly costing LCP on a phone.
+// Sizes are uncompressed bytes; production serves these gzipped/brotli'd.
+console.log('\n  weight budgets (uncompressed)');
+{
+  const BUDGET_KB = { js: 240, css: 110, font: 200, img: 500 };
+  const DOM_BUDGET = 1500;
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, ignoreHTTPSErrors: true });
+  for (const path of ['/', '/order.html', '/contact.html']) {
+    const page = await context.newPage();
+    await page.goto(BASE + path, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForTimeout(1200);
+    const measured = await page.evaluate(() => {
+      const bytes = { js: 0, css: 0, font: 0, img: 0 };
+      for (const entry of performance.getEntriesByType('resource')) {
+        const ext = (entry.name.split('?')[0].split('.').pop() || '').toLowerCase();
+        const kind = ext === 'js' ? 'js'
+          : ext === 'css' ? 'css'
+          : ext === 'woff2' ? 'font'
+          : ['webp', 'jpg', 'jpeg', 'png', 'svg', 'avif'].includes(ext) ? 'img'
+          : null;
+        if (kind) bytes[kind] += entry.encodedBodySize || entry.transferSize || 0;
+      }
+      return { bytes, dom: document.getElementsByTagName('*').length };
+    });
+    const over = Object.entries(BUDGET_KB)
+      .filter(([kind, kb]) => measured.bytes[kind] / 1024 > kb)
+      .map(([kind, kb]) => `${kind} ${(measured.bytes[kind] / 1024).toFixed(0)}KB > ${kb}KB`);
+    if (measured.dom > DOM_BUDGET) over.push(`DOM ${measured.dom} nodes > ${DOM_BUDGET}`);
+    const summary = Object.entries(measured.bytes)
+      .map(([kind, value]) => `${kind} ${(value / 1024).toFixed(0)}KB`).join(', ');
+    if (over.length) {
+      console.log(`    FAIL  ${path} over budget: ${over.join('; ')}`);
+      failures++;
+    } else {
+      console.log(`    ok    ${path} ${summary}, DOM ${measured.dom}`);
+    }
+    await page.close();
   }
   await context.close();
 }
