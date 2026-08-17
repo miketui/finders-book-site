@@ -20,6 +20,11 @@ finders-book-site/
     │   │   ├── archivo-latin-variable-normal.woff2
     │   │   ├── newsreader-latin-variable-italic.woff2
     │   │   └── newsreader-latin-variable-normal.woff2
+    │   ├── vendor/
+    │   │   ├── gsap.min.js
+    │   │   ├── lenis.min.js
+    │   │   ├── ScrollTrigger.min.js
+    │   │   └── SplitText.min.js
     │   ├── bonus-1-emergency-fridge-card.webp
     │   ├── bonus-2-15-minute-secure-vault-setup-guide.webp
     │   ├── bonus-3-continuity-check-in-plan.webp
@@ -44,13 +49,25 @@ finders-book-site/
     │   ├── DEPLOYMENT.md
     │   ├── FILE-INVENTORY.md
     │   ├── FILE-TREE.md
+    │   ├── implementation-brief.md
     │   ├── LAUNCH-READINESS.md
+    │   ├── OPERATIONS.md
+    │   ├── OWNER-ACTIONS.md
     │   ├── PRIVATE-PAYHIP-FILES.md
+    │   ├── PRODUCTION-VERIFICATION.md
+    │   ├── redesign-direction.html
+    │   ├── redesign-mock.html
     │   ├── SOURCE-ZIP-AUDIT.md
-    │   └── VENDOR-MAP.md
+    │   ├── VENDOR-MAP.md
+    │   └── VERIFIED-STATE-2026-08-15.md
+    ├── lib/
+    │   ├── ga4.js
+    │   └── notify.js
     ├── scripts/
+    │   ├── build-sitemap.mjs
     │   ├── check-chrome-drift.mjs
     │   ├── check-csp.mjs
+    │   ├── check-deploy-surface.mjs
     │   ├── check-html.mjs
     │   ├── check-local-references.mjs
     │   ├── check-secrets.mjs
@@ -66,11 +83,11 @@ finders-book-site/
     ├── .env.example
     ├── .gitattributes
     ├── .gitignore
+    ├── .vercelignore
     ├── 404.html
     ├── about.html
     ├── analytics.js
     ├── apply-chrome.py
-    ├── book3d.js
     ├── chrome.css
     ├── chrome.js
     ├── consent.css

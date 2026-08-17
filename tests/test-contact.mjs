@@ -33,9 +33,15 @@ let passed = 0;
 let failed = 0;
 let lastUpstream = null;
 
+let lastNotification = null;
+
 /** Intercept the MailerLite call so no network request is made. */
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
+  if (String(url).includes('hooks.example.test')) {
+    lastNotification = { url: String(url), body: JSON.parse(init.body) };
+    return { status: 200, ok: true, json: async () => ({}), text: async () => '' };
+  }
   lastUpstream = { url: String(url), body: JSON.parse(init.body) };
   return {
     status: 201,
@@ -60,6 +66,7 @@ function mockRes() {
 
 async function call(body, { method = 'POST' } = {}) {
   lastUpstream = null;
+  lastNotification = null;
   const req = { method, body, headers: { 'x-forwarded-for': `10.0.0.${Math.floor(Math.random() * 250)}` }, query: {} };
   const res = mockRes();
   await handler(req, res);
@@ -195,6 +202,50 @@ console.log('\n=== Long message handling ===\n');
   check('over-long message truncated with a marker, not dropped',
     res.statusCode === 200 && stored.length < 2500 && stored.includes('truncated') && stored.includes('2500'),
     `stored ${stored.length} chars, marker present: ${stored.includes('truncated')}`);
+}
+
+console.log('\n=== Owner notification ===\n');
+
+{
+  const res = await call({ ...validBase, kind: 'question' });
+  check('no notification attempted when no alert endpoint is configured',
+    res.statusCode === 200 && lastNotification === null);
+}
+
+{
+  process.env.CONTACT_NOTIFY_WEBHOOK_URL = 'https://hooks.example.test/finders-book';
+  const res = await call({ ...validBase, kind: 'licensing' });
+  const body = lastNotification?.body ?? {};
+  check('stored message also alerts the owner so replying does not depend on polling MailerLite',
+    res.statusCode === 200 && Boolean(lastNotification)
+    && body.kind === 'licensing'
+    && String(body.text).includes('Jane Doe')
+    && String(body.email) === 'jane.doe@example.com',
+    `-> ${res.statusCode} | alerted: ${Boolean(lastNotification)} kind=${body.kind}`);
+}
+
+{
+  // http:// is refused rather than silently downgraded — the alert carries the
+  // sender's address and must not travel in the clear.
+  process.env.CONTACT_NOTIFY_WEBHOOK_URL = 'http://hooks.example.test/finders-book';
+  const res = await call({ ...validBase, kind: 'question' });
+  check('plain-http alert endpoint is ignored, not used',
+    res.statusCode === 200 && lastNotification === null);
+}
+
+{
+  process.env.CONTACT_NOTIFY_WEBHOOK_URL = 'https://hooks.example.test/finders-book';
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).includes('hooks.example.test')) throw new Error('alert endpoint down');
+    return originalFetch(url, init);
+  };
+  const res = await call({ ...validBase, kind: 'feedback' });
+  check('a failing alert endpoint does not fail the visitor\'s message',
+    res.statusCode === 200 && res.payload.ok === true,
+    `-> ${res.statusCode}`);
+  globalThis.fetch = originalFetch;
+  delete process.env.CONTACT_NOTIFY_WEBHOOK_URL;
 }
 
 console.log('\n=== Not configured ===\n');

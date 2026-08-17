@@ -24,9 +24,13 @@ const GROUP = {
 let calls = [];
 let membership = new Set();
 let failingRemoval = null;
+let ga4Status = 204;
 globalThis.fetch = async (url, init = {}) => {
   const body = init.body ? JSON.parse(init.body) : null;
   calls.push({ url: String(url), method: init.method, body });
+  if (String(url).includes('google-analytics.com')) {
+    return { status: ga4Status, ok: ga4Status < 400, json: async () => ({}), text: async () => '' };
+  }
   if (String(url).endsWith('/subscribers')) {
     (body?.groups || []).forEach((group) => membership.add(String(group)));
     return {
@@ -244,6 +248,114 @@ const normalised = sent?.email === 'buyer@example.com';
 const activeStatus = sent?.status === 'active';
 normalised && activeStatus ? pass++ : fail++;
 console.log(`${normalised && activeStatus ? 'PASS' : 'FAIL'}  buyer normalised to lowercase + status "active"\n        -> email=${sent?.email} status=${sent?.status}`);
+
+console.log('\n=== GA4 revenue reporting ===\n');
+
+function ga4Calls() {
+  return calls.filter((c) => String(c.url).includes('google-analytics.com'));
+}
+
+function assert(name, condition, detail = '') {
+  condition ? pass++ : fail++;
+  console.log(`${condition ? 'PASS' : 'FAIL'}  ${name}${detail ? `\n        -> ${detail}` : ''}`);
+}
+
+// Unconfigured is the default everywhere except production: no calls, no noise.
+calls = [];
+membership = new Set();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: paid(['Y1O7B']) }, mockRes());
+assert('no GA4 call when measurement id / api secret are unset', ga4Calls().length === 0);
+
+process.env.GA4_MEASUREMENT_ID = 'G-TEST12345';
+process.env.GA4_API_SECRET = 'test-ga4-secret';
+
+calls = [];
+membership = new Set();
+const purchaseBody = paid(['Y1O7B'], { id: 'TX-ga4-purchase', price: 4900, currency: 'usd' });
+const purchaseRes = mockRes();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: purchaseBody }, purchaseRes);
+const purchaseCall = ga4Calls()[0];
+const purchaseEvent = purchaseCall?.body?.events?.[0];
+assert('paid order sends exactly one GA4 purchase',
+  ga4Calls().length === 1 && purchaseEvent?.name === 'purchase',
+  `calls=${ga4Calls().length} event=${purchaseEvent?.name}`);
+assert('purchase carries transaction id, dollar value, and currency',
+  purchaseEvent?.params?.transaction_id === 'TX-ga4-purchase'
+  && purchaseEvent?.params?.value === 49
+  && purchaseEvent?.params?.currency === 'USD',
+  `${purchaseEvent?.params?.transaction_id} ${purchaseEvent?.params?.value} ${purchaseEvent?.params?.currency}`);
+assert('purchase carries the item id, name, and tier',
+  purchaseEvent?.params?.items?.[0]?.item_id === 'Y1O7B'
+  && purchaseEvent?.params?.items?.[0]?.item_category === 'ultimate',
+  JSON.stringify(purchaseEvent?.params?.items?.[0] ?? null));
+assert('GA4 payload contains no customer email or name',
+  !JSON.stringify(purchaseCall?.body ?? {}).toLowerCase().includes('example.com'));
+assert('client id is a hash, not the buyer address',
+  /^\d+\.\d+$/.test(String(purchaseCall?.body?.client_id ?? '')),
+  String(purchaseCall?.body?.client_id));
+assert('measurement id and api secret travel in the query string, never the body',
+  String(purchaseCall?.url).includes('measurement_id=G-TEST12345')
+  && String(purchaseCall?.url).includes('api_secret=test-ga4-secret'));
+
+// Redelivery: GA4 deduplicates on transaction_id, so the same id must be re-sent.
+calls = [];
+membership = new Set();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: purchaseBody }, mockRes());
+assert('redelivered order re-sends the same transaction id for GA4 deduplication',
+  ga4Calls()[0]?.body?.events?.[0]?.params?.transaction_id === 'TX-ga4-purchase');
+
+// A sale is still a sale when the buyer declines marketing email.
+calls = [];
+membership = new Set();
+const unconsented = mockRes();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {},
+  body: paid(['Y1O7B'], { id: 'TX-ga4-unconsented', unconsented_from_emails: true }) }, unconsented);
+assert('unconsented buyer still produces revenue in GA4',
+  unconsented.payload?.action === 'skipped_unconsented'
+  && ga4Calls()[0]?.body?.events?.[0]?.name === 'purchase');
+
+// Full refund.
+calls = [];
+membership = new Set(['194226612687865798', '194226610412455586']);
+const refundRes = mockRes();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {},
+  body: refund({ id: 'TX-ga4-refund' }) }, refundRes);
+const refundEvent = ga4Calls()[0]?.body?.events?.[0];
+assert('full refund sends a GA4 refund event with the refunded amount',
+  refundRes.payload?.action === 'refund_flagged'
+  && refundEvent?.name === 'refund'
+  && refundEvent?.params?.value === 49,
+  `${refundEvent?.name} ${refundEvent?.params?.value}`);
+
+// Partial refund keeps entitlements but still reports the money.
+calls = [];
+membership = new Set(['194226612687865798', '194226610412455586']);
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {},
+  body: refund({ id: 'TX-ga4-partial', amount_refunded: 1000 }) }, mockRes());
+assert('partial refund reports only the refunded portion',
+  ga4Calls()[0]?.body?.events?.[0]?.params?.value === 10,
+  String(ga4Calls()[0]?.body?.events?.[0]?.params?.value));
+
+// An unmapped product must not be reported as revenue — that delivery gets retried.
+calls = [];
+membership = new Set();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: paid(['ZZZZZ']) }, mockRes());
+assert('unmapped product reports no purchase', ga4Calls().length === 0);
+
+// Analytics must never be able to fail an order that MailerLite accepted.
+calls = [];
+membership = new Set();
+ga4Status = 500;
+const degraded = mockRes();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {},
+  body: paid(['Y1O7B'], { id: 'TX-ga4-degraded' }) }, degraded);
+assert('GA4 outage does not fail the webhook',
+  degraded.statusCode === 200 && degraded.payload?.action === 'buyer_added',
+  `-> ${degraded.statusCode} ${degraded.payload?.action ?? degraded.payload?.error}`);
+ga4Status = 204;
+
+delete process.env.GA4_MEASUREMENT_ID;
+delete process.env.GA4_API_SECRET;
 
 console.log(`\n${'='.repeat(46)}\n  ${pass} passed, ${fail} failed\n${'='.repeat(46)}\n`);
 process.exit(fail ? 1 : 0);

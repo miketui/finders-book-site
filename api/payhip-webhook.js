@@ -8,6 +8,7 @@
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { ga4Items, sendGa4Event } from '../lib/ga4.js';
 
 const ML_BASE = 'https://connect.mailerlite.com/api';
 const UPSTREAM_TIMEOUT_MS = 8000;
@@ -142,6 +143,35 @@ export function tiersFromItems(items) {
   return { tiers: [...tiers], unmatched };
 }
 
+/** Resolve one product key to a tier, reusing the same matching rules as tiersFromItems. */
+export function tierForKey(key) {
+  const { tiers } = tiersFromItems([{ product_key: key }]);
+  return tiers[0] ?? null;
+}
+
+/**
+ * Report revenue to GA4 from the server, because the browser hands the visitor
+ * to Payhip and never learns whether the order completed. Deliberately awaited
+ * but never allowed to throw: a failed analytics call must not turn a completed
+ * order into a Payhip retry.
+ */
+async function reportToGa4(eventName, body, amountMinorUnits) {
+  try {
+    const result = await sendGa4Event(eventName, {
+      transactionId: String(body?.id ?? ''),
+      amountMinorUnits,
+      currency: body?.currency,
+      items: ga4Items(body?.items, tierForKey),
+    });
+    if (result.sent) console.log(`[payhip] ga4 ${eventName} recorded`, { txId: String(body?.id ?? '') });
+    else if (result.reason !== 'not_configured') {
+      console.warn(`[payhip] ga4 ${eventName} not recorded`, { reason: result.reason, status: result.status });
+    }
+  } catch (err) {
+    console.warn('[payhip] ga4 reporting threw unexpectedly', { event: eventName, err: err?.message });
+  }
+}
+
 async function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 async function ml(path, init = {}) {
@@ -271,6 +301,9 @@ export default async function handler(req, res) {
     if (type === 'paid') {
       if (on(process.env.RESPECT_EMAIL_CONSENT, true) && body?.unconsented_from_emails === true) {
         console.log('[payhip] paid but unconsented — no marketing groups added', txId);
+        // Declining marketing email does not erase the sale. GA4 receives no
+        // identifiers, so revenue is still reported.
+        await reportToGa4('purchase', body, body?.price);
         return res.status(200).json({ ok: true, action: 'skipped_unconsented' });
       }
 
@@ -287,6 +320,8 @@ export default async function handler(req, res) {
         removeFromGroup(subscriberId, groupFor('leads')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(leads) failed', { err: e?.message })),
       ]);
 
+      await reportToGa4('purchase', body, body?.price);
+
       console.log('[payhip] paid ->', tiers.join(','), txId);
       return res.status(200).json({ ok: true, action: 'buyer_added', tiers });
     }
@@ -298,6 +333,9 @@ export default async function handler(req, res) {
 
       if (!isFull && !on(process.env.REFUND_ON_PARTIAL, false)) {
         console.log('[payhip] partial refund — no group change', txId, refunded, 'of', price);
+        // Entitlements stay, but the money did move. Reporting it keeps GA4
+        // revenue reconcilable against Payhip.
+        await reportToGa4('refund', body, refunded);
         return res.status(200).json({ ok: true, action: 'ignored_partial_refund' });
       }
 
@@ -321,6 +359,8 @@ export default async function handler(req, res) {
           throw e;
         }
       }
+
+      await reportToGa4('refund', body, refunded || price);
 
       const remainingTiers = ['essentials', 'ultimate', 'family_bundle'].filter((tier) => remainingBuyerGroups.includes(groupFor(tier)));
       console.log('[payhip] refunded -> item-scoped cleanup', tiers.join(','), txId);
