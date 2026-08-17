@@ -1,0 +1,30 @@
+# Files uploaded to Vercel are served publicly. Everything a browser does not
+# need to render the site, and everything the API functions do not read at
+# runtime, is excluded here.
+#
+# This is not hypothetical tidiness. Before this file existed,
+# https://www.familyfindersbook.com/ served /tests/test-webhook.mjs (the webhook
+# signature scheme, the token parameter name, and every MailerLite group id),
+# /scripts/check-secrets.mjs (exactly which credential patterns are scanned
+# for), /docs/PRIVATE-PAYHIP-FILES.md, /areas/finders-book.md (the internal
+# operational runbook), and the CI workflow — all 200 OK on the commercial
+# domain. No secret values leaked, but the design of every protected path did.
+#
+# scripts/check-deploy-surface.mjs fails the build if a new development-only
+# path appears without being listed here.
+
+# Documentation and internal notes
+docs/
+areas/
+README.md
+SECURITY.md
+
+# Development tooling — never part of the served site
+scripts/
+tests/
+apply-chrome.py
+.github/
+
+# Local config references (dotfiles are not served, listed for intent)
+.env.example
+.gitattributes

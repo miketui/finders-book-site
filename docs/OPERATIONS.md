@@ -111,6 +111,37 @@ Measurement Protocol (`lib/ga4.js`). Known limits, by design:
   is logged, and the order still returns 200. This is deliberate: analytics must
   not make Payhip retry a delivery that already succeeded.
 
+## What is published, and what is not
+
+Every file uploaded to Vercel is served publicly. Until 2026-08-17 that included
+`/tests/test-webhook.mjs`, `/scripts/check-secrets.mjs`, `/apply-chrome.py`,
+`/docs/PRIVATE-PAYHIP-FILES.md`, `/areas/finders-book.md` and the CI workflow —
+all 200 OK on the commercial domain. No secret values were exposed, but the
+webhook signature scheme, the MailerLite group ids, the credential patterns
+being scanned for, and the internal operational runbook were.
+
+`.vercelignore` now excludes documentation and tooling, and
+`scripts/check-deploy-surface.mjs` (part of `npm run validate`) fails the build
+if a new development-only path appears without being excluded. When you add a
+directory the site genuinely needs at runtime, add it to that script's `RUNTIME`
+set rather than loosening the check.
+
+### The lead magnet URL is deliberately not blocked
+
+`/Family-Readiness-Gap-Check.pdf` is reachable without a token, and that is on
+purpose: the MailerLite delivery email links straight to it, because the signed
+token the form issues expires after 15 minutes — long before most people open an
+email. Blocking the path would break delivery for every existing subscriber.
+
+What it must never do is rank. `vercel.json` serves it with
+`X-Robots-Tag: noindex, nofollow, noarchive`, because an indexed lead magnet is
+one a search result hands out without an email address, and the Gap Check
+signup rate is the metric the traffic plan gates growth on.
+
+If you want it genuinely gated, that is a product change, not a config change:
+the delivery email has to link to a long-lived, subscriber-scoped token instead
+of the plain file.
+
 ## Support ownership
 
 `/contact.html` promises "a person reads these". The route stores every message

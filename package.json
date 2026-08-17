@@ -12,11 +12,12 @@
     "check:html": "node scripts/check-html.mjs",
     "check:sitemap": "node scripts/build-sitemap.mjs --check",
     "sitemap": "node scripts/build-sitemap.mjs",
-    "validate": "npm run check:secrets && npm run check:refs && npm run check:chrome && npm run check:csp && npm run check:html && npm run check:sitemap && npm test",
+    "validate": "npm run check:secrets && npm run check:refs && npm run check:chrome && npm run check:csp && npm run check:html && npm run check:sitemap && npm run check:deploy && npm test",
     "hydrate": "node scripts/hydrate-assets.mjs",
     "manifests": "node scripts/regen-manifests.mjs",
     "check:chrome": "node scripts/check-chrome-drift.mjs",
-    "test:render": "node tests/smoke-render.mjs"
+    "test:render": "node tests/smoke-render.mjs",
+    "check:deploy": "node scripts/check-deploy-surface.mjs"
   },
   "engines": {
     "node": ">=20 <25"

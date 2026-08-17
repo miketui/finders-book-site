@@ -67,6 +67,7 @@ finders-book-site/
     │   ├── build-sitemap.mjs
     │   ├── check-chrome-drift.mjs
     │   ├── check-csp.mjs
+    │   ├── check-deploy-surface.mjs
     │   ├── check-html.mjs
     │   ├── check-local-references.mjs
     │   ├── check-secrets.mjs
@@ -82,6 +83,7 @@ finders-book-site/
     ├── .env.example
     ├── .gitattributes
     ├── .gitignore
+    ├── .vercelignore
     ├── 404.html
     ├── about.html
     ├── analytics.js
