@@ -28,6 +28,7 @@ const DEFAULT_PRODUCT_MAP = {
   Y1O7B: 'ultimate',
   xPuv4: 'family_bundle',
 };
+const ALLOWED_TIERS = new Set(['essentials', 'ultimate', 'family_bundle']);
 
 const on = (v, dflt) => (v === undefined ? dflt : String(v).toLowerCase() === 'true');
 
@@ -46,14 +47,18 @@ function productMap() {
   if (!raw) return DEFAULT_PRODUCT_MAP;
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      // normalize: keep literal keys and regex keys as-is
-      return parsed;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('must be a JSON object');
     }
+    const entries = Object.entries(parsed);
+    if (!entries.length || entries.some(([key, tier]) => !key || !ALLOWED_TIERS.has(String(tier)))) {
+      throw new Error('contains an empty key or unsupported tier');
+    }
+    return parsed;
   } catch (err) {
-    console.error('[payhip] PAYHIP_PRODUCT_MAP is not valid JSON — falling back to defaults', err?.message);
+    console.error('[payhip] invalid PAYHIP_PRODUCT_MAP configuration', err?.message);
+    throw new Error('invalid PAYHIP_PRODUCT_MAP configuration');
   }
-  return DEFAULT_PRODUCT_MAP;
 }
 
 /** Constant-time compare that does not leak length. */
@@ -61,6 +66,20 @@ function safeEqual(a, b) {
   const ha = createHash('sha256').update(String(a ?? ''), 'utf8').digest();
   const hb = createHash('sha256').update(String(b ?? ''), 'utf8').digest();
   return timingSafeEqual(ha, hb);
+}
+
+function webhookTokens() {
+  const rotated = process.env.PAYHIP_WEBHOOK_TOKENS;
+  if (rotated) {
+    try {
+      const parsed = JSON.parse(rotated);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(String).map((token) => token.trim()).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+  return process.env.PAYHIP_WEBHOOK_TOKEN ? [process.env.PAYHIP_WEBHOOK_TOKEN] : [];
 }
 
 /**
@@ -196,7 +215,7 @@ async function removeFromGroup(subscriberId, groupIdValue, { attempts = 3, baseD
     const res = await ml(path, { method: 'DELETE' });
     if (res.ok || res.status === 404) return;
     const detail = await res.text().catch(() => '');
-    console.warn('[payhip] mailerlite group removal attempt failed', { attempt, subscriberId, groupIdValue, status: res.status, snippet: String(detail).slice(0,200) });
+    console.warn('[payhip] mailerlite group removal attempt failed', { attempt, status: res.status, snippet: String(detail).slice(0,200) });
     if (attempt < attempts) await sleep(baseDelay * attempt);
     else throw new Error(`mailerlite group removal ${res.status}: ${detail.slice(0,400)}`);
   }
@@ -216,17 +235,11 @@ export default async function handler(req, res) {
 
   const mlKey = process.env.MAILERLITE_API_KEY;
   const payhipKey = process.env.PAYHIP_API_KEY;
-  const requiredTokenEnv = process.env.PAYHIP_WEBHOOK_TOKEN || process.env.PAYHIP_WEBHOOK_TOKENS;
-  if (!mlKey || !payhipKey || !requiredTokenEnv) {
+  const tokens = webhookTokens();
+  if (!mlKey || !payhipKey || !tokens.length) {
     console.error('[payhip] missing required integration configuration');
     return res.status(500).json({ ok: false, error: 'not_configured' });
   }
-
-  // Support single token or JSON array of tokens for rotation
-  const tokens = (() => {
-    if (!process.env.PAYHIP_WEBHOOK_TOKENS) return [process.env.PAYHIP_WEBHOOK_TOKEN];
-    try { const parsed = JSON.parse(process.env.PAYHIP_WEBHOOK_TOKENS); return Array.isArray(parsed) ? parsed.map(String) : [String(process.env.PAYHIP_WEBHOOK_TOKENS)]; } catch { return [process.env.PAYHIP_WEBHOOK_TOKENS]; }
-  })();
 
   const supplied = (req.query?.t ?? '') || req.headers['x-webhook-token'] || '';
   const okToken = tokens.some((t) => safeEqual(supplied, t));
@@ -270,8 +283,8 @@ export default async function handler(req, res) {
 
       // Best-effort: removals on purchase are non-fatal.
       await Promise.all([
-        removeFromGroup(subscriberId, groupFor('refunded')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(refunded) failed', { subscriberId, err: e?.message })),
-        removeFromGroup(subscriberId, groupFor('leads')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(leads) failed', { subscriberId, err: e?.message })),
+        removeFromGroup(subscriberId, groupFor('refunded')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(refunded) failed', { err: e?.message })),
+        removeFromGroup(subscriberId, groupFor('leads')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(leads) failed', { err: e?.message })),
       ]);
 
       console.log('[payhip] paid ->', tiers.join(','), txId);
@@ -304,7 +317,7 @@ export default async function handler(req, res) {
         try {
           await removeFromGroup(subscriberId, groupId, { attempts: 3 });
         } catch (e) {
-          console.error('[payhip] failed to remove group during refund cleanup — will surface 500 so Payhip retries', { subscriberId, groupId, err: e?.message });
+          console.error('[payhip] failed to remove group during refund cleanup — will surface 500 so Payhip retries', { err: e?.message });
           throw e;
         }
       }

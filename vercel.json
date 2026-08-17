@@ -5,6 +5,9 @@
   "outputDirectory": null,
   "cleanUrls": false,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true }
+  ],
   "functions": {
     "api/*.js": {
       "maxDuration": 15

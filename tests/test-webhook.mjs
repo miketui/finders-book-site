@@ -159,6 +159,13 @@ await check('paid / product_key missing, permalink fallback',
 await check('paid / unknown product key', paid(['ZZZZZ']),
   { status: 500, error: 'unmapped_product', groups: [] });
 
+const savedProductMap = process.env.PAYHIP_PRODUCT_MAP;
+process.env.PAYHIP_PRODUCT_MAP = JSON.stringify({ Y1O7B: 'ultimatte' });
+await check('paid / invalid product-map tier fails closed', paid(['Y1O7B']),
+  { status: 500, error: 'processing_failed', groups: [] });
+if (savedProductMap === undefined) delete process.env.PAYHIP_PRODUCT_MAP;
+else process.env.PAYHIP_PRODUCT_MAP = savedProductMap;
+
 await check('paid / buyer declined marketing email',
   paid(['Y1O7B'], { unconsented_from_emails: true }),
   { status: 200, action: 'skipped_unconsented', groups: [] });
@@ -185,8 +192,12 @@ await check('refunded / repeated event is idempotent', refund(),
   { initialGroups: ['194226612687865798', '194226614527067324'] });
 
 await check('refunded / MailerLite removal failure returns retryable 500', refund(),
-  { status: 500, groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { status: 500, error: 'processing_failed', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Ultimate Buyers', 'Ultimate Buyers'] },
   { initialGroups: ['194226612687865798', '194226610412455586'], failRemoval: '194226610412455586' });
+
+await check('refunded / successful redelivery completes cleanup after transient failure', refund(),
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { initialGroups: ['194226612687865798', '194226610412455586', '194226614527067324'] });
 
 console.log('\n=== Security ===\n');
 
@@ -214,6 +225,14 @@ const savedWebhookToken = process.env.PAYHIP_WEBHOOK_TOKEN;
 delete process.env.PAYHIP_WEBHOOK_TOKEN;
 await check('missing webhook token configuration fails closed', paid(['Y1O7B']),
   { status: 500, groups: [] });
+process.env.PAYHIP_WEBHOOK_TOKEN = savedWebhookToken;
+
+delete process.env.PAYHIP_WEBHOOK_TOKEN;
+process.env.PAYHIP_WEBHOOK_TOKENS = JSON.stringify(['old-test-token', 'new-test-token']);
+await check('rotation array accepts the second webhook token', paid(['Y1O7B']),
+  { status: 200, action: 'buyer_added', groups: ['All Customers', 'Ultimate Buyers'], removed: ['Refunded', 'Finder\'s Book — Leads'] },
+  { token: 'new-test-token' });
+delete process.env.PAYHIP_WEBHOOK_TOKENS;
 process.env.PAYHIP_WEBHOOK_TOKEN = savedWebhookToken;
 
 // Email normalisation

@@ -310,7 +310,47 @@ console.log('\n  analytics consent');
   await context.close();
 }
 
-// --- 7. the specific regression: sub-pages must survive without GSAP ---
+// --- 7. Skip Intro must reach the offer across input/motion modes ---
+console.log('\n  Skip Intro');
+for (const viewport of VIEWPORTS) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    reducedMotion: viewport.name === 'mobile' ? 'reduce' : 'no-preference',
+  });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
+  await page.locator('#callSkip').click();
+  await page.waitForTimeout(viewport.name === 'mobile' ? 100 : 1200);
+  const position = await page.evaluate(() => ({
+    hash: location.hash,
+    y: window.scrollY,
+    revealTop: document.getElementById('reveal')?.getBoundingClientRect().top,
+  }));
+  if (position.y < 100 || Math.abs(position.revealTop ?? 9999) > 8) {
+    console.log(`    FAIL  ${viewport.name} Skip Intro did not reach #reveal (${JSON.stringify(position)})`);
+    failures++;
+  } else {
+    console.log(`    ok    ${viewport.name} Skip Intro reaches #reveal`);
+  }
+  await context.close();
+}
+
+{
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load', timeout: 30000 });
+  await page.locator('#callSkip').click();
+  const position = await page.evaluate(() => ({ hash: location.hash, y: window.scrollY }));
+  if (position.hash !== '#reveal' || position.y < 100) {
+    console.log(`    FAIL  no-JS Skip Intro fallback failed (${JSON.stringify(position)})`);
+    failures++;
+  } else {
+    console.log('    ok    no-JS Skip Intro anchor fallback reaches #reveal');
+  }
+  await context.close();
+}
+
+// --- 8. the specific regression: sub-pages must survive without GSAP ---
 console.log('\n  no-GSAP resilience (blocks the CDN, simulates failure)');
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, ignoreHTTPSErrors: true });

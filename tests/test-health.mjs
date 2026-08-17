@@ -37,7 +37,21 @@ health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
 const serialised = JSON.stringify(res.payload);
 check('correct token returns config presence', res.statusCode === 200 && res.payload?.secrets_present?.GAP_CHECK_TOKEN_SECRET === true);
 check('health response never echoes secret values', !serialised.includes(process.env.MAILERLITE_API_KEY) && !serialised.includes(process.env.PAYHIP_API_KEY) && !serialised.includes(process.env.PAYHIP_WEBHOOK_TOKEN));
-check('health reports lifecycle group defaults', /All Customers/.test(JSON.stringify(res.payload?.groups?.all_customers).replace('194226612687865798', 'All Customers')) && Boolean(res.payload?.groups?.review_requested));
+check('health does not expose group IDs, fingerprints, signatures, or product-map contents',
+  !serialised.includes('194226') &&
+  !serialised.includes('fingerprint') &&
+  !serialised.includes('signature_prefix') &&
+  !serialised.includes('eHcPG'));
+
+const savedSingle = process.env.PAYHIP_WEBHOOK_TOKEN;
+delete process.env.PAYHIP_WEBHOOK_TOKEN;
+process.env.PAYHIP_WEBHOOK_TOKENS = JSON.stringify(['old-rotation-token', 'new-rotation-token']);
+res = mockRes();
+health({ method: 'GET', query: { t: 'new-rotation-token' } }, res);
+check('rotation array accepts any configured token',
+  res.statusCode === 200 && res.payload?.behaviour?.webhook_token_mode === 'rotation_array');
+delete process.env.PAYHIP_WEBHOOK_TOKENS;
+process.env.PAYHIP_WEBHOOK_TOKEN = savedSingle;
 
 const saved = process.env.PAYHIP_WEBHOOK_TOKEN;
 delete process.env.PAYHIP_WEBHOOK_TOKEN;
