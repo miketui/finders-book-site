@@ -1,8 +1,10 @@
-/*
- * Updated payhip-webhook.js
- * - hardened tiersFromItems and candidateKeys for unexpected item shapes
- * - added retry semantics and better logging for MailerLite group removals
- * - preserved original behavior but attempts a small retry on transient failures
+/**
+ * POST /api/payhip-webhook
+ *
+ * Receives Payhip events and maintains MailerLite group membership.
+ * Hardened to support flexible PAYHIP_PRODUCT_MAP keys (literal, case-insensitive,
+ * and regex-style keys) and added retry semantics for upserts on transient
+ * MailerLite 5xx/429 responses. Exposes helpers for unit testing.
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
@@ -33,14 +35,23 @@ function groupFor(tier) {
   return process.env[`ML_GROUP_${tier.toUpperCase()}`] || DEFAULT_GROUPS[tier];
 }
 
+/**
+ * Parse PAYHIP_PRODUCT_MAP env which can be JSON object of the form:
+ * { "eHcPG": "essentials", "/^prefix-\\d+$/": "family_bundle" }
+ * Keys that start and end with '/' are treated as regex patterns. Values must
+ * be tier strings. Falls back to DEFAULT_PRODUCT_MAP on parse failure.
+ */
 function productMap() {
   const raw = process.env.PAYHIP_PRODUCT_MAP;
   if (!raw) return DEFAULT_PRODUCT_MAP;
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') return parsed;
-  } catch {
-    console.error('[payhip] PAYHIP_PRODUCT_MAP is not valid JSON — falling back to defaults');
+    if (parsed && typeof parsed === 'object') {
+      // normalize: keep literal keys and regex keys as-is
+      return parsed;
+    }
+  } catch (err) {
+    console.error('[payhip] PAYHIP_PRODUCT_MAP is not valid JSON — falling back to defaults', err?.message);
   }
   return DEFAULT_PRODUCT_MAP;
 }
@@ -53,10 +64,10 @@ function safeEqual(a, b) {
 }
 
 /**
- * A Payhip line item may identify its product by product_key, and always
- * carries a permalink. We read both — tolerate missing/odd shapes safely.
+ * A Payhip line item may identify its product by product_key, and often
+ * carries a permalink. Tolerate missing/odd shapes safely.
  */
-function candidateKeys(item) {
+export function candidateKeys(item) {
   const keys = [];
   if (!item || typeof item !== 'object') return keys;
   if (item.product_key && typeof item.product_key === 'string') keys.push(String(item.product_key).trim());
@@ -68,9 +79,24 @@ function candidateKeys(item) {
   return keys;
 }
 
-function tiersFromItems(items) {
+/**
+ * Map item product keys to tiers.
+ * Supports literal map keys and regex keys (map key string starting and ending
+ * with '/'). Matching order: exact literal, case-insensitive literal, regex.
+ */
+export function tiersFromItems(items) {
   const map = productMap();
-  const lower = new Map(Object.entries(map).map(([k, v]) => [k.toLowerCase(), v]));
+  const lower = new Map();
+  const regexEntries = [];
+  for (const [k, v] of Object.entries(map)) {
+    if (typeof k !== 'string') continue;
+    if (k.startsWith('/') && k.endsWith('/')) {
+      try { regexEntries.push([new RegExp(k.slice(1, -1), 'i'), v]); } catch (e) { console.warn('[payhip] invalid regex in PAYHIP_PRODUCT_MAP key', k); }
+    } else {
+      lower.set(k.toLowerCase(), v);
+    }
+  }
+
   const tiers = new Set();
   const unmatched = [];
 
@@ -83,6 +109,13 @@ function tiersFromItems(items) {
       if (map[key]) { hit = map[key]; break; }
       const ci = lower.get(String(key).toLowerCase());
       if (ci) { hit = ci; break; }
+      // regex match
+      for (const [re, v] of regexEntries) {
+        try {
+          if (re.test(String(key))) { hit = v; break; }
+        } catch (e) { /* ignore */ }
+      }
+      if (hit) break;
     }
     if (hit) tiers.add(hit);
     else unmatched.push(item?.product_key ?? item?.product_permalink ?? JSON.stringify(item) ?? '(unidentifiable)');
@@ -113,29 +146,34 @@ async function ml(path, init = {}) {
 }
 
 /**
- * Upsert the subscriber and set group membership. Purchase callers explicitly
- * pass status "active"; refund callers omit it so an existing unsubscribed
- * subscriber is not deliberately reactivated. Returns the subscriber id.
+ * Upsert with retries on 429 and 5xx. Returns subscriber id on success.
  */
-async function upsert(email, groups, extra = {}) {
-  const res = await ml('/subscribers', {
-    method: 'POST',
-    body: JSON.stringify({ email, groups, ...extra }),
-  });
-
-  if (res.status === 200 || res.status === 201) {
-    const body = await res.json().catch(() => ({}));
-    return body?.data?.id ?? null;
+async function upsertWithRetries(email, groups, extra = {}, { attempts = 3, baseDelay = 250 } = {}) {
+  const bodyPayload = JSON.stringify({ email, groups, ...extra });
+  const path = '/subscribers';
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const res = await ml(path, { method: 'POST', body: bodyPayload });
+    if (res.status === 200 || res.status === 201) {
+      const body = await res.json().catch(() => ({}));
+      return body?.data?.id ?? null;
+    }
+    if (res.status === 422) {
+      // already subscribed — parse and return id if present
+      const body = await res.json().catch(() => ({}));
+      return body?.data?.id ?? null;
+    }
+    const text = await res.text().catch(() => '');
+    // Retry on 429 or 5xx
+    if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+      console.warn('[payhip] upsert attempt failed, will retry', { attempt, status: res.status, snippet: String(text).slice(0,200) });
+      if (attempt < attempts) await sleep(baseDelay * attempt);
+      continue;
+    }
+    throw new Error(`mailerlite upsert ${res.status}: ${text.slice(0,400)}`);
   }
-  const detail = await res.text().catch(() => '');
-  throw new Error(`mailerlite upsert ${res.status}: ${detail.slice(0, 400)}`);
+  throw new Error('mailerlite upsert failed after retries');
 }
 
-/**
- * Fetch group membership after a refund marker is added. MailerLite's
- * subscriber endpoint returns group objects; treating a missing/invalid list
- * as an error is safer than guessing and revoking unrelated entitlements.
- */
 async function currentGroupIds(subscriberId) {
   if (!subscriberId) throw new Error('mailerlite subscriber id missing');
   const res = await ml(`/subscribers/${subscriberId}`, { method: 'GET' });
@@ -150,28 +188,17 @@ async function currentGroupIds(subscriberId) {
   return new Set(body.data.groups.map((group) => String(group?.id ?? group)).filter(Boolean));
 }
 
-/**
- * Remove from group with a small retry on transient failures. 404 is OK (not a
- * failure); non-2xx/404 responses will be retried up to attempts.
- */
 async function removeFromGroup(subscriberId, groupIdValue, { attempts = 3, baseDelay = 250 } = {}) {
   if (!subscriberId || !groupIdValue) return;
   const path = `/subscribers/${subscriberId}/groups/${groupIdValue}`;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const res = await ml(path, { method: 'DELETE' });
-    if (res.ok || res.status === 404) {
-      // success or already removed
-      return;
-    }
+    if (res.ok || res.status === 404) return;
     const detail = await res.text().catch(() => '');
-    console.warn(`[payhip] mailerlite group removal attempt ${attempt} failed for subscriber=${subscriberId} group=${groupIdValue} status=${res.status} detail=${String(detail).slice(0,200)}`);
-    if (attempt < attempts) {
-      await sleep(baseDelay * attempt);
-      continue;
-    }
-    // After retries, throw so caller can return 500 -> Payhip will retry
-    throw new Error(`mailerlite group removal ${res.status}: ${detail.slice(0, 400)}`);
+    console.warn('[payhip] mailerlite group removal attempt failed', { attempt, subscriberId, groupIdValue, status: res.status, snippet: String(detail).slice(0,200) });
+    if (attempt < attempts) await sleep(baseDelay * attempt);
+    else throw new Error(`mailerlite group removal ${res.status}: ${detail.slice(0,400)}`);
   }
 }
 
@@ -179,46 +206,42 @@ function readBody(req) {
   const raw = req.body;
   if (raw && typeof raw === 'object' && !Buffer.isBuffer(raw)) return { body: raw, malformed: false };
   const text = Buffer.isBuffer(raw) ? raw.toString('utf8') : String(raw ?? '');
-  try {
-    const body = JSON.parse(text);
-    return { body: body && typeof body === 'object' ? body : {}, malformed: false };
-  } catch {
-    return { body: {}, malformed: true };
-  }
+  try { const body = JSON.parse(text); return { body: body && typeof body === 'object' ? body : {}, malformed: false }; } catch { return { body: {}, malformed: true }; }
 }
 
 export default async function handler(req, res) {
   res.setHeader('cache-control', 'no-store');
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ ok: false, error: 'method_not_allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'method_not_allowed' });
 
   const mlKey = process.env.MAILERLITE_API_KEY;
   const payhipKey = process.env.PAYHIP_API_KEY;
-  const requiredToken = process.env.PAYHIP_WEBHOOK_TOKEN;
-  if (!mlKey || !payhipKey || !requiredToken) {
-    // 500 (not 200) on purpose: Payhip retries hourly for 3h, so a misconfigured
-    // deploy still delivers the sale once you set the variables.
+  const requiredTokenEnv = process.env.PAYHIP_WEBHOOK_TOKEN || process.env.PAYHIP_WEBHOOK_TOKENS;
+  if (!mlKey || !payhipKey || !requiredTokenEnv) {
     console.error('[payhip] missing required integration configuration');
     return res.status(500).json({ ok: false, error: 'not_configured' });
   }
 
-  // Second factor — see the security note at the top of this file.
+  // Support single token or JSON array of tokens for rotation
+  const tokens = (() => {
+    if (!process.env.PAYHIP_WEBHOOK_TOKENS) return [process.env.PAYHIP_WEBHOOK_TOKEN];
+    try { const parsed = JSON.parse(process.env.PAYHIP_WEBHOOK_TOKENS); return Array.isArray(parsed) ? parsed.map(String) : [String(process.env.PAYHIP_WEBHOOK_TOKENS)]; } catch { return [process.env.PAYHIP_WEBHOOK_TOKENS]; }
+  })();
+
   const supplied = (req.query?.t ?? '') || req.headers['x-webhook-token'] || '';
-  if (!safeEqual(supplied, requiredToken)) {
+  const okToken = tokens.some((t) => safeEqual(supplied, t));
+  if (!okToken) {
     console.warn('[payhip] rejected: bad or missing URL token');
     return res.status(401).json({ ok: false, error: 'unauthorized' });
   }
 
   const parsed = readBody(req);
-  if (parsed.malformed) {
-    return res.status(400).json({ ok: false, error: 'malformed_json' });
-  }
+  if (parsed.malformed) return res.status(400).json({ ok: false, error: 'malformed_json' });
   const body = parsed.body;
+
   const expected = createHash('sha256').update(payhipKey, 'utf8').digest('hex');
   if (!safeEqual(body?.signature, expected)) {
-    console.warn('[payhip] rejected: signature mismatch', { id: body?.id, signature: String(body?.signature).slice(0, 40) });
+    console.warn('[payhip] rejected: signature mismatch', { id: body?.id, signature_snippet: String(body?.signature).slice(0,40) });
     return res.status(401).json({ ok: false, error: 'bad_signature' });
   }
 
@@ -239,19 +262,13 @@ export default async function handler(req, res) {
       }
 
       const { tiers, unmatched } = tiersFromItems(body?.items);
-      if (unmatched.length) {
-        console.error('[payhip] UNMAPPED PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', { txId, unmatched: unmatched.slice(0,10) });
-      }
-      if (!tiers.length) {
-        // A mapping deployment within Payhip's retry window can still recover
-        // the sale; do not acknowledge and silently lose segmentation.
-        return res.status(500).json({ ok: false, error: 'unmapped_product' });
-      }
+      if (unmatched.length) console.error('[payhip] UNMAPPED PRODUCT KEYS', { txId, unmatched: unmatched.slice(0,10) });
+      if (!tiers.length) return res.status(500).json({ ok: false, error: 'unmapped_product' });
 
       const groups = [groupFor('all_customers'), ...tiers.map(groupFor)].filter(Boolean);
-      const subscriberId = await upsert(email, groups, { status: 'active' });
+      const subscriberId = await upsertWithRetries(email, groups, { status: 'active' });
 
-      // A purchase stops lead sales messages and clears any prior refund flag.
+      // Best-effort: removals on purchase are non-fatal.
       await Promise.all([
         removeFromGroup(subscriberId, groupFor('refunded')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(refunded) failed', { subscriberId, err: e?.message })),
         removeFromGroup(subscriberId, groupFor('leads')).catch((e) => console.warn('[payhip] non-fatal removeFromGroup(leads) failed', { subscriberId, err: e?.message })),
@@ -272,29 +289,18 @@ export default async function handler(req, res) {
       }
 
       const { tiers, unmatched } = tiersFromItems(body?.items);
-      if (unmatched.length) {
-        console.error('[payhip] UNMAPPED REFUND PRODUCT KEYS — check PAYHIP_PRODUCT_MAP:', { txId, unmatched: unmatched.slice(0,10) });
-      }
-      if (!tiers.length) {
-        return res.status(500).json({ ok: false, error: 'unmapped_product' });
-      }
+      if (unmatched.length) console.error('[payhip] UNMAPPED REFUND PRODUCT KEYS', { txId, unmatched: unmatched.slice(0,10) });
+      if (!tiers.length) return res.status(500).json({ ok: false, error: 'unmapped_product' });
 
-      const subscriberId = await upsert(email, [groupFor('refunded')]);
+      const subscriberId = await upsertWithRetries(email, [groupFor('refunded')]);
       const memberships = await currentGroupIds(subscriberId);
       const refundedGroups = tiers.map(groupFor).filter(Boolean);
       const buyerGroups = ['essentials', 'ultimate', 'family_bundle'].map(groupFor).filter(Boolean);
-      const remainingBuyerGroups = buyerGroups.filter((groupId) =>
-        memberships.has(String(groupId)) && !refundedGroups.includes(groupId)
-      );
+      const remainingBuyerGroups = buyerGroups.filter((groupId) => memberships.has(String(groupId)) && !refundedGroups.includes(groupId));
 
-      const removals = [
-        ...refundedGroups,
-        groupFor('review_requested'),
-        groupFor('leads'),
-      ];
+      const removals = [...refundedGroups, groupFor('review_requested'), groupFor('leads')].filter(Boolean);
 
-      // Attempt removals; on any non-retryable failure bubble up so Payhip will retry.
-      for (const groupId of removals.filter(Boolean)) {
+      for (const groupId of removals) {
         try {
           await removeFromGroup(subscriberId, groupId, { attempts: 3 });
         } catch (e) {
@@ -303,15 +309,9 @@ export default async function handler(req, res) {
         }
       }
 
-      const remainingTiers = ['essentials', 'ultimate', 'family_bundle']
-        .filter((tier) => remainingBuyerGroups.includes(groupFor(tier)));
+      const remainingTiers = ['essentials', 'ultimate', 'family_bundle'].filter((tier) => remainingBuyerGroups.includes(groupFor(tier)));
       console.log('[payhip] refunded -> item-scoped cleanup', tiers.join(','), txId);
-      return res.status(200).json({
-        ok: true,
-        action: 'refund_flagged',
-        refunded_tiers: tiers,
-        remaining_tiers: remainingTiers,
-      });
+      return res.status(200).json({ ok: true, action: 'refund_flagged', refunded_tiers: tiers, remaining_tiers: remainingTiers });
     }
 
     return res.status(200).json({ ok: true, action: 'ignored_event_type', type });
