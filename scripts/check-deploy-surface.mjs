@@ -34,8 +34,12 @@ const RUNTIME = new Set([
 /** Root files the browser loads directly. */
 const RUNTIME_EXTENSIONS = new Set(['.html', '.css', '.js']);
 
-/** Dotfiles Vercel does not serve, and which carry nothing sensitive anyway. */
-const NOT_SERVED = new Set(['.gitignore']);
+/**
+ * Vercel does not serve dotfiles — verified against production, where
+ * /.env.example returns 404 while /SECURITY.md returned 200. The one exception
+ * is /.well-known, which is served on purpose for domain verification.
+ */
+const servedByVercel = (entry) => !entry.startsWith('.') || entry === '.well-known';
 
 const problems = [];
 
@@ -57,13 +61,19 @@ const ignored = new Set(
     .map((line) => line.replace(/\/$/, ''))
 );
 
-const tracked = execFileSync('git', ['ls-tree', '--name-only', 'HEAD'], { encoding: 'utf8' })
-  .split('\n')
-  .map((entry) => entry.trim().replace(/\/$/, ''))
-  .filter(Boolean);
+// Read the index, not HEAD. Reading HEAD checks the previous commit and is
+// blind to the change being made right now — which is how this check first
+// shipped flagging nothing locally and failing in CI on its own new file.
+const tracked = [...new Set(
+  execFileSync('git', ['ls-files'], { encoding: 'utf8' })
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.split('/')[0])
+)];
 
 for (const entry of tracked) {
-  if (RUNTIME.has(entry) || NOT_SERVED.has(entry)) continue;
+  if (RUNTIME.has(entry) || !servedByVercel(entry)) continue;
   const extension = entry.includes('.') ? entry.slice(entry.lastIndexOf('.')) : '';
   if (!entry.includes('/') && RUNTIME_EXTENSIONS.has(extension) && !entry.startsWith('.')) continue;
   if (ignored.has(entry)) continue;
