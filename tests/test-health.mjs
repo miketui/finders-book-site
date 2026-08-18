@@ -49,7 +49,8 @@ res = mockRes();
 health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
 check('short Gap Check secret reports false even when present',
   res.statusCode === 200 && res.payload?.secrets_present?.GAP_CHECK_TOKEN_SECRET === false);
-process.env.GAP_CHECK_TOKEN_SECRET = savedGapSecret;
+if (savedGapSecret === undefined) delete process.env.GAP_CHECK_TOKEN_SECRET;
+else process.env.GAP_CHECK_TOKEN_SECRET = savedGapSecret;
 
 const savedMap = process.env.PAYHIP_PRODUCT_MAP;
 process.env.PAYHIP_PRODUCT_MAP = JSON.stringify({ Y1O7B: 'not-a-tier' });
