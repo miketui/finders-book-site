@@ -113,33 +113,35 @@ weeks and confirm alignment actually passes **before** tightening to
 
 ## 3. GA4 — two settings and one secret
 
-The webhook now reports revenue server-side, but it stays silent until you
-create the credential.
+**All complete as of 2026-08-18 — do not redo.** `/api/health` reports
+`ga4_purchase_reporting: true`, and the referral exclusions and internal-traffic
+filter were confirmed in the GA4 UI by the owner.
 
-**Do this:**
+~~1. Create the Measurement Protocol API secret and put it in Vercel as
+`GA4_API_SECRET`, with the stream's `G-…` id as `GA4_MEASUREMENT_ID`.~~ Done.
+~~2. List unwanted referrals: `familyfindersbook.com` and `payhip.com`.~~ Done.
+~~3. Data filters → internal traffic filter, set to Active.~~ Done.
 
-1. GA4 → Admin → Data streams → the web stream → **Measurement Protocol API
-   secrets** → Create. Put the value in Vercel as `GA4_API_SECRET`, and the
-   stream's `G-…` id as `GA4_MEASUREMENT_ID`. Redeploy.
-2. Same screen → **List unwanted referrals**: add `familyfindersbook.com` and
-   `payhip.com`. Without this, Payhip's checkout hand-off restarts the session
-   and every sale is credited to the wrong source.
-3. Admin → Data settings → **Data filters** → internal traffic filter for your
-   own IP, then set it to Active. The 15 test visits from 31 July are otherwise
-   mixed into real data forever.
-4. Verify with one controlled order — see `docs/PRODUCTION-VERIFICATION.md` §3.
+**Still outstanding:** step 4 — verify with one controlled order. See
+`docs/PRODUCTION-VERIFICATION.md` §3. This is the audit's last open P0.
 
-These are account settings; the GA4 API available here is read-only reporting
-and cannot change them.
+Why the settings above could not be machine-verified here, for the next person
+who wonders: the GA4 connection available in this environment is the read-only
+Data API, and Composio's GA4 connector returned 403 on `dataStreams.list` and an
+empty property list on the Admin API, so neither could read account settings.
 
 ## 4. Contact alerting
 
-Set `CONTACT_NOTIFY_WEBHOOK_URL` in Vercel to any https endpoint that accepts
-JSON — a Slack incoming webhook, a Zapier/Make catch hook, or an inbox relay.
-Until it is set, answering `/contact.html` depends on remembering to open
-MailerLite, while the page promises "a person reads these".
+**Complete as of 2026-08-18 — do not redo.** `/api/health` reports
+`contact_owner_alert: true`, so `CONTACT_NOTIFY_WEBHOOK_URL` is set in Vercel
+and inbound contact messages are being pushed to it.
 
-Then assign, in writing: who answers, and within how long.
+~~Set `CONTACT_NOTIFY_WEBHOOK_URL` in Vercel to any https endpoint that accepts
+JSON.~~ Done.
+
+**Still worth doing, and not a config change:** assign in writing who answers
+`/contact.html` messages and within how long. The page promises "a person reads
+these"; an unowned promise is the failure mode here, not the plumbing.
 
 ## 5. Author credentials (blocks the E-E-A-T work)
 
