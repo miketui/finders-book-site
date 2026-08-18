@@ -12,7 +12,7 @@ from the assumption in an older document.
 | §2 DKIM | ✅ **done** | `litesrv._domainkey.familyfindersbook.com` is a CNAME to `litesrv._domainkey.mlsend.com` and resolves to a valid key; mail-tester reports a valid DKIM signature |
 | §3 GA4 Measurement Protocol secret in Vercel | ✅ **done** | `/api/health` reports `ga4_purchase_reporting: true` |
 | §4 Contact alerting | ✅ **done** | `/api/health` reports `contact_owner_alert: true` |
-| GA4 referral exclusions + internal-traffic filter | ⚠️ **reported done, unverified** | GA4 Admin settings are not readable from the tooling used here |
+| GA4 referral exclusions + internal-traffic filter | ✅ **done** | Confirmed by the owner in the GA4 UI on 2026-08-18. Not machine-verifiable here: the GA4 Data API connection is reporting-only, and Composio's GA4 connector returned 403 / an empty property list on Admin API reads |
 | §5 Author credentials | ✅ **done** | Shipped on `/about.html` with `Person` structured data, PR #26 |
 | §6 Essentials edition question | ✅ **resolved** | Essentials ships the two 49-page PDFs plus START_HERE/licence; Ultimate adds the bonus tools. Genuinely reduced — the $29 card stays |
 | DMARC tightening to `p=quarantine` | ⏳ **not yet, deliberately** | See the note under §2 |
@@ -87,16 +87,20 @@ dashboard: <https://dashboard.mailerlite.com/automations>
 and that mail sends from a gmail.com address. SPF and DMARC exist, and the
 automations send from `info@familyfindersbook.com`.
 
-**Do this:**
+**Already done — do not redo these.** MailerLite domain authentication is in
+place, the DKIM record is published at selector `litesrv`, and mail-tester
+reports valid SPF and a valid DKIM signature (2026-08-18). Re-running the
+authentication flow risks changing a working configuration.
 
-1. MailerLite → Settings → Domains → authenticate `familyfindersbook.com`, and
-   publish the DKIM record it gives you. Without DKIM, DMARC alignment relies on
-   SPF alone and forwarded mail fails.
-2. Once DKIM is live and `rua` reports look clean for a week or two, tighten
-   DMARC from `p=none` to `p=quarantine`.
-3. Confirm with <https://www.mail-tester.com> — target 9/10 or better.
+~~1. MailerLite → Settings → Domains → authenticate the domain and publish the
+DKIM record.~~ Superseded — done.
+~~3. Confirm with mail-tester.~~ Superseded — done, passing.
 
-**Done 2026-08-18.** mail-tester reports valid SPF and a valid DKIM signature.
+**The one step that remains:**
+
+Tighten DMARC from `p=none` to `p=quarantine` — but **only after** confirming
+alignment in the `rua` reports. See the caveat below; doing this early can
+quarantine legitimate mail.
 
 One caveat before step 2 above (`p=quarantine`): the signature mail-tester
 displayed was `d=mailerlite.com` with selector `litesrv`, and its `h=` list
@@ -169,14 +173,31 @@ to be replaced later — it is the only path there is.
 
 ---
 
-## Order of operations
+## What is actually left
 
-1. §1 MailerLite decision and rename — before any traffic.
-2. §2 DKIM — before any traffic. Unauthenticated bulk mail is the one mistake
-   here that takes months to undo.
-3. §3 GA4 secret and the two settings — before spending anything on traffic,
-   or you will be buying visits you cannot attribute.
-4. §4 contact alerting — before promotion.
-5. §5 credentials — before pitching podcasts or guest posts, whose first
-   question is who you are.
-6. §6 Essentials decision — before promoting the $29 tier.
+Everything in the original list below was completed on 2026-08-18 except the
+DMARC step. See the status table at the top of this file.
+
+1. **Read the DMARC `rua` reports** arriving at info@familyfindersbook.com for a
+   week or two, and confirm an *aligned* signature is passing. Only then tighten
+   DMARC from `p=none` to `p=quarantine`.
+2. **Run one controlled order** end to end and confirm exactly one deduplicated
+   GA4 `purchase` with the correct value, currency and item — the last open P0
+   from the audit. Steps are in `PRODUCTION-VERIFICATION.md` §3.
+
+### Historical order (all complete except DMARC)
+
+The sequence these were originally done in, kept because it records why each
+came before the next:
+
+1. ~~§1 MailerLite decision and rename~~ — before any traffic. **Done.**
+2. ~~§2 DKIM~~ — before any traffic. Unauthenticated bulk mail is the one
+   mistake here that takes months to undo. **Done** (DMARC tightening still
+   pending, deliberately).
+3. ~~§3 GA4 secret and the two settings~~ — before spending anything on
+   traffic, or you will be buying visits you cannot attribute. **Done.**
+4. ~~§4 contact alerting~~ — before promotion. **Done.**
+5. ~~§5 credentials~~ — before pitching podcasts or guest posts, whose first
+   question is who you are. **Done.**
+6. ~~§6 Essentials decision~~ — before promoting the $29 tier. **Done** —
+   genuinely a reduced edition, card stays.
