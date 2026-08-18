@@ -12,7 +12,7 @@ const files = [
   ['assets/bonus-4-trusted-person-handoff-scripts.webp', '15f238c9a36bc068fbf12c9705f52db099680294fb6c0ad3627f6ae2e0fae31f'],
   ['assets/bonus-5-digital-legacy-link-and-qr-guide.webp', 'ded60f8422f87d937969d7b3485e9ea2040287fb7a7abf710fb693b7ad5d4109'],
   ['assets/continuity-snapshot.webp', '00d6a0e639654a70eb91ed8f8ad2ef512d3949ae4bb9cef45df2d18368c8cc31'],
-  ['assets/cover.jpg', '0dc51a39ec84a7d8b2070a565201237c0b3d7a15edaba92e5e2f6f3a16681a23'],
+  ['assets/cover.jpg', 'edfd4db9c457c5109948faf6c58d833df79a020a3f29f4d928a5c80ce69ccf7d'],
   ['assets/credit-cards.webp', '7a7dff0fe159fc74ce0dfb169479cb035686f59288eb8de895defccd54b7c632'],
   ['assets/documents-locator.webp', '23dbc3007745fcc1ee3adf2138f53416dfbbf8cd4a04227454479e6a8770c668'],
   ['assets/email-accounts.webp', '60bbf108a6afc55df5fe2612942d7e5ae0360026b22d26c51062bf6751f606fb'],
