@@ -51,6 +51,15 @@ check('short Gap Check secret reports false even when present',
   res.statusCode === 200 && res.payload?.secrets_present?.GAP_CHECK_TOKEN_SECRET === false);
 process.env.GAP_CHECK_TOKEN_SECRET = savedGapSecret;
 
+const savedMap = process.env.PAYHIP_PRODUCT_MAP;
+process.env.PAYHIP_PRODUCT_MAP = JSON.stringify({ Y1O7B: 'not-a-tier' });
+res = mockRes();
+health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
+check('malformed product map makes health fail clearly without exposing map contents',
+  res.statusCode === 503 && res.payload?.ok === false && res.payload?.behaviour?.product_map_valid === false);
+if (savedMap === undefined) delete process.env.PAYHIP_PRODUCT_MAP;
+else process.env.PAYHIP_PRODUCT_MAP = savedMap;
+
 const savedSingle = process.env.PAYHIP_WEBHOOK_TOKEN;
 delete process.env.PAYHIP_WEBHOOK_TOKEN;
 process.env.PAYHIP_WEBHOOK_TOKENS = JSON.stringify(['old-rotation-token', 'new-rotation-token']);
