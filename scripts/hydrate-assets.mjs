@@ -27,7 +27,28 @@ const files = [
   ['assets/og-finders-book.jpg', '2ee45c2234cb72cd01bc31da3a8b2c8266db58e77da275b715f63de5f078fc4e'],
   ['assets/security-doctrine.webp', 'dcf0c94a6781f78737f919ceb0c67d90cdb3fa8005c3479ad31128396f88fe75'],
   ['assets/trusted-people.webp', '755ae75071208180861982019d3b0278a20a8cf1295a8bd778959014631a2d30'],
-  ['assets/will-locator.webp', '1db3daed1775798848f4496319570086b043e0a61d6d69a119eba0ae42f53cc3']
+  ['assets/will-locator.webp', '1db3daed1775798848f4496319570086b043e0a61d6d69a119eba0ae42f53cc3'],
+  ['assets/bonus-1-emergency-fridge-card-400.webp', 'b99eabf970b997d584d2fcd3ed0c0cbf736a4308de8893da48bfb95f136f4bf0'],
+  ['assets/bonus-2-15-minute-secure-vault-setup-guide-400.webp', '29d29268dc4093a528d99d331b81be6e71af65d76f94ad70df26ab12ec8900d1'],
+  ['assets/bonus-3-continuity-check-in-plan-400.webp', '2046c1e91ebd1179f76609a3c594551c5115c338424e53d0002ddb7454e9d745'],
+  ['assets/bonus-4-trusted-person-handoff-scripts-400.webp', '11dc2efae9f8a6a97ecc85869e181527bfca08e20beaa8cd8da8ddf3ee338f72'],
+  ['assets/bonus-5-digital-legacy-link-and-qr-guide-400.webp', 'ed286313b506dfd1d7fec01e6cd9de65d2dd40b40d931f9d57055ecc378a203d'],
+  ['assets/continuity-snapshot-400.webp', '13a62cf0daba1e569a492d5730683f26da6b9a69c51fbafe4a0a03496a051217'],
+  ['assets/cover-400.jpg', '9855970cfbfa77398619f2ce2ab2bc62190feb4ecf84918957f8f39b7ed69e25'],
+  ['assets/credit-cards-400.webp', 'd2df6d6c6ba5c438a825842f52e8914e6f5e25da0c49221d8f3f827200cfba68'],
+  ['assets/documents-locator-400.webp', 'ffc1e5c81196d0e63a96d35c5cd0d1ee38e88412cd13684301457bbedf658a73'],
+  ['assets/email-accounts-400.webp', '2de88da7616ec781ba66dec72257a969e9b5a94d16d25800a48a2aecadec6bad'],
+  ['assets/essentials-storefront-400.jpg', 'e46e93d09da15e93c5542ad02940be217c5c3cf8d1fabed03b59801eee8c8ad3'],
+  ['assets/family-storefront-400.jpg', '836f4d31c5b1bb8451b21235e0e76091c14fd46071ab846c84a5c4f8c9d515c8'],
+  ['assets/how-to-use-400.webp', 'f56f32bf9d7faa0c162192723450d871f65c85a4ee85bd4b1db03ecbf316990d'],
+  ['assets/important-people-400.webp', 'ab3256f113c578ef8fc464a7e277b300152d7d0f57f1a6296aee441877b51886'],
+  ['assets/letter-to-finder-400.webp', 'd13d52cf6ab8acf341b2b4e94422e8ceb9d28187eecf8a8bc315ea01787c7d74'],
+  ['assets/letter-to-loved-one-400.webp', '93f0063d4dbb3f4094703548dc11986f7853b37da8f50d222653500a00a5392a'],
+  ['assets/levels-of-access-400.webp', '44f34e36a4adabae9cb7c39381507583cd81ff61eb179744568f9ebb363eddac'],
+  ['assets/security-doctrine-400.webp', '0e40dc3efd171602772fccf0c87189956c2edb8f49baa2039c4ed7d228cd68c5'],
+  ['assets/trusted-people-400.webp', '68a207a529345044cbcd6e24e6a3986563ff03a9ff235ed212175f7b78d0ab68'],
+  ['assets/ultimate-storefront-400.jpg', '700dc1a410d24bb1d01f86c31019f84e08449d7dd40cfe63984873c1a6d59a48'],
+  ['assets/will-locator-400.webp', 'da71e1f1a43f19ab0941058199125173dfbf6c97dd6c003cdcfec9d5dc8b6f9a']
 ];
 
 function sha256(buffer) {
