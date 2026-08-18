@@ -40,6 +40,8 @@ const PAGES = [
   { path: '/how-it-works.html', must: ['h1', '.lede', '.eyebrow', '.doc-list'] },
   { path: '/family-emergency-planning.html', must: ['h1', '.lede', '.eyebrow', '.ticks'] },
   { path: '/important-documents.html', must: ['h1', '.lede', '.eyebrow', '.ticks'] },
+  { path: '/in-case-of-death-binder.html', must: ['h1', '.lede', '.eyebrow', '.ticks', '.doc-list'] },
+  { path: '/letter-of-instruction.html', must: ['h1', '.lede', '.eyebrow', '.ticks'] },
   {
     path: '/missing/nested-route',
     must: ['h1', '.lede', '.eyebrow'],
