@@ -23,6 +23,7 @@ SECURITY.md
 scripts/
 tests/
 apply-chrome.py
+protect_and_cleanup.sh
 .github/
 
 # Local config references (dotfiles are not served, listed for intent)
