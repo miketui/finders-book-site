@@ -31,10 +31,12 @@ finders-book-site/
     │   ├── bonus-4-trusted-person-handoff-scripts.webp
     │   ├── bonus-5-digital-legacy-link-and-qr-guide.webp
     │   ├── continuity-snapshot.webp
-    │   ├── cover.webp
+    │   ├── cover.jpg
     │   ├── credit-cards.webp
     │   ├── documents-locator.webp
     │   ├── email-accounts.webp
+    │   ├── essentials-storefront.jpg
+    │   ├── family-storefront.jpg
     │   ├── favicon.svg
     │   ├── how-to-use.webp
     │   ├── important-people.webp
@@ -44,6 +46,7 @@ finders-book-site/
     │   ├── og-finders-book.jpg
     │   ├── security-doctrine.webp
     │   ├── trusted-people.webp
+    │   ├── ultimate-storefront.jpg
     │   └── will-locator.webp
     ├── docs/
     │   ├── DEPLOYMENT.md
@@ -98,7 +101,9 @@ finders-book-site/
     ├── Family-Readiness-Gap-Check.pdf
     ├── how-it-works.html
     ├── important-documents.html
+    ├── in-case-of-death-binder.html
     ├── index.html
+    ├── letter-of-instruction.html
     ├── motion.js
     ├── order.html
     ├── package-lock.json
