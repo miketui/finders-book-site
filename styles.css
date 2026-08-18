@@ -272,6 +272,7 @@ p{margin:0 0 1rem}
 .doc-list li:last-child{border-bottom:0}
 .doc-yes li::before{content:"";position:absolute;left:0;top:1.02rem;width:9px;height:9px;border-radius:50%;background:var(--gold-hi)}
 .doc-no li{color:var(--doc-no-ink)}
+.band-pine .doc-no li,.band-deep .doc-no li{color:var(--mute-pine)}
 .doc-no li::before{content:"";position:absolute;left:0;top:1.28rem;width:11px;height:1.5px;background:var(--mute-pine);opacity:.75}
 .doc-no li span{text-decoration:line-through;text-decoration-color:rgba(169,189,178,.55);text-decoration-thickness:1px}
 
