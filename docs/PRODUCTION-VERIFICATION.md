@@ -105,7 +105,7 @@ checking by hand unless you are testing a real device.
 | # | Step | Expected |
 |---|---|---|
 | 8.1 | Rich Results Test on `/` and `/order.html` | Product and FAQ parse with no errors |
-| 8.2 | Search Console → sitemap | Seven canonical URLs, no unexpected exclusions |
+| 8.2 | Search Console → sitemap | Twelve canonical URLs, no unexpected exclusions |
 | 8.3 | `curl -I https://www.familyfindersbook.com/index.html` | 308 to `/` |
 | 8.4 | PageSpeed Insights, mobile and desktop, `/` and `/order.html` | LCP ≤ 2.5s, INP < 200ms, CLS < 0.1 |
 
