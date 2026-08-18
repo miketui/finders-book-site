@@ -94,7 +94,10 @@ finders-book-site/
     ├── consent.js
     ├── contact.html
     ├── contact.js
+    ├── family-emergency-planning.html
     ├── Family-Readiness-Gap-Check.pdf
+    ├── how-it-works.html
+    ├── important-documents.html
     ├── index.html
     ├── motion.js
     ├── order.html
@@ -102,6 +105,7 @@ finders-book-site/
     ├── package.json
     ├── pages.css
     ├── privacy-policy.html
+    ├── protect_and_cleanup.sh
     ├── README.md
     ├── refund-policy.html
     ├── robots.txt
