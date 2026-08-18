@@ -4,10 +4,9 @@
  * Replaces the unwired client-side MailerLite JSONP stub that shipped in
  * contact.js. Two reasons it had to move server-side:
  *
- *   1. The site CSP allows connect-src 'self' and connect.mailerlite.com. It
- *      does NOT allow assets.mailerlite.com, which is where the JSONP form
- *      endpoint lives. The stub could never have worked from the browser even
- *      with the IDs filled in — the request dies at the CSP before it is sent.
+ *   1. Browser form submissions are intentionally limited to same-origin API
+ *      routes. MailerLite is called only from this server-side function, so no
+ *      MailerLite browser origin needs to be allowed by the site CSP.
  *   2. The JSONP endpoint is public by design. Anyone reading source could
  *      pump the list. Keeping the key server-side puts the honeypot and the
  *      rate limit where devtools cannot reach them, exactly as the Gap Check

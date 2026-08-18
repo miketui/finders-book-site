@@ -25,28 +25,49 @@ finders-book-site/
     │   │   ├── lenis.min.js
     │   │   ├── ScrollTrigger.min.js
     │   │   └── SplitText.min.js
+    │   ├── bonus-1-emergency-fridge-card-400.webp
     │   ├── bonus-1-emergency-fridge-card.webp
+    │   ├── bonus-2-15-minute-secure-vault-setup-guide-400.webp
     │   ├── bonus-2-15-minute-secure-vault-setup-guide.webp
+    │   ├── bonus-3-continuity-check-in-plan-400.webp
     │   ├── bonus-3-continuity-check-in-plan.webp
+    │   ├── bonus-4-trusted-person-handoff-scripts-400.webp
     │   ├── bonus-4-trusted-person-handoff-scripts.webp
+    │   ├── bonus-5-digital-legacy-link-and-qr-guide-400.webp
     │   ├── bonus-5-digital-legacy-link-and-qr-guide.webp
+    │   ├── continuity-snapshot-400.webp
     │   ├── continuity-snapshot.webp
+    │   ├── cover-400.jpg
     │   ├── cover.jpg
+    │   ├── credit-cards-400.webp
     │   ├── credit-cards.webp
+    │   ├── documents-locator-400.webp
     │   ├── documents-locator.webp
+    │   ├── email-accounts-400.webp
     │   ├── email-accounts.webp
+    │   ├── essentials-storefront-400.jpg
     │   ├── essentials-storefront.jpg
+    │   ├── family-storefront-400.jpg
     │   ├── family-storefront.jpg
     │   ├── favicon.svg
+    │   ├── how-to-use-400.webp
     │   ├── how-to-use.webp
+    │   ├── important-people-400.webp
     │   ├── important-people.webp
+    │   ├── letter-to-finder-400.webp
     │   ├── letter-to-finder.webp
+    │   ├── letter-to-loved-one-400.webp
     │   ├── letter-to-loved-one.webp
+    │   ├── levels-of-access-400.webp
     │   ├── levels-of-access.webp
     │   ├── og-finders-book.jpg
+    │   ├── security-doctrine-400.webp
     │   ├── security-doctrine.webp
+    │   ├── trusted-people-400.webp
     │   ├── trusted-people.webp
+    │   ├── ultimate-storefront-400.jpg
     │   ├── ultimate-storefront.jpg
+    │   ├── will-locator-400.webp
     │   └── will-locator.webp
     ├── docs/
     │   ├── DEPLOYMENT.md
