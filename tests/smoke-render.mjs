@@ -25,6 +25,7 @@ import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import AxeBuilder from '@axe-core/playwright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.SMOKE_PORT || 8123);
@@ -42,6 +43,8 @@ const PAGES = [
   { path: '/important-documents.html', must: ['h1', '.lede', '.eyebrow', '.ticks'] },
   { path: '/in-case-of-death-binder.html', must: ['h1', '.lede', '.eyebrow', '.ticks', '.doc-list'] },
   { path: '/letter-of-instruction.html', must: ['h1', '.lede', '.eyebrow', '.ticks'] },
+  { path: '/privacy-policy.html', must: ['h1', '.lede', '.eyebrow'] },
+  { path: '/refund-policy.html', must: ['h1', '.lede', '.eyebrow'] },
   {
     path: '/missing/nested-route',
     must: ['h1', '.lede', '.eyebrow'],
@@ -206,7 +209,24 @@ for (const { path, must, mobileMust = [] } of PAGES) {
       console.log(`    note  ${e} missing (allowlisted, progressive enhancement)`));
   }
 
-  // --- 4. layout stability ---
+  // --- 4. WCAG A/AA accessibility ---
+  const axeResults = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  const axeViolations = axeResults.violations.filter((violation) =>
+    ['serious', 'critical'].includes(violation.impact) || violation.id === 'color-contrast'
+  );
+  if (axeViolations.length) {
+    for (const violation of axeViolations) {
+      const targets = violation.nodes.slice(0, 3).flatMap((node) => node.target).join(' | ');
+      console.log(`    FAIL  axe ${violation.id} (${violation.impact || 'unknown'}): ${targets}`);
+    }
+    failures += axeViolations.length;
+  } else {
+    console.log('    ok    axe WCAG A/AA: no serious/critical or color-contrast violations');
+  }
+
+  // --- 5. layout stability ---
   const cls = await page.evaluate(() => window.__cls).catch(() => null);
   if (typeof cls === 'number' && cls > CLS_BUDGET) {
     console.log(`    FAIL  CLS ${cls.toFixed(4)} exceeds budget ${CLS_BUDGET}`);
