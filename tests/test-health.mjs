@@ -43,6 +43,14 @@ check('health does not expose group IDs, fingerprints, signatures, or product-ma
   !serialised.includes('signature_prefix') &&
   !serialised.includes('eHcPG'));
 
+const savedGapSecret = process.env.GAP_CHECK_TOKEN_SECRET;
+process.env.GAP_CHECK_TOKEN_SECRET = 'too-short';
+res = mockRes();
+health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
+check('short Gap Check secret reports false even when present',
+  res.statusCode === 200 && res.payload?.secrets_present?.GAP_CHECK_TOKEN_SECRET === false);
+process.env.GAP_CHECK_TOKEN_SECRET = savedGapSecret;
+
 const savedSingle = process.env.PAYHIP_WEBHOOK_TOKEN;
 delete process.env.PAYHIP_WEBHOOK_TOKEN;
 process.env.PAYHIP_WEBHOOK_TOKENS = JSON.stringify(['old-rotation-token', 'new-rotation-token']);

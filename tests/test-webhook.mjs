@@ -177,7 +177,7 @@ await check('paid / buyer declined marketing email',
 console.log('\n=== Refunds ===\n');
 
 await check('refunded / full 4900 of 4900', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'All Customers', 'Review Requested', 'Finder\'s Book — Leads'] },
   { initialGroups: ['194226612687865798', '194226610412455586'] });
 
 await check('refunded / Ultimate preserves separate Essentials purchase', refund(),
@@ -192,7 +192,7 @@ await check('refunded / unknown product does not revoke entitlements', refund({ 
   { initialGroups: ['194226612687865798', '194226610412455586'] });
 
 await check('refunded / repeated event is idempotent', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'All Customers', 'Review Requested', 'Finder\'s Book — Leads'] },
   { initialGroups: ['194226612687865798', '194226614527067324'] });
 
 await check('refunded / MailerLite removal failure returns retryable 500', refund(),
@@ -200,7 +200,7 @@ await check('refunded / MailerLite removal failure returns retryable 500', refun
   { initialGroups: ['194226612687865798', '194226610412455586'], failRemoval: '194226610412455586' });
 
 await check('refunded / successful redelivery completes cleanup after transient failure', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'All Customers', 'Review Requested', 'Finder\'s Book — Leads'] },
   { initialGroups: ['194226612687865798', '194226610412455586', '194226614527067324'] });
 
 console.log('\n=== Security ===\n');

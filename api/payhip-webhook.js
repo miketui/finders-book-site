@@ -284,7 +284,7 @@ export default async function handler(req, res) {
 
   const expected = createHash('sha256').update(payhipKey, 'utf8').digest('hex');
   if (!safeEqual(body?.signature, expected)) {
-    console.warn('[payhip] rejected: signature mismatch', { id: body?.id, signature_snippet: String(body?.signature).slice(0,40) });
+    console.warn('[payhip] rejected: signature mismatch', { id: body?.id });
     return res.status(401).json({ ok: false, error: 'bad_signature' });
   }
 
@@ -349,7 +349,12 @@ export default async function handler(req, res) {
       const buyerGroups = ['essentials', 'ultimate', 'family_bundle'].map(groupFor).filter(Boolean);
       const remainingBuyerGroups = buyerGroups.filter((groupId) => memberships.has(String(groupId)) && !refundedGroups.includes(groupId));
 
-      const removals = [...refundedGroups, groupFor('review_requested'), groupFor('leads')].filter(Boolean);
+      const removals = [
+        ...refundedGroups,
+        ...(remainingBuyerGroups.length === 0 ? [groupFor('all_customers')] : []),
+        groupFor('review_requested'),
+        groupFor('leads'),
+      ].filter(Boolean);
 
       for (const groupId of removals) {
         try {

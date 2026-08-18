@@ -60,7 +60,7 @@ export default function handler(req, res) {
       MAILERLITE_API_KEY: Boolean(process.env.MAILERLITE_API_KEY),
       PAYHIP_API_KEY: Boolean(process.env.PAYHIP_API_KEY),
       PAYHIP_WEBHOOK_TOKEN: tokens.length > 0,
-      GAP_CHECK_TOKEN_SECRET: Boolean(process.env.GAP_CHECK_TOKEN_SECRET),
+      GAP_CHECK_TOKEN_SECRET: Boolean(process.env.GAP_CHECK_TOKEN_SECRET && process.env.GAP_CHECK_TOKEN_SECRET.length >= 32),
       GA4_MEASUREMENT_ID: Boolean(process.env.GA4_MEASUREMENT_ID),
       GA4_API_SECRET: Boolean(process.env.GA4_API_SECRET),
     },
