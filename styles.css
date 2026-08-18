@@ -438,7 +438,10 @@ p{margin:0 0 1rem}
 /* ---------- footer ---------- */
 .ftr{background:var(--pine-900);color:var(--mute-pine);padding:clamp(3rem,5vw,4.5rem) 0 2.5rem;font-family:var(--sans);font-size:.85rem}
 .ftr a{color:var(--gold-hi)}
-.ftr-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:2.5rem;margin-bottom:3rem}
+.ftr-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:2.5rem;margin-bottom:3rem}
+/* Four columns need more room than three: drop to a 2x2 before stacking, or the
+   guide titles wrap to three lines each on a tablet. */
+@media (max-width:1040px){.ftr-grid{grid-template-columns:1fr 1fr;gap:2.25rem}}
 @media (max-width:760px){.ftr-grid{grid-template-columns:1fr;gap:2rem}}
 .ftr h2{font-family:var(--sans);font-size:.68rem;font-weight:700;line-height:1.2;letter-spacing:.17em;text-transform:uppercase;color:var(--gold-hi);margin-bottom:1rem}
 .ftr ul{list-style:none;margin:0;padding:0}

@@ -26,6 +26,7 @@ import { createHash } from "node:crypto";
  */
 const PAGES = [
   "index.html", "about.html", "order.html", "contact.html",
+  "how-it-works.html", "family-emergency-planning.html", "important-documents.html",
   "privacy-policy.html", "refund-policy.html", "terms.html", "404.html",
 ];
 
