@@ -165,3 +165,46 @@ remembering to open MailerLite.
 
 Assign, in writing: who answers, and within how long. An unowned promise is the
 failure mode here, not the code.
+
+### Support retention review
+
+The support/contact retention promise is operational, not aspirational. During the
+**first week of January, April, July, and October**, the person responsible for
+`info@familyfindersbook.com` must review the three Finder's Book Contact groups in
+MailerLite.
+
+For each resolved request:
+
+1. decide whether the message body is still needed for an active support issue,
+   dispute, legal obligation, or necessary business record;
+2. if it is no longer needed, remove or blank the stored contact-message text and
+   other unnecessary support-only profile fields using MailerLite or its API;
+3. preserve unsubscribe/suppression state and any record that must remain to honor
+   an opt-out or legal obligation rather than re-subscribing someone by accident;
+4. honor a valid deletion request by removing deletable profile/support data unless
+   a documented legal obligation requires retention; and
+5. record the review date in the private operating log so the next quarterly review
+   is observable rather than assumed.
+
+This procedure deliberately avoids promising a fixed deletion day in the public
+policy. The governing rule is data minimization: once a resolved support message no
+longer has an operational or legal reason to exist, its content should not remain in
+the contact profile merely because storage is available.
+
+## Runtime monitoring ownership
+
+For the first four weeks after launch, the repository/account owner should review
+Vercel function logs and production analytics/error signals at least weekly; after
+that, monthly is sufficient while traffic remains low. Any repeated 5xx, failed
+webhook, or customer-visible form failure reopens the relevant launch task.
+
+A Node 24 `DEP0169` warning for legacy `url.parse()` has been observed on Vercel's
+`/api/health` invocation and in GitHub runner setup. The repository itself contains
+no `url.parse()` call. Treat this as an upstream runtime/tooling warning unless a
+future stack trace identifies application-owned code. Do **not** suppress it.
+
+**Sentry decision:** defer adding another error processor at the current launch
+scale. GitHub's protected CI, Vercel runtime logs, owner alerting, and the existing
+analytics stack provide the current operational floor. Revisit Sentry if uncaught
+application exceptions appear, Vercel logs become insufficient to diagnose them,
+or support volume makes manual correlation unreliable.
