@@ -8,13 +8,13 @@ from the assumption in an older document.
 
 | Item | State | Current evidence |
 |---|---|---|
-| MailerLite generic `Buyer Onboarding` | ✅ **retired safely** | It is disabled; tier-specific onboarding is the active model. Do not enable it beside the tier workflows. |
+| MailerLite generic `Buyer Onboarding` | ⛔ **open / UI archive-or-rename required** | It is disabled and has sent 0 messages, so there is no current duplicate-send path. It still targets all three buyer groups, so an accidental re-enable would overlap tier-specific onboarding. Keep it off until it is safely archived/renamed in the UI. |
 | MailerLite plaintext + visible postal footer | ⛔ **open / UI required** | All 18 enabled email steps still expose MailerLite's generic plaintext fallback; public HTML previews contain unsubscribe wiring but no visible postal address. Active automations cannot be edited through the supported API. |
 | MailerLite Contact Acknowledgement | ⛔ **open / UI decision** | Contact submissions are intentionally created `unconfirmed`; do not make them marketable merely to force an acknowledgement. Prefer page confirmation + verified owner alert/human reply, or a truly transactional channel. |
 | DKIM / SPF | ✅ **done** | Existing DNS authentication is working; do not rerun domain authentication. |
 | DMARC tightening | ⏳ **post-launch** | Remains `p=none`; inspect aggregate alignment before any protected DNS change. |
 | GA4 Measurement Protocol config | ✅ **armed** | Vercel has the GA4 configuration keys and health reports the integration path; unit tests prove a 4900-cent Payhip payload maps to value 49 USD. |
-| GA4 `checkout_click` / `lead_submit` key events | ⛔ **open / GA4 UI required** | The current connected reporting API cannot mutate key-event configuration; the high-level Admin wrapper is failing upstream. |
+| GA4 `checkout_click` / `lead_submit` key events | ✅ **verified 2026-08-18** | Current GA4 Admin API evidence for property `548125685` lists `purchase`, `checkout_click`, and `lead_submit` as key events/conversions. No mutation is required. |
 | GA4 paid attribution + live revenue | ⛔ **open** | Historical live purchase revenue was $0.00 and server purchase events use a synthetic transaction client id. Close only with Payhip/GA4 configuration review plus the controlled Ultimate order. |
 | Contact owner alert | ⚠️ **armed, live delivery not yet proven in this pass** | `CONTACT_NOTIFY_WEBHOOK_URL` exists in production without exposing its value; code tests fail open to the visitor if alerting is unavailable. |
 | Essentials package distinction | ⛔ **re-verify in Payhip** | Historical notes say Essentials is reduced, but the canonical launch gate requires inspection of the files currently attached to the live Payhip products before promotion. |
