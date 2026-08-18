@@ -41,10 +41,12 @@ Use the private token stored in Vercel:
 https://www.familyfindersbook.com/api/health?t=YOUR_PRIVATE_TOKEN
 ```
 
-Expected result: `ok: true`, with every required secret reported as present, the
-deployed commit, and behaviour flags including `ga4_purchase_reporting` and
-`contact_owner_alert`. The response reports presence only — never secret values,
-group IDs, product-map contents, signatures, or subscriber data.
+Expected result: `ok: true`, with every required secret reported as effectively
+configured, the deployed commit, `behaviour.product_map_valid: true`, and
+behaviour flags including `ga4_purchase_reporting` and `contact_owner_alert`.
+`GAP_CHECK_TOKEN_SECRET` is healthy only at 32+ characters. The response reports
+presence/health only — never secret values, group IDs, product-map contents,
+signatures, or subscriber data.
 
 ## Payhip webhook
 
@@ -65,7 +67,7 @@ Do not create a second Zapier, Composio, or native Payhip-to-MailerLite path for
 The webhook owns lifecycle membership:
 
 - paid: add `All Customers` plus the matching tier; remove `Finder's Book — Leads` and `Refunded`
-- full refund: add `Refunded`; remove only the refunded product tier(s), `Review Requested`, and Leads; retain `All Customers` as historical customer status and preserve unrelated tiers
+- full refund: add `Refunded`; remove the refunded product tier(s), `Review Requested`, and Leads; remove `All Customers` only when no other paid tier remains; preserve unrelated valid tiers
 - partial refund: no group change unless `REFUND_ON_PARTIAL=true`
 - buyer declined marketing email: do not add marketing groups
 

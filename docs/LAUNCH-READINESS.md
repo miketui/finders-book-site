@@ -1,5 +1,12 @@
 # The Finder's Book launch-readiness report
 
+> **HISTORICAL SNAPSHOT — DO NOT USE AS THE CURRENT LAUNCH VERDICT.**
+> This file records the 2026-08-15 launch-readiness pass and intentionally keeps
+> its historical observations. Current launch decisions must use the latest
+> protected GitHub checks, production/provider verification, and the active
+> canonical AGM C01–C36 execution record. Where this snapshot conflicts with
+> newer evidence, the newer direct evidence wins.
+
 Last updated: 2026-08-15
 
 ## 1. Executive Status
