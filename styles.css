@@ -182,7 +182,7 @@ p{margin:0 0 1rem}
 }
 .snap-top{display:grid;grid-template-columns:1fr auto;gap:1.25rem;align-items:start;margin-bottom:1.55rem}
 .hero-cover{
-  width:76px;height:auto;aspect-ratio:1100/1423;object-fit:cover;
+  width:76px;height:auto;aspect-ratio:800/1202;object-fit:cover;
   border:1px solid var(--hair);border-radius:2px;box-shadow:var(--shadow-sm);
   transform:rotate(1.5deg);
 }
@@ -748,7 +748,7 @@ html.fx .reveal.is-revealed .btn-note{opacity:1;transform:none;transition:opacit
 
 /* the object: one earned rotation, then still */
 .stage{position:relative;display:flex;justify-content:center;perspective:1700px;perspective-origin:50% 44%}
-.book3d{position:relative;width:clamp(190px,21vw,282px);aspect-ratio:1100/1423;transform-style:preserve-3d;transform:rotateY(-18deg)}
+.book3d{position:relative;width:clamp(190px,21vw,282px);aspect-ratio:800/1202;transform-style:preserve-3d;transform:rotateY(-18deg)}
 html.fx .book3d{opacity:0;transform:rotateY(196deg) translateY(42px)}
 html.fx .reveal.is-revealed .book3d{opacity:1;transform:rotateY(-18deg) translateY(0);transition:transform 2.6s .35s var(--ease),opacity .9s .35s var(--ease)}
 .book-face{position:absolute;inset:0;backface-visibility:hidden}
