@@ -1,8 +1,24 @@
 # Owner actions — what code cannot close
 
 Everything in this file needs a human with an account login. Each item records
-what was **verified live on 2026-08-17**, so the next person starts from
-evidence rather than from the assumption in an older document.
+what was **verified live**, so the next person starts from evidence rather than
+from the assumption in an older document.
+
+## Status as of 2026-08-18
+
+| Item | State | Evidence |
+|---|---|---|
+| §1 MailerLite automation naming | ✅ **done** | Both renamed to `Finder's Book — Essentials Onboarding` / `— Ultimate Onboarding`, still enabled; `Buyer Onboarding` still off, so no duplicate sends |
+| §2 DKIM | ✅ **done** | `litesrv._domainkey.familyfindersbook.com` is a CNAME to `litesrv._domainkey.mlsend.com` and resolves to a valid key; mail-tester reports a valid DKIM signature |
+| §3 GA4 Measurement Protocol secret in Vercel | ✅ **done** | `/api/health` reports `ga4_purchase_reporting: true` |
+| §4 Contact alerting | ✅ **done** | `/api/health` reports `contact_owner_alert: true` |
+| GA4 referral exclusions + internal-traffic filter | ⚠️ **reported done, unverified** | GA4 Admin settings are not readable from the tooling used here |
+| §5 Author credentials | ✅ **done** | Shipped on `/about.html` with `Person` structured data, PR #26 |
+| §6 Essentials edition question | ✅ **resolved** | Essentials ships the two 49-page PDFs plus START_HERE/licence; Ultimate adds the bonus tools. Genuinely reduced — the $29 card stays |
+| DMARC tightening to `p=quarantine` | ⏳ **not yet, deliberately** | See the note under §2 |
+
+Everything below is the original detail, kept because it records how each item
+was checked.
 
 Several items here contradict the 17 August traffic plan. That plan's data was
 gathered before the 15–16 August MailerLite work; where this file and that plan
@@ -39,6 +55,9 @@ disagree, this file was checked against the live accounts.
   onboarding automations carry the real content, and the newer generic
   "Buyer Onboarding" that would have overlapped them is switched off.
 
+**Resolved 2026-08-18** — both were renamed and remain enabled; `Buyer Onboarding`
+is still off. The original decision, kept for the record:
+
 **What you must decide (nobody else can):**
 
 1. Which buyer sequence is canonical — the two enabled DRAFT-named ones, or
@@ -62,7 +81,7 @@ dashboard: <https://dashboard.mailerlite.com/automations>
 | DMARC | ✅ `v=DMARC1; p=none; rua=mailto:info@familyfindersbook.com` |
 | MailerLite domain verification | ✅ present |
 | MX | ✅ `mx1/mx2.privateemail.com` — real mailbox on the domain |
-| **DKIM** | ❌ **not found** at `mailerlite._domainkey` or twelve other common selectors |
+| **DKIM** | ✅ **present** at selector `litesrv` — a CNAME to `litesrv._domainkey.mlsend.com`. An earlier sweep of 22 guessed selectors missed it because `litesrv` was not among them |
 
 **Corrections to the traffic plan:** it states there is no SPF, DKIM or DMARC
 and that mail sends from a gmail.com address. SPF and DMARC exist, and the
@@ -76,6 +95,17 @@ automations send from `info@familyfindersbook.com`.
 2. Once DKIM is live and `rua` reports look clean for a week or two, tighten
    DMARC from `p=none` to `p=quarantine`.
 3. Confirm with <https://www.mail-tester.com> — target 9/10 or better.
+
+**Done 2026-08-18.** mail-tester reports valid SPF and a valid DKIM signature.
+
+One caveat before step 2 above (`p=quarantine`): the signature mail-tester
+displayed was `d=mailerlite.com` with selector `litesrv`, and its `h=` list
+includes `DKIM-Signature`, meaning it signs another signature — so the message
+almost certainly carries two, and the aligned one was not the one shown. DMARC
+only passes on an *aligned* signature (`d=familyfindersbook.com`) or an aligned
+return-path. Read the `rua` aggregate reports arriving at info@ for a couple of
+weeks and confirm alignment actually passes **before** tightening to
+`p=quarantine`, or legitimate MailerLite mail could start being quarantined.
 
 ## 3. GA4 — two settings and one secret
 
