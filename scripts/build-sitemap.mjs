@@ -35,6 +35,8 @@ const WEIGHTS = [
   { match: /^how-it-works\.html$/, changefreq: 'monthly', priority: '0.8' },
   { match: /^family-emergency-planning\.html$/, changefreq: 'monthly', priority: '0.7' },
   { match: /^important-documents\.html$/, changefreq: 'monthly', priority: '0.7' },
+  { match: /^in-case-of-death-binder\.html$/, changefreq: 'monthly', priority: '0.7' },
+  { match: /^letter-of-instruction\.html$/, changefreq: 'monthly', priority: '0.7' },
   { match: /^about\.html$/, changefreq: 'yearly', priority: '0.6' },
   { match: /^contact\.html$/, changefreq: 'yearly', priority: '0.5' },
   { match: /.*/, changefreq: 'yearly', priority: '0.3' },
