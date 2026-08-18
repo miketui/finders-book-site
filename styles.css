@@ -40,7 +40,7 @@
   --gold-ink:#7A5E22;    /* gold text on cream, 5.55 AA */
   --mute:#4A5D55;        /* muted text on cream, 6.42 AA */
   --mute-pine:#A9BDB2;   /* muted text on pine, 6.57 AA */
-  --doc-no-ink:#5A7268;   /* normal-size safety text on cream, 4.74:1 AA */
+  --doc-no-ink:#A9BDB2;   /* normal-size safety text on pine, 6.57:1 AA */
   --hair:rgba(20,55,45,.16);
   --hair-lt:rgba(250,244,232,.20);
   --serif:"Newsreader Local",Georgia,"Times New Roman",serif;
