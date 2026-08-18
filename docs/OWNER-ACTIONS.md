@@ -4,25 +4,26 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
-## Status as of 2026-08-18
+## Status as of 2026-08-18 — current AGM execution
 
-| Item | State | Evidence |
+| Item | State | Current evidence |
 |---|---|---|
-| §1 MailerLite automation naming | ✅ **done** | Both renamed to `Finder's Book — Essentials Onboarding` / `— Ultimate Onboarding`, still enabled; `Buyer Onboarding` still off, so no duplicate sends |
-| §2 DKIM | ✅ **done** | `litesrv._domainkey.familyfindersbook.com` is a CNAME to `litesrv._domainkey.mlsend.com` and resolves to a valid key; mail-tester reports a valid DKIM signature |
-| §3 GA4 Measurement Protocol secret in Vercel | ✅ **done** | `/api/health` reports `ga4_purchase_reporting: true` |
-| §4 Contact alerting | ✅ **done** | `/api/health` reports `contact_owner_alert: true` |
-| GA4 referral exclusions + internal-traffic filter | ✅ **done** | Confirmed by the owner in the GA4 UI on 2026-08-18. Not machine-verifiable here: the GA4 Data API connection is reporting-only, and Composio's GA4 connector returned 403 / an empty property list on Admin API reads |
-| §5 Author credentials | ✅ **done** | Shipped on `/about.html` with `Person` structured data, PR #26 |
-| §6 Essentials edition question | ✅ **resolved** | Essentials ships the two 49-page PDFs plus START_HERE/licence; Ultimate adds the bonus tools. Genuinely reduced — the $29 card stays |
-| DMARC tightening to `p=quarantine` | ⏳ **not yet, deliberately** | See the note under §2 |
+| MailerLite generic `Buyer Onboarding` | ✅ **retired safely** | It is disabled; tier-specific onboarding is the active model. Do not enable it beside the tier workflows. |
+| MailerLite plaintext + visible postal footer | ⛔ **open / UI required** | All 18 enabled email steps still expose MailerLite's generic plaintext fallback; public HTML previews contain unsubscribe wiring but no visible postal address. Active automations cannot be edited through the supported API. |
+| MailerLite Contact Acknowledgement | ⛔ **open / UI decision** | Contact submissions are intentionally created `unconfirmed`; do not make them marketable merely to force an acknowledgement. Prefer page confirmation + verified owner alert/human reply, or a truly transactional channel. |
+| DKIM / SPF | ✅ **done** | Existing DNS authentication is working; do not rerun domain authentication. |
+| DMARC tightening | ⏳ **post-launch** | Remains `p=none`; inspect aggregate alignment before any protected DNS change. |
+| GA4 Measurement Protocol config | ✅ **armed** | Vercel has the GA4 configuration keys and health reports the integration path; unit tests prove a 4900-cent Payhip payload maps to value 49 USD. |
+| GA4 `checkout_click` / `lead_submit` key events | ⛔ **open / GA4 UI required** | The current connected reporting API cannot mutate key-event configuration; the high-level Admin wrapper is failing upstream. |
+| GA4 paid attribution + live revenue | ⛔ **open** | Historical live purchase revenue was $0.00 and server purchase events use a synthetic transaction client id. Close only with Payhip/GA4 configuration review plus the controlled Ultimate order. |
+| Contact owner alert | ⚠️ **armed, live delivery not yet proven in this pass** | `CONTACT_NOTIFY_WEBHOOK_URL` exists in production without exposing its value; code tests fail open to the visitor if alerting is unavailable. |
+| Essentials package distinction | ⛔ **re-verify in Payhip** | Historical notes say Essentials is reduced, but the canonical launch gate requires inspection of the files currently attached to the live Payhip products before promotion. |
+| Payhip exact files / refund / analytics settings | ⛔ **open / dashboard required** | The connected Payhip toolkit exposes webhook schemas/coupons, not product attachment/settings reads. |
+| Browser automation | ⛔ **platform blocked** | Composio Browser Tool currently returns `temporarily disabled by the administrator`; UI-only GA4/MailerLite/Payhip work cannot be automated through it right now. |
 
-Everything below is the original detail, kept because it records how each item
-was checked.
-
-Several items here contradict the 17 August traffic plan. That plan's data was
-gathered before the 15–16 August MailerLite work; where this file and that plan
-disagree, this file was checked against the live accounts.
+**The detail below is retained as historical context. When it conflicts with the
+current AGM table above or newer direct provider evidence, the newer evidence
+wins.**
 
 ---
 

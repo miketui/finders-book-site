@@ -17,8 +17,9 @@ row. Do not mark a row green from inspection — every row needs an observation.
 | Right commit is live | `/api/health?t=…` | `deployment.commit` matches the SHA you deployed |
 | All secrets landed | same response | every `secrets_present` value `true` |
 | Revenue reporting armed | same response | `behaviour.ga4_purchase_reporting: true` |
+| GA4 key events | GA4 Admin | `purchase`, `checkout_click`, and `lead_submit` are configured as key events before traffic |
 | Owner alerting armed | same response | `behaviour.contact_owner_alert: true` |
-| Product map source | same response | `product_map_source: "built_in"` unless products changed |
+| Product map health | same response | `behaviour.product_map_valid: true`; source may be `built_in` or an intentionally configured environment override |
 
 ## 1. Lead magnet (Gap Check)
 
@@ -45,8 +46,9 @@ Run once per kind: **question**, **feedback**, **licensing**.
 
 ## 3. Purchase — one controlled order
 
-Use a 100%-off coupon if Payhip allows it for the tier. Do not charge a live
-card only for QA. Delete the coupon afterwards.
+Use the single explicitly authorized **$49 Ultimate QA purchase** for this
+launch pass, then refund that same order in §4. Do not create a second paid QA
+transaction without a new authorization.
 
 | # | Step | Expected |
 |---|---|---|
@@ -56,16 +58,16 @@ card only for QA. Delete the coupon afterwards.
 | 3.4 | MailerLite | Added to `All Customers` + the matching tier; removed from `Leads` and `Refunded` |
 | 3.5 | Buyer onboarding email | Arrives, correct edition, correct links |
 | 3.6 | GA4 Realtime / DebugView | Exactly **one** `purchase`, correct `value`, `currency`, `transaction_id`, `items` |
-| 3.7 | Ask Payhip to redeliver the same webhook | Second delivery returns 200; GA4 still shows **one** purchase (deduplicated on `transaction_id`) |
+| 3.7 | Ask Payhip to redeliver the same webhook if the dashboard supports safe redelivery | Second delivery returns 200 `duplicate_ignored`; no second MailerLite or GA4 side effect occurs |
 
 ## 4. Refund
 
 | # | Step | Expected |
 |---|---|---|
 | 4.1 | Refund the controlled order in full | Webhook returns 200 `refund_flagged` |
-| 4.2 | MailerLite | Added to `Refunded`; removed from that tier, `Review Requested`, `Leads`; other tiers untouched; `All Customers` retained by design |
+| 4.2 | MailerLite | Added to `Refunded`; removed from that tier, `Review Requested`, `Leads`; other valid tiers untouched; `All Customers` removed when no other paid tier remains |
 | 4.3 | GA4 | One `refund` event with the refunded amount |
-| 4.4 | Redeliver the same refund webhook | 200 again, no duplicate group churn |
+| 4.4 | Redeliver the same refund webhook if safe redelivery is available | 200 `duplicate_ignored`, no duplicate group churn or analytics side effect |
 
 ## 5. Transient-failure recovery
 
@@ -100,14 +102,24 @@ coverage in `tests/test-webhook.mjs`, which asserts all of it.
 `npm run test:render` asserts every row in section 7 — re-run it rather than
 checking by hand unless you are testing a real device.
 
-## 8. Search and structured data
+
+## 8. Real-device acceptance
 
 | # | Step | Expected |
 |---|---|---|
-| 8.1 | Rich Results Test on `/` and `/order.html` | Product and FAQ parse with no errors |
-| 8.2 | Search Console → sitemap | Twelve canonical URLs, no unexpected exclusions |
-| 8.3 | `curl -I https://www.familyfindersbook.com/index.html` | 308 to `/` |
-| 8.4 | PageSpeed Insights, mobile and desktop, `/` and `/order.html` | LCP ≤ 2.5s, INP < 200ms, CLS < 0.1 |
+| 8.1 | Real iPhone Safari: home, order, contact | No horizontal overflow; navigation, consent, CTA and forms are usable |
+| 8.2 | VoiceOver on the same device | Landmarks, headings, controls and form labels are announced coherently; focus is not trapped |
+| 8.3 | Open the Ultimate fillable PDF in the supported mobile/desktop reader path | A test field can be entered, saved, closed and reopened without losing the value |
+| 8.4 | Payhip checkout on the real phone | Product/tier/price are correct and checkout remains usable before the authorized purchase |
+
+## 9. Search and structured data
+
+| # | Step | Expected |
+|---|---|---|
+| 9.1 | Rich Results Test on `/` and `/order.html` | Product and FAQ parse with no errors |
+| 9.2 | Search Console → sitemap | Twelve canonical URLs, no unexpected exclusions |
+| 9.3 | `curl -I https://www.familyfindersbook.com/index.html` | 308 to `/` |
+| 9.4 | PageSpeed Insights, mobile and desktop, `/` and `/order.html` | LCP ≤ 2.5s, INP < 200ms, CLS < 0.1 |
 
 ## Sign-off
 
