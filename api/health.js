@@ -13,6 +13,25 @@
 
 import { createHash, timingSafeEqual } from 'node:crypto';
 
+const ALLOWED_PRODUCT_TIERS = new Set(['essentials', 'ultimate', 'family_bundle']);
+
+function productMapValid() {
+  const raw = process.env.PAYHIP_PRODUCT_MAP;
+  if (!raw) return true;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
+    const entries = Object.entries(parsed);
+    if (!entries.length || entries.some(([key, tier]) => !key || !ALLOWED_PRODUCT_TIERS.has(String(tier)))) return false;
+    for (const [key] of entries) {
+      if (key.startsWith('/') && key.endsWith('/')) new RegExp(key.slice(1, -1), 'i');
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function safeEqual(a, b) {
   const ha = createHash('sha256').update(String(a ?? ''), 'utf8').digest();
   const hb = createHash('sha256').update(String(b ?? ''), 'utf8').digest();
@@ -48,8 +67,9 @@ export default function handler(req, res) {
     return res.status(401).json({ ok: false, error: 'unauthorized' });
   }
 
-  return res.status(200).json({
-    ok: true,
+  const mapValid = productMapValid();
+  return res.status(mapValid ? 200 : 503).json({
+    ok: mapValid,
     deployment: {
       env: process.env.VERCEL_ENV ?? 'unknown',
       region: process.env.VERCEL_REGION ?? 'unknown',
@@ -60,7 +80,7 @@ export default function handler(req, res) {
       MAILERLITE_API_KEY: Boolean(process.env.MAILERLITE_API_KEY),
       PAYHIP_API_KEY: Boolean(process.env.PAYHIP_API_KEY),
       PAYHIP_WEBHOOK_TOKEN: tokens.length > 0,
-      GAP_CHECK_TOKEN_SECRET: Boolean(process.env.GAP_CHECK_TOKEN_SECRET),
+      GAP_CHECK_TOKEN_SECRET: Boolean(process.env.GAP_CHECK_TOKEN_SECRET && process.env.GAP_CHECK_TOKEN_SECRET.length >= 32),
       GA4_MEASUREMENT_ID: Boolean(process.env.GA4_MEASUREMENT_ID),
       GA4_API_SECRET: Boolean(process.env.GA4_API_SECRET),
     },
@@ -73,6 +93,7 @@ export default function handler(req, res) {
       refund_on_partial: process.env.REFUND_ON_PARTIAL === 'true',
       lead_status: process.env.MAILERLITE_SUBSCRIBER_STATUS || 'unconfirmed',
       product_map_source: process.env.PAYHIP_PRODUCT_MAP ? 'environment' : 'built_in',
+      product_map_valid: mapValid,
       webhook_token_mode: process.env.PAYHIP_WEBHOOK_TOKENS ? 'rotation_array' : 'single',
     },
   });

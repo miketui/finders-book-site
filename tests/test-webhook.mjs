@@ -59,7 +59,7 @@ globalThis.fetch = async (url, init = {}) => {
   return { status: 500, ok: false, json: async () => ({}), text: async () => 'unexpected mock call' };
 };
 
-const { default: handler } = await import('../api/payhip-webhook.js');
+const { default: handler, __resetReplayCacheForTests } = await import('../api/payhip-webhook.js');
 
 function mockRes() {
   return {
@@ -110,6 +110,7 @@ async function check(name, body, expect, {
   initialGroups = [],
   failRemoval = null,
 } = {}) {
+  __resetReplayCacheForTests();
   calls = [];
   membership = new Set(initialGroups);
   failingRemoval = failRemoval;
@@ -177,7 +178,7 @@ await check('paid / buyer declined marketing email',
 console.log('\n=== Refunds ===\n');
 
 await check('refunded / full 4900 of 4900', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'All Customers', 'Review Requested', 'Finder\'s Book — Leads'] },
   { initialGroups: ['194226612687865798', '194226610412455586'] });
 
 await check('refunded / Ultimate preserves separate Essentials purchase', refund(),
@@ -192,7 +193,7 @@ await check('refunded / unknown product does not revoke entitlements', refund({ 
   { initialGroups: ['194226612687865798', '194226610412455586'] });
 
 await check('refunded / repeated event is idempotent', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'All Customers', 'Review Requested', 'Finder\'s Book — Leads'] },
   { initialGroups: ['194226612687865798', '194226614527067324'] });
 
 await check('refunded / MailerLite removal failure returns retryable 500', refund(),
@@ -200,8 +201,24 @@ await check('refunded / MailerLite removal failure returns retryable 500', refun
   { initialGroups: ['194226612687865798', '194226610412455586'], failRemoval: '194226610412455586' });
 
 await check('refunded / successful redelivery completes cleanup after transient failure', refund(),
-  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'Review Requested', 'Finder\'s Book — Leads'] },
+  { status: 200, action: 'refund_flagged', groups: ['Refunded'], removed: ['Ultimate Buyers', 'All Customers', 'Review Requested', 'Finder\'s Book — Leads'] },
   { initialGroups: ['194226612687865798', '194226610412455586', '194226614527067324'] });
+
+// Same-instance replay guard: cache only after a complete success.
+__resetReplayCacheForTests();
+calls = [];
+membership = new Set();
+const replayBody = paid(['Y1O7B'], { id: 'TX-explicit-replay' });
+const replayFirst = mockRes();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: replayBody }, replayFirst);
+const firstSideEffectCount = calls.length;
+const replaySecond = mockRes();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: replayBody }, replaySecond);
+const replayGood = replayFirst.payload?.action === 'buyer_added'
+  && replaySecond.payload?.action === 'duplicate_ignored'
+  && calls.length === firstSideEffectCount;
+replayGood ? pass++ : fail++;
+console.log(`${replayGood ? 'PASS' : 'FAIL'}  successful paid replay performs no second side effect`);
 
 console.log('\n=== Security ===\n');
 
@@ -297,12 +314,15 @@ assert('measurement id and api secret travel in the query string, never the body
   String(purchaseCall?.url).includes('measurement_id=G-TEST12345')
   && String(purchaseCall?.url).includes('api_secret=test-ga4-secret'));
 
-// Redelivery: GA4 deduplicates on transaction_id, so the same id must be re-sent.
+// Redelivery after a complete success is short-circuited before any second
+// MailerLite or GA4 side effect. Failed attempts are never marked processed.
 calls = [];
 membership = new Set();
-await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: purchaseBody }, mockRes());
-assert('redelivered order re-sends the same transaction id for GA4 deduplication',
-  ga4Calls()[0]?.body?.events?.[0]?.params?.transaction_id === 'TX-ga4-purchase');
+const purchaseReplayRes = mockRes();
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: purchaseBody }, purchaseReplayRes);
+assert('redelivered paid event is short-circuited before duplicate GA4 or MailerLite side effects',
+  purchaseReplayRes.payload?.action === 'duplicate_ignored' && ga4Calls().length === 0 && calls.length === 0,
+  `action=${purchaseReplayRes.payload?.action} calls=${calls.length}`);
 
 // A sale is still a sale when the buyer declines marketing email.
 calls = [];

@@ -8,7 +8,8 @@ Website visitor
     |      -> MailerLite Leads group
     |      -> MailerLite double opt-in
     |      -> signed /api/gap-check-download link
-    |      -> Gap Check Lead Nurture after confirmation (disabled; designs and suppression pending)
+    |      -> MailerLite Gap Check Lead Nurture after confirmation
+    |         (provider-managed; re-verify live eligibility/suppression before paid launch)
     |
     +-- Paid checkout button
            -> Payhip product checkout
@@ -32,4 +33,11 @@ Website visitor
 | Measurement | GA4 + Vercel Web Analytics |
 | Source control and change review | GitHub |
 
-Zapier and Composio are not required in the live purchase path unless a separate, non-duplicative workflow is deliberately added later.
+Zapier and Composio are not runtime dependencies in the live purchase path.
+
+**Operator tooling:** Composio is intentionally used as a maintenance/launch
+bridge for authorized reads and scoped changes in GitHub, Vercel, GA4,
+MailerLite, and Payhip when those connectors are available. Its failure must not
+break checkout, fulfillment, forms, or email delivery. Keep each connector at
+the least privilege needed for the active maintenance task, and never create a
+second Payhip→MailerLite lifecycle path through Composio or Zapier.

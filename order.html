@@ -30,7 +30,7 @@
 <meta name="twitter:image" content="https://www.familyfindersbook.com/assets/og-finders-book.jpg">
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" as="image" href="assets/cover.jpg" type="image/jpeg" fetchpriority="high">
+<link rel="preload" as="image" href="assets/cover.jpg" type="image/jpeg" fetchpriority="high" imagesrcset="assets/cover-400.jpg 400w, assets/cover.jpg 800w" imagesizes="(max-width: 700px) 72vw, 400px">
 <link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-normal.woff2" type="font/woff2" crossorigin>
 <link rel="preload" as="font" href="assets/fonts/newsreader-latin-variable-italic.woff2" type="font/woff2" crossorigin>
 <link rel="preload" as="font" href="assets/fonts/archivo-latin-variable-normal.woff2" type="font/woff2" crossorigin>
@@ -42,19 +42,84 @@
 <script>document.documentElement.classList.add("fx");</script>
 
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[
-{"@type":"BreadcrumbList","itemListElement":[
- {"@type":"ListItem","position":1,"name":"Home","item":"https://www.familyfindersbook.com/"},
- {"@type":"ListItem","position":2,"name":"Order","item":"https://www.familyfindersbook.com/order.html"}]},
-{"@type":"Product","name":"The Finder's Book — The Family Clarity System","description":"A 49-page fillable and printable family emergency and legacy organizer that records where important information lives without storing passwords.",
- "brand":{"@type":"Brand","name":"The Family Clarity Co."},
- "image":"https://www.familyfindersbook.com/assets/og-finders-book.jpg",
- "offers":{"@type":"AggregateOffer","priceCurrency":"USD","lowPrice":"29.00","highPrice":"89.00","offerCount":3,
-  "offers":[
-   {"@type":"Offer","name":"Essentials Digital Edition","price":"29.00","priceCurrency":"USD","availability":"https://schema.org/InStock","itemCondition":"https://schema.org/NewCondition","url":"https://payhip.com/b/eHcPG","seller":{"@type":"Organization","name":"The Family Clarity Co."}},
-   {"@type":"Offer","name":"Ultimate Digital Edition","price":"49.00","priceCurrency":"USD","availability":"https://schema.org/InStock","itemCondition":"https://schema.org/NewCondition","url":"https://payhip.com/b/Y1O7B","seller":{"@type":"Organization","name":"The Family Clarity Co."}},
-   {"@type":"Offer","name":"Family Bundle","price":"89.00","priceCurrency":"USD","availability":"https://schema.org/InStock","itemCondition":"https://schema.org/NewCondition","url":"https://payhip.com/b/xPuv4","seller":{"@type":"Organization","name":"The Family Clarity Co."}}]}}
-]}
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.familyfindersbook.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Order",
+          "item": "https://www.familyfindersbook.com/order.html"
+        }
+      ]
+    },
+    {
+      "@type": "Product",
+      "name": "The Finder's Book",
+      "description": "A 49-page fillable and printable family emergency and legacy organizer that records where important information lives without storing passwords.",
+      "brand": {
+        "@type": "Brand",
+        "name": "The Family Clarity Co."
+      },
+      "image": "https://www.familyfindersbook.com/assets/og-finders-book.jpg",
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "USD",
+        "lowPrice": "29.00",
+        "highPrice": "89.00",
+        "offerCount": 3,
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Essentials Digital Edition",
+            "price": "29.00",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "itemCondition": "https://schema.org/NewCondition",
+            "url": "https://payhip.com/b/eHcPG",
+            "seller": {
+              "@id": "https://www.familyfindersbook.com/#organization"
+            }
+          },
+          {
+            "@type": "Offer",
+            "name": "Ultimate Digital Edition",
+            "price": "49.00",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "itemCondition": "https://schema.org/NewCondition",
+            "url": "https://payhip.com/b/Y1O7B",
+            "seller": {
+              "@id": "https://www.familyfindersbook.com/#organization"
+            }
+          },
+          {
+            "@type": "Offer",
+            "name": "Family Bundle",
+            "price": "89.00",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "itemCondition": "https://schema.org/NewCondition",
+            "url": "https://payhip.com/b/xPuv4",
+            "seller": {
+              "@id": "https://www.familyfindersbook.com/#organization"
+            }
+          }
+        ]
+      },
+      "@id": "https://www.familyfindersbook.com/#product"
+    }
+  ]
+}
 </script>
 </head>
 <body>
@@ -104,7 +169,7 @@
       <div class="order-hero">
         <div class="book3d fx-scale" aria-label="Cover preview of The Finder's Book">
           <img class="book-poster" src="assets/cover.jpg" width="800" height="1202"
-               alt="The Finder's Book, closed, showing the front cover." fetchpriority="high">
+               alt="The Finder's Book, closed, showing the front cover." fetchpriority="high" srcset="assets/cover-400.jpg 400w, assets/cover.jpg 800w" sizes="(max-width: 700px) 72vw, 400px">
         </div>
         <div class="order-hero-txt">
           <p class="eyebrow">What you are buying</p>
@@ -140,19 +205,19 @@
       </div>
       <div class="order-pages">
         <button class="pg" type="button" data-full="assets/continuity-snapshot.webp" data-cap="Page 2: Continuity Snapshot">
-          <img src="assets/continuity-snapshot.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Continuity Snapshot page listing first person to call, backup, dependent caretaker and pet caretaker.">
+          <img src="assets/continuity-snapshot.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Continuity Snapshot page listing first person to call, backup, dependent caretaker and pet caretaker." srcset="assets/continuity-snapshot-400.webp 400w, assets/continuity-snapshot.webp 900w" sizes="(max-width: 700px) 88vw, 420px">
           <span class="pg-cap">Page 2 · Continuity Snapshot</span>
         </button>
         <button class="pg" type="button" data-full="assets/letter-to-finder.webp" data-cap="Page 6: A letter to the person who found this book">
-          <img src="assets/letter-to-finder.webp" width="900" height="1165" loading="lazy" decoding="async" alt="A written letter addressed to whoever finds the book, explaining what to do first.">
+          <img src="assets/letter-to-finder.webp" width="900" height="1165" loading="lazy" decoding="async" alt="A written letter addressed to whoever finds the book, explaining what to do first." srcset="assets/letter-to-finder-400.webp 400w, assets/letter-to-finder.webp 900w" sizes="(max-width: 700px) 88vw, 420px">
           <span class="pg-cap">Page 6 · Letter to the finder</span>
         </button>
         <button class="pg" type="button" data-full="assets/levels-of-access.webp" data-cap="Pages 12–13: Levels of access and the access matrix">
-          <img src="assets/levels-of-access.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Access matrix assigning Now, Later, or Never permission levels to each trusted person.">
+          <img src="assets/levels-of-access.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Access matrix assigning Now, Later, or Never permission levels to each trusted person." srcset="assets/levels-of-access-400.webp 400w, assets/levels-of-access.webp 900w" sizes="(max-width: 700px) 88vw, 420px">
           <span class="pg-cap">Pages 12–13 · The access matrix</span>
         </button>
         <button class="pg" type="button" data-full="assets/will-locator.webp" data-cap="Page 21: The will">
-          <img src="assets/will-locator.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Will locator page recording the executor, where the original is stored, and the attorney.">
+          <img src="assets/will-locator.webp" width="900" height="1165" loading="lazy" decoding="async" alt="Will locator page recording the executor, where the original is stored, and the attorney." srcset="assets/will-locator-400.webp 400w, assets/will-locator.webp 900w" sizes="(max-width: 700px) 88vw, 420px">
           <span class="pg-cap">Page 21 · The will</span>
         </button>
       </div>
@@ -228,13 +293,19 @@
         <h2 class="h-lg">Three editions. The difference is how much help you want getting it used.</h2>
       </div>
 
+      <div class="card" style="margin-bottom:1.5rem;">
+        <h3 class="h-md">About the fillable PDF</h3>
+        <p class="small">It uses standard AcroForm fields. For the most reliable fill-and-save experience, use Adobe Acrobat Reader or another AcroForm-compatible reader on a laptop or desktop.</p>
+        <p class="small no-bottom-margin"><strong>On mobile:</strong> some PDF apps do not preserve saved entries. Save a working copy, type one test entry, close it, and reopen it before filling in the book. Every edition also includes the matching 49-page print PDF.</p>
+      </div>
+
       <div class="tiers">
 
         <!-- CANONICAL TIER SPEC — identical to the three lists in index.html.
              If a deliverable changes, it changes in both places or nowhere.
              Guarded by scripts/check-chrome-drift.mjs (tier parity). -->
         <article class="tier">
-          <img src="assets/essentials-storefront.jpg" width="600" height="600" loading="lazy" decoding="async" alt="" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:0 0 1rem;">
+          <img src="assets/essentials-storefront.jpg" width="600" height="600" loading="lazy" decoding="async" alt="" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:0 0 1rem;" srcset="assets/essentials-storefront-400.jpg 400w, assets/essentials-storefront.jpg 600w" sizes="(max-width: 700px) 92vw, 360px">
           <h3>Essentials</h3>
           <p class="tier-price"><span>$29</span></p>
           <p class="tier-for">For the person who wants the document and nothing else.</p>
@@ -249,7 +320,7 @@
 
         <article class="tier tier-rec">
           <p class="tier-flag">Most chosen</p>
-          <img src="assets/ultimate-storefront.jpg" width="600" height="600" loading="lazy" decoding="async" alt="" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:0 0 1rem;">
+          <img src="assets/ultimate-storefront.jpg" width="600" height="600" loading="lazy" decoding="async" alt="" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:0 0 1rem;" srcset="assets/ultimate-storefront-400.jpg 400w, assets/ultimate-storefront.jpg 600w" sizes="(max-width: 700px) 92vw, 360px">
           <h3>Ultimate</h3>
           <p class="tier-price"><span>$49</span></p>
           <p class="tier-for">For the person who wants it finished, found, and actually used.</p>
@@ -263,7 +334,7 @@
         </article>
 
         <article class="tier">
-          <img src="assets/family-storefront.jpg" width="600" height="600" loading="lazy" decoding="async" alt="" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:0 0 1rem;">
+          <img src="assets/family-storefront.jpg" width="600" height="600" loading="lazy" decoding="async" alt="" style="display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:0 0 1rem;" srcset="assets/family-storefront-400.jpg 400w, assets/family-storefront.jpg 600w" sizes="(max-width: 700px) 92vw, 360px">
           <h3>Family Bundle</h3>
           <p class="tier-price"><span>$89</span></p>
           <p class="tier-for">For households organizing for more than one person.</p>
@@ -386,7 +457,7 @@
      page that carries a .pg button. -->
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Page preview" hidden>
   <button class="lb-close" id="lbClose" type="button" aria-label="Close preview">&times;</button>
-  <img id="lbImg" src="assets/cover.jpg" width="800" height="1202" alt="Product page preview">
+  <img id="lbImg" src="assets/cover.jpg" width="800" height="1202" alt="Product page preview" srcset="assets/cover-400.jpg 400w, assets/cover.jpg 800w" sizes="(max-width: 700px) 72vw, 400px">
   <p class="lb-cap" id="lbCap"></p>
 </div>
 

@@ -63,6 +63,9 @@ await subscribe(req({ email: '  Family@Example.COM ', name: '  Joanne  ' }), res
 const issuedToken = res.payload?.token;
 const sent = calls[0]?.body;
 check('valid signup returns a signed token', res.statusCode === 200 && typeof issuedToken === 'string' && issuedToken.includes('.'));
+const issuedClaims = JSON.parse(Buffer.from(issuedToken.split('.')[0], 'base64url').toString('utf8'));
+check('issued download token contains exactly one numeric expiry claim and no additional data',
+  typeof issuedClaims.exp === 'number' && Object.keys(issuedClaims).sort().join(',') === 'exp');
 check('signup normalises email and uses Leads group', sent?.email === 'family@example.com' && sent?.groups?.[0] === '194226608569059081');
 check('signup defaults to unconfirmed consent state', sent?.status === 'unconfirmed');
 check('signup trims and maps the optional name', sent?.fields?.name === 'Joanne');

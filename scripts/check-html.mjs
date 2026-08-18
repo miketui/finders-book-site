@@ -10,8 +10,8 @@ const PAGES = [
 ];
 
 /** Search-result truncation limits. Not laws, but past these a snippet is being cut. */
-const TITLE_MAX = 65;
-const DESCRIPTION_MAX = 160;
+const TITLE_MAX = 60;
+const DESCRIPTION_MAX = 155;
 
 let failed = false;
 const fail = (message) => { failed = true; console.error(`  FAIL  ${message}`); };
@@ -20,7 +20,33 @@ const ok = (message) => console.log(`  ok    ${message}`);
 /** Titles and descriptions are authored with entities; measure what Google shows. */
 const decode = (text) => String(text)
   .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-  .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&nbsp;/g, ' ');
+  .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&nbsp;/g, ' ')
+  .replace(/&mdash;/g, '—').replace(/&ndash;/g, '–')
+  .replace(/&rsquo;/g, '’').replace(/&lsquo;/g, '‘').replace(/&ldquo;/g, '“').replace(/&rdquo;/g, '”')
+  .replace(/&times;/g, '×').replace(/&trade;/g, '™')
+  .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+  .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)));
+
+const stripTags = (markup) => decode(String(markup))
+  .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
+  .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+function visibleFaqs(html) {
+  const map = new Map();
+  for (const match of html.matchAll(/<details\b[^>]*>([\s\S]*?)<\/details>/gi)) {
+    const block = match[1];
+    const summary = block.match(/<summary\b[^>]*>([\s\S]*?)<\/summary>/i);
+    if (!summary) continue;
+    const question = stripTags(summary[1]);
+    const answer = stripTags(block.replace(summary[0], ' '));
+    if (question && answer) map.set(question, answer);
+  }
+  return map;
+}
+
 
 console.log('\nHTML quality');
 
@@ -28,11 +54,12 @@ const titles = new Map();
 for (const page of PAGES) {
   const html = readFileSync(page, 'utf8');
   const title = html.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.trim();
-  const descriptions = [...html.matchAll(/<meta\s+name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/gi)];
+  const descriptions = [...html.matchAll(/<meta\s+name=(["'])description\1[^>]*content=(["'])([\s\S]*?)\2[^>]*>/gi)];
   const h1s = [...html.matchAll(/<h1\b/gi)];
   const ids = [...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((match) => match[1]);
   const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
   const images = [...html.matchAll(/<img\b[^>]*>/gi)].map((match) => match[0]);
+  const faqVisible = visibleFaqs(html);
 
   if (!/<html\s+[^>]*lang=["']en["']/i.test(html)) fail(`${page} is missing lang="en"`);
   if (!title) fail(`${page} is missing a title`);
@@ -45,12 +72,16 @@ for (const page of PAGES) {
   if (duplicateIds.length) fail(`${page} has duplicate id(s): ${duplicateIds.join(', ')}`);
   images.forEach((tag, index) => {
     if (!/\balt=["'][^"']*["']/i.test(tag)) fail(`${page} image ${index + 1} is missing alt`);
+    const localSrc = tag.match(/\bsrc=["'](assets\/[^"']+)["']/i)?.[1];
+    if (localSrc && (!/\bsrcset=["'][^"']+["']/i.test(tag) || !/\bsizes=["'][^"']+["']/i.test(tag))) {
+      fail(`${page} local image ${localSrc} is missing responsive srcset/sizes`);
+    }
   });
   if (title && decode(title).length > TITLE_MAX) {
     fail(`${page} title is ${decode(title).length} characters and will truncate in search results`);
   }
-  if (descriptions.length === 1 && decode(descriptions[0][1]).length > DESCRIPTION_MAX) {
-    fail(`${page} meta description is ${decode(descriptions[0][1]).length} characters and will truncate`);
+  if (descriptions.length === 1 && decode(descriptions[0][3]).length > DESCRIPTION_MAX) {
+    fail(`${page} meta description is ${decode(descriptions[0][3]).length} characters and will truncate`);
   }
 
   // Structured data is invisible until it is wrong. A block that no longer
@@ -64,6 +95,18 @@ for (const page of PAGES) {
       for (const node of [].concat(nodes)) {
         if (node && typeof node === 'object' && !node['@type']) {
           fail(`${page} JSON-LD block ${index + 1} contains a node with no @type`);
+        }
+        if (node?.['@type'] === 'FAQPage') {
+          for (const entity of node.mainEntity ?? []) {
+            const question = String(entity?.name ?? '').replace(/\s+/g, ' ').trim();
+            const schemaAnswer = String(entity?.acceptedAnswer?.text ?? '').replace(/\s+/g, ' ').trim();
+            const visibleAnswer = faqVisible.get(question);
+            if (!visibleAnswer) fail(`${page} FAQ schema question is not visible: ${question}`);
+            else if (schemaAnswer !== visibleAnswer) fail(`${page} FAQ schema answer differs from visible answer: ${question}`);
+          }
+        }
+        if (node?.['@type'] === 'Product' && node['@id'] !== 'https://www.familyfindersbook.com/#product') {
+          fail(`${page} Product JSON-LD must use the canonical #product @id`);
         }
       }
     } catch (error) {

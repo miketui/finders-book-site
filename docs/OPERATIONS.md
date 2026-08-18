@@ -4,7 +4,7 @@ What to watch, what to ignore, and what to do when something breaks. Written for
 a low-volume serverless site with four API routes — deliberately proportionate:
 Vercel's own logs and alerts plus this page, not an observability platform.
 
-Last verified: 2026-08-17.
+Last verified: 2026-08-18.
 
 ## The five things worth an alert
 
@@ -13,7 +13,7 @@ Last verified: 2026-08-17.
 | Any 5xx burst on `/api/*` | Vercel → Logs, filter status ≥ 500 | Purchases and leads are being dropped | Open the log line, read the `[payhip]` / `[gap-check]` / `[contact]` prefix |
 | `unmapped_product` in webhook logs | Vercel logs, search `UNMAPPED` | A buyer paid and received no entitlement group | Compare the logged key against the product map in `api/payhip-webhook.js` |
 | `502`/`503` from `/api/contact` or `/api/gap-check-subscribe` | Vercel logs | MailerLite is down or the API key expired | Check `/api/health`, then MailerLite status |
-| Sustained `429` from one route | Vercel logs | Either abuse or a genuine traffic spike | If abuse, add a Vercel Firewall rule; the in-process limiter is best-effort only |
+| Sustained `429`/edge `403` on the public form routes | Vercel logs / Firewall | Either abuse or a genuine traffic spike | Inspect the active combined WAF rate-limit rule for `/api/contact` and `/api/gap-check-subscribe`; keep the in-process limiter as defense-in-depth |
 | GA4 purchases stop while Payhip sales continue | GA4 vs Payhip dashboard | Revenue attribution is blind again | `/api/health` → `behaviour.ga4_purchase_reporting` |
 
 Nothing else needs to page anyone.
@@ -61,8 +61,10 @@ Every production deployment in Vercel is a rollback candidate.
 4. Confirm `https://www.familyfindersbook.com/api/health?t=…` reports the
    expected `deployment.commit`.
 
-Last-known-good at the time of writing: `a6e220e` (PR #22 merge), deployed
-2026-08-17.
+Do not rely on a hard-coded SHA in this runbook. Record the currently promoted
+production commit in the production-verification log before each launch change,
+and choose the immediately preceding green production deployment if rollback is
+needed.
 
 Rolling back the site does **not** roll back MailerLite group membership. If a
 bad webhook deploy mis-assigned groups, fix membership in MailerLite directly.
@@ -81,6 +83,14 @@ signatures, or subscriber data.
 
 Read `behaviour.ga4_purchase_reporting` and `behaviour.contact_owner_alert` to
 confirm the two optional integrations are actually live.
+
+## Static asset caching posture
+
+HTML/CSS/JS filenames are currently unversioned. Keep those mutable files on
+revalidation rather than assigning a year-long immutable cache: a long cache on
+an unversioned `styles.css` or `analytics.js` can strand a buyer on stale launch
+logic after a deploy. Image/font assets may use long-lived caching where their
+URLs are content-stable. If CSS/JS are later content-hashed, revisit this rule.
 
 ## Webhook token rotation, without downtime
 
@@ -105,8 +115,12 @@ Measurement Protocol (`lib/ga4.js`). Known limits, by design:
   forward the GA4 client id, so a purchase is attributed to a synthetic client
   derived from the transaction id. Campaign-level attribution therefore comes
   from the landing-page events and UTMs, not from the purchase event itself.
-- **Deduplication is GA4's**, keyed on `transaction_id`. A Payhip redelivery of
-  the same order re-sends the same id and does not create a second purchase.
+- **Successful Payhip replays are short-circuited in the webhook instance** by
+  `type + transaction_id` for 24 hours, after all required work completes. Failed
+  attempts are never marked processed, so Payhip can retry. The same
+  `transaction_id` is still sent to GA4 as downstream duplicate protection. This
+  is explicit same-instance replay protection, not a durable cross-instance
+  transaction ledger.
 - **A GA4 outage never fails a webhook.** The call is time-limited, its failure
   is logged, and the order still returns 200. This is deliberate: analytics must
   not make Payhip retry a delivery that already succeeded.

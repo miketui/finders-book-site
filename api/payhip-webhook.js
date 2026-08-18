@@ -12,6 +12,8 @@ import { ga4Items, sendGa4Event } from '../lib/ga4.js';
 
 const ML_BASE = 'https://connect.mailerlite.com/api';
 const UPSTREAM_TIMEOUT_MS = 8000;
+const REPLAY_TTL_MS = 24 * 60 * 60 * 1000;
+const PROCESSED_EVENTS = new Map();
 
 /** Live MailerLite1 (account 2202141) group IDs. */
 const DEFAULT_GROUPS = {
@@ -32,6 +34,32 @@ const DEFAULT_PRODUCT_MAP = {
 const ALLOWED_TIERS = new Set(['essentials', 'ultimate', 'family_bundle']);
 
 const on = (v, dflt) => (v === undefined ? dflt : String(v).toLowerCase() === 'true');
+
+function replayKey(type, txId) {
+  if (!type || !txId || txId === 'unknown') return null;
+  return `${type}:${txId}`;
+}
+
+function wasProcessed(key) {
+  if (!key) return false;
+  const now = Date.now();
+  const seenAt = PROCESSED_EVENTS.get(key);
+  if (seenAt && now - seenAt < REPLAY_TTL_MS) return true;
+  if (seenAt) PROCESSED_EVENTS.delete(key);
+  if (PROCESSED_EVENTS.size > 5000) {
+    for (const [candidate, at] of PROCESSED_EVENTS) {
+      if (now - at >= REPLAY_TTL_MS) PROCESSED_EVENTS.delete(candidate);
+    }
+    if (PROCESSED_EVENTS.size > 5000) PROCESSED_EVENTS.clear();
+  }
+  return false;
+}
+
+function markProcessed(key) {
+  if (key) PROCESSED_EVENTS.set(key, Date.now());
+}
+
+export function __resetReplayCacheForTests() { PROCESSED_EVENTS.clear(); }
 
 function groupFor(tier) {
   return process.env[`ML_GROUP_${tier.toUpperCase()}`] || DEFAULT_GROUPS[tier];
@@ -54,6 +82,11 @@ function productMap() {
     const entries = Object.entries(parsed);
     if (!entries.length || entries.some(([key, tier]) => !key || !ALLOWED_TIERS.has(String(tier)))) {
       throw new Error('contains an empty key or unsupported tier');
+    }
+    for (const [key] of entries) {
+      if (key.startsWith('/') && key.endsWith('/')) {
+        try { new RegExp(key.slice(1, -1), 'i'); } catch { throw new Error('contains an invalid regex key'); }
+      }
     }
     return parsed;
   } catch (err) {
@@ -284,13 +317,19 @@ export default async function handler(req, res) {
 
   const expected = createHash('sha256').update(payhipKey, 'utf8').digest('hex');
   if (!safeEqual(body?.signature, expected)) {
-    console.warn('[payhip] rejected: signature mismatch', { id: body?.id, signature_snippet: String(body?.signature).slice(0,40) });
+    console.warn('[payhip] rejected: signature mismatch', { id: body?.id });
     return res.status(401).json({ ok: false, error: 'bad_signature' });
   }
 
   const type = String(body?.type ?? '');
   const email = String(body?.email ?? '').trim().toLowerCase();
   const txId = String(body?.id ?? 'unknown');
+  const eventReplayKey = replayKey(type, txId);
+
+  if (wasProcessed(eventReplayKey)) {
+    console.log('[payhip] duplicate event ignored', { type, txId });
+    return res.status(200).json({ ok: true, action: 'duplicate_ignored' });
+  }
 
   if (!email) {
     console.error('[payhip] no email on event', type, txId);
@@ -304,6 +343,7 @@ export default async function handler(req, res) {
         // Declining marketing email does not erase the sale. GA4 receives no
         // identifiers, so revenue is still reported.
         await reportToGa4('purchase', body, body?.price);
+        markProcessed(eventReplayKey);
         return res.status(200).json({ ok: true, action: 'skipped_unconsented' });
       }
 
@@ -323,6 +363,7 @@ export default async function handler(req, res) {
       await reportToGa4('purchase', body, body?.price);
 
       console.log('[payhip] paid ->', tiers.join(','), txId);
+      markProcessed(eventReplayKey);
       return res.status(200).json({ ok: true, action: 'buyer_added', tiers });
     }
 
@@ -336,6 +377,7 @@ export default async function handler(req, res) {
         // Entitlements stay, but the money did move. Reporting it keeps GA4
         // revenue reconcilable against Payhip.
         await reportToGa4('refund', body, refunded);
+        markProcessed(eventReplayKey);
         return res.status(200).json({ ok: true, action: 'ignored_partial_refund' });
       }
 
@@ -349,7 +391,12 @@ export default async function handler(req, res) {
       const buyerGroups = ['essentials', 'ultimate', 'family_bundle'].map(groupFor).filter(Boolean);
       const remainingBuyerGroups = buyerGroups.filter((groupId) => memberships.has(String(groupId)) && !refundedGroups.includes(groupId));
 
-      const removals = [...refundedGroups, groupFor('review_requested'), groupFor('leads')].filter(Boolean);
+      const removals = [
+        ...refundedGroups,
+        ...(remainingBuyerGroups.length === 0 ? [groupFor('all_customers')] : []),
+        groupFor('review_requested'),
+        groupFor('leads'),
+      ].filter(Boolean);
 
       for (const groupId of removals) {
         try {
@@ -364,6 +411,7 @@ export default async function handler(req, res) {
 
       const remainingTiers = ['essentials', 'ultimate', 'family_bundle'].filter((tier) => remainingBuyerGroups.includes(groupFor(tier)));
       console.log('[payhip] refunded -> item-scoped cleanup', tiers.join(','), txId);
+      markProcessed(eventReplayKey);
       return res.status(200).json({ ok: true, action: 'refund_flagged', refunded_tiers: tiers, remaining_tiers: remainingTiers });
     }
 

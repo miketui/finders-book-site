@@ -5,7 +5,7 @@
  * streams Family-Readiness-Gap-Check.pdf to the client with a
  * Content-Disposition: attachment header.
  *
- * Token format: base64url(JSON{email,exp}) + "." + base64url(HMAC-SHA256)
+ * Token format: base64url(JSON{exp}) + "." + base64url(HMAC-SHA256)
  * Tokens expire after 15 minutes (set at issue time by gap-check-subscribe).
  *
  * Env:

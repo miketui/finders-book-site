@@ -66,6 +66,9 @@
 
   /* ---------- checkout click tracking ---------- */
   document.querySelectorAll("[data-checkout]").forEach(function(el){
+    // Decorate at initialization so middle-click, Cmd/Ctrl-click and context
+    // "Open in new tab" preserve stored campaign parameters too.
+    forwardAttribution(el);
     el.addEventListener("click", function(){
       forwardAttribution(el);
       track("checkout_click", Object.assign({

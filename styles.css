@@ -40,6 +40,7 @@
   --gold-ink:#7A5E22;    /* gold text on cream, 5.55 AA */
   --mute:#4A5D55;        /* muted text on cream, 6.42 AA */
   --mute-pine:#A9BDB2;   /* muted text on pine, 6.57 AA */
+  --doc-no-ink:#5A7268;   /* normal-size safety text on cream, 4.74:1 AA */
   --hair:rgba(20,55,45,.16);
   --hair-lt:rgba(250,244,232,.20);
   --serif:"Newsreader Local",Georgia,"Times New Roman",serif;
@@ -270,7 +271,7 @@ p{margin:0 0 1rem}
 .doc-list li{padding:.62rem 0 .62rem 1.75rem;border-bottom:1px solid var(--hair-lt);position:relative;line-height:1.45}
 .doc-list li:last-child{border-bottom:0}
 .doc-yes li::before{content:"";position:absolute;left:0;top:1.02rem;width:9px;height:9px;border-radius:50%;background:var(--gold-hi)}
-.doc-no li{color:var(--mute-pine)}
+.doc-no li{color:var(--doc-no-ink)}
 .doc-no li::before{content:"";position:absolute;left:0;top:1.28rem;width:11px;height:1.5px;background:var(--mute-pine);opacity:.75}
 .doc-no li span{text-decoration:line-through;text-decoration-color:rgba(169,189,178,.55);text-decoration-thickness:1px}
 
@@ -691,7 +692,7 @@ html.fx .call{height:460vh;padding:0}
    scrub derives from call.offsetHeight (motion.js), so shortening the stage
    redistributes the four stops automatically rather than clipping the last. */
 @media (max-width:720px){ html.fx .call{height:330vh} }
-html.fx .call-stage{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 clamp(1.5rem,7vw,7rem)}
+html.fx .call-stage{position:sticky;top:0;height:100vh;height:100svh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0 clamp(1.5rem,7vw,7rem)}
 .call-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 50% 0%,rgba(184,146,61,.13),transparent 62%)}
 .call-spine{position:absolute;left:clamp(1.5rem,4vw,3.4rem);top:0;width:1px;background:var(--gold);opacity:.55;height:0}
 .call-lines{position:relative;width:100%;max-width:min(1020px,92vw);margin:0 auto;text-align:center}
@@ -722,7 +723,7 @@ html:not(.fx) .call-hint{display:none}
 .call-skip{position:absolute;top:calc(var(--hdr-h) + clamp(.75rem,2vw,1.25rem));right:clamp(1rem,3vw,2rem);z-index:5;display:inline-flex;align-items:center;font-family:var(--sans);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--gold-hi);background:transparent;border:1px solid rgba(223,201,157,.4);border-radius:var(--r);padding:.5rem .85rem;cursor:pointer;min-height:44px}
 .call-skip:hover{background:rgba(223,201,157,.1)}
 /* Warm / returning / anchored traffic: one statement, not four. */
-html.call-compress.fx .call{height:100vh}
+html.call-compress.fx .call{height:100vh;height:100svh}
 html.call-compress.fx .call-line:not([data-slot="3"]){display:none}
 html.call-compress.fx .call-line[data-slot="3"]{opacity:1;visibility:visible}
 html.call-compress.fx .call-line[data-slot="3"] .clip i{transform:none}

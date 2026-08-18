@@ -130,7 +130,7 @@ html.fx .q summary::after{ transition:transform var(--dur-2) var(--ease) }
 }
 html.fx .cf-radio{ transition:border-color var(--dur-1) var(--ease),background var(--dur-1) var(--ease) }
 .cf-radio:hover{ border-color:var(--gold) }
-.cf-radio input{ margin-top:.3rem; accent-color:var(--pine); flex:0 0 auto }
+.cf-radio input{ width:20px; height:20px; margin-top:.15rem; accent-color:var(--pine); flex:0 0 20px }
 .cf-radio input:checked ~ span strong{ color:var(--gold-ink) }
 .cf-radio:has(input:checked){ border-color:var(--gold); background:var(--paper) }
 .cf-radio span{ display:block }

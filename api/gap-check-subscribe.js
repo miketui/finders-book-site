@@ -6,7 +6,7 @@
  * Check PDF through /api/gap-check-download?token=... instead of a bare
  * public URL.
  *
- * Token format: base64url(JSON{email,exp}) + "." + base64url(HMAC-SHA256)
+ * Token format: base64url(JSON{exp}) + "." + base64url(HMAC-SHA256)
  * Tokens expire after 15 minutes. The download handler verifies the signature
  * and expiry before streaming the file.
  *
@@ -47,8 +47,8 @@ function b64url(buf) {
     .replace(/=/g, '');
 }
 
-function makeToken(email, secret) {
-  const payload = b64url(JSON.stringify({ email, exp: Date.now() + TOKEN_TTL_MS }));
+function makeToken(secret) {
+  const payload = b64url(JSON.stringify({ exp: Date.now() + TOKEN_TTL_MS }));
   const sig = b64url(createHmac('sha256', secret).update(payload).digest());
   return `${payload}.${sig}`;
 }
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
 
     if (upstream.status === 200 || upstream.status === 201 || upstream.status === 422) {
       // 422 = already subscribed — still gets the download
-      return res.status(200).json({ ok: true, token: makeToken(email, secret) });
+      return res.status(200).json({ ok: true, token: makeToken(secret) });
     }
 
     const detail = await upstream.text().catch(() => '');
