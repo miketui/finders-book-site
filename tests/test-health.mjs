@@ -4,6 +4,9 @@ process.env.PAYHIP_API_KEY = 'test-payhip-key';
 process.env.PAYHIP_WEBHOOK_TOKEN = 'test-private-health-token';
 process.env.GAP_CHECK_TOKEN_SECRET = 'test-gap-check-secret-that-is-at-least-32-bytes';
 process.env.RESEND_CONTACT_API_KEY = 'test-resend-contact-key';
+process.env.CONTACT_OWNER_EMAIL = 'info@familyfindersbook.com';
+process.env.CONTACT_FROM_EMAIL = 'info@familyfindersbook.com';
+process.env.CONTACT_NOTIFY_WEBHOOK_URL = 'https://hooks.example.test/finders-book';
 
 const { default: health } = await import('../api/health.js');
 
@@ -37,12 +40,36 @@ res = mockRes();
 health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
 const serialised = JSON.stringify(res.payload);
 check('correct token returns config presence', res.statusCode === 200 && res.payload?.secrets_present?.GAP_CHECK_TOKEN_SECRET === true && res.payload?.secrets_present?.RESEND_CONTACT_API_KEY === true && res.payload?.behaviour?.contact_owner_email === true);
-check('health response never echoes secret values', !serialised.includes(process.env.MAILERLITE_API_KEY) && !serialised.includes(process.env.PAYHIP_API_KEY) && !serialised.includes(process.env.PAYHIP_WEBHOOK_TOKEN));
+check('health response never echoes secret values', !serialised.includes(process.env.MAILERLITE_API_KEY) && !serialised.includes(process.env.PAYHIP_API_KEY) && !serialised.includes(process.env.PAYHIP_WEBHOOK_TOKEN) && !serialised.includes(process.env.RESEND_CONTACT_API_KEY));
 check('health does not expose group IDs, fingerprints, signatures, or product-map contents',
   !serialised.includes('194226') &&
   !serialised.includes('fingerprint') &&
   !serialised.includes('signature_prefix') &&
   !serialised.includes('eHcPG'));
+
+const savedOwner = process.env.CONTACT_OWNER_EMAIL;
+process.env.CONTACT_OWNER_EMAIL = 'not-an-email';
+res = mockRes();
+health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
+check('invalid owner email makes contact owner-email readiness false',
+  res.statusCode === 200 && res.payload?.behaviour?.contact_owner_email === false);
+process.env.CONTACT_OWNER_EMAIL = savedOwner;
+
+const savedFrom = process.env.CONTACT_FROM_EMAIL;
+process.env.CONTACT_FROM_EMAIL = 'also-not-an-email';
+res = mockRes();
+health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
+check('invalid from email makes contact owner-email readiness false',
+  res.statusCode === 200 && res.payload?.behaviour?.contact_owner_email === false);
+process.env.CONTACT_FROM_EMAIL = savedFrom;
+
+const savedNotifyUrl = process.env.CONTACT_NOTIFY_WEBHOOK_URL;
+process.env.CONTACT_NOTIFY_WEBHOOK_URL = 'http://hooks.example.test/finders-book';
+res = mockRes();
+health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
+check('non-HTTPS secondary webhook reports false',
+  res.statusCode === 200 && res.payload?.behaviour?.contact_secondary_alert === false);
+process.env.CONTACT_NOTIFY_WEBHOOK_URL = savedNotifyUrl;
 
 const savedGapSecret = process.env.GAP_CHECK_TOKEN_SECRET;
 process.env.GAP_CHECK_TOKEN_SECRET = 'too-short';
