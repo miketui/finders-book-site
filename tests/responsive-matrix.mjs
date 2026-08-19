@@ -29,9 +29,9 @@ const PAGES = [
   {
     path: '/order.html',
     controls: [
-      { selector: '[data-checkout][data-tier="essentials"]', min: 44, label: 'Essentials CTA' },
-      { selector: '[data-checkout][data-tier="ultimate"]', min: 44, label: 'Ultimate CTA' },
-      { selector: '[data-checkout][data-tier="family_bundle"]', min: 44, label: 'Family CTA' },
+      { selector: '[data-checkout][data-placement="order-essentials"]', min: 44, label: 'Essentials CTA' },
+      { selector: '[data-checkout][data-placement="order-ultimate"]', min: 44, label: 'Ultimate CTA' },
+      { selector: '[data-checkout][data-placement="order-bundle"]', min: 44, label: 'Family CTA' },
     ],
   },
   {
@@ -151,8 +151,67 @@ async function checkControl(page, width, { selector, min, label }) {
   }
 }
 
+async function checkNavigation(page, width) {
+  // Header behaviour is intentionally stateful: it tucks while scrolling down.
+  // Test navigation from its actual entry state at the top of the page, before
+  // the control matrix scrolls through downstream CTAs.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(350);
+
+  const toggle = page.locator('.nav-toggle');
+  const drawerMode = await toggle.isVisible();
+
+  if (width <= 720) {
+    if (!drawerMode) {
+      console.log('    FAIL  mobile nav toggle missing at drawer breakpoint');
+      failures++;
+      return;
+    }
+    const box = await toggle.boundingBox();
+    if (!box || box.width < 44 || box.height < 44) {
+      console.log(`    FAIL  mobile nav target ${box ? `${box.width}x${box.height}` : 'missing'}`);
+      failures++;
+      return;
+    }
+    const hit = await toggle.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return Boolean(t && (t === el || el.contains(t)));
+    });
+    if (!hit) {
+      console.log('    FAIL  mobile nav centre is intercepted');
+      failures++;
+      return;
+    }
+    await toggle.click();
+    const open = await page.locator('#sitenav').isVisible();
+    const expanded = await toggle.getAttribute('aria-expanded');
+    if (!open || expanded !== 'true') {
+      console.log(`    FAIL  mobile nav did not open (visible=${open}, expanded=${expanded})`);
+      failures++;
+    } else {
+      console.log(`    ok    mobile nav ${Math.round(box.width)}x${Math.round(box.height)} opens`);
+    }
+    await page.keyboard.press('Escape');
+    return;
+  }
+
+  if (drawerMode) {
+    console.log('    FAIL  drawer toggle visible above 720px breakpoint');
+    failures++;
+    return;
+  }
+  const desktopNav = page.locator('#sitenav');
+  if (!(await desktopNav.isVisible())) {
+    console.log('    FAIL  desktop navigation missing above 720px breakpoint');
+    failures++;
+  } else {
+    console.log('    ok    desktop navigation visible');
+  }
+}
+
 for (const width of WIDTHS) {
-  const height = width <= 430 ? 844 : width <= 768 ? 900 : 900;
+  const height = width <= 430 ? 844 : 900;
   console.log(`  viewport ${width}x${height}`);
 
   for (const spec of PAGES) {
@@ -172,42 +231,14 @@ for (const width of WIDTHS) {
       console.log(`    ok    ${spec.path}: no horizontal overflow`);
     }
 
+    if (spec.path === '/') await checkNavigation(page, width);
+
     if (jsErrors.length) {
       jsErrors.forEach((e) => console.log(`    FAIL  ${spec.path}: JS ${e.split('\n')[0]}`));
       failures += jsErrors.length;
     }
 
     for (const control of spec.controls) await checkControl(page, width, control);
-
-    if (width < 860 && spec.path === '/') {
-      const toggle = page.locator('.nav-toggle');
-      const box = await toggle.boundingBox();
-      if (!box || box.width < 44 || box.height < 44) {
-        console.log(`    FAIL  mobile nav target ${box ? `${box.width}x${box.height}` : 'missing'}`);
-        failures++;
-      } else {
-        const hit = await toggle.evaluate((el) => {
-          const r = el.getBoundingClientRect();
-          const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-          return Boolean(t && (t === el || el.contains(t)));
-        });
-        if (!hit) {
-          console.log('    FAIL  mobile nav centre is intercepted');
-          failures++;
-        } else {
-          await toggle.click();
-          const open = await page.locator('#sitenav').isVisible();
-          const expanded = await toggle.getAttribute('aria-expanded');
-          if (!open || expanded !== 'true') {
-            console.log(`    FAIL  mobile nav did not open (visible=${open}, expanded=${expanded})`);
-            failures++;
-          } else {
-            console.log(`    ok    mobile nav ${Math.round(box.width)}x${Math.round(box.height)} opens`);
-          }
-          await page.keyboard.press('Escape');
-        }
-      }
-    }
 
     await context.close();
   }
