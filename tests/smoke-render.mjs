@@ -512,6 +512,80 @@ console.log('\n  weight budgets (uncompressed)');
   await context.close();
 }
 
+
+// --- 10. mobile lab LCP regression guard ---
+// This is a deterministic CI regression signal, not field/Core Web Vitals evidence.
+// The profile mirrors the broad Lighthouse mobile shape: 4x CPU slowdown,
+// ~1.6 Mbps downstream, ~750 Kbps upstream, and 150ms request latency.
+console.log('\n  mobile lab LCP (throttled regression guard)');
+{
+  const LAB_LCP_BUDGET_MS = 2500;
+  const LAB_PATHS = ['/', '/order.html'];
+  for (const path of LAB_PATHS) {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+      deviceScaleFactor: 3,
+      ignoreHTTPSErrors: true,
+    });
+    await context.addInitScript(() => {
+      window.__labLcp = { value: 0, tag: '', id: '', className: '', url: '', size: 0, renderTime: 0, loadTime: 0 };
+      try {
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if ((entry.startTime || 0) < window.__labLcp.value) continue;
+            const el = entry.element;
+            window.__labLcp = {
+              value: entry.startTime || 0,
+              tag: el?.tagName || '',
+              id: el?.id || '',
+              className: typeof el?.className === 'string' ? el.className : '',
+              url: entry.url || '',
+              size: entry.size || 0,
+              renderTime: entry.renderTime || 0,
+              loadTime: entry.loadTime || 0,
+            };
+          }
+        }).observe({ type: 'largest-contentful-paint', buffered: true });
+      } catch {}
+    });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 150,
+      downloadThroughput: 200_000,
+      uploadThroughput: 93_750,
+      connectionType: 'cellular4g',
+    });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+
+    try {
+      await page.goto(BASE + path, { waitUntil: 'load', timeout: 30000 });
+      await page.waitForTimeout(1200);
+      const lcp = await page.evaluate(() => window.__labLcp || { value: 0 });
+      const detail = [lcp.tag, lcp.id ? `#${lcp.id}` : '', lcp.className ? `.${String(lcp.className).trim().replace(/\s+/g, '.')}` : ''].join('');
+      const resource = lcp.url ? ` url=${lcp.url}` : '';
+      const timing = ` size=${lcp.size || 0} render=${Math.round(lcp.renderTime || 0)} load=${Math.round(lcp.loadTime || 0)}`;
+      if (!Number.isFinite(lcp.value) || lcp.value <= 0) {
+        console.log(`    FAIL  ${path} no LCP entry observed`);
+        failures++;
+      } else if (lcp.value > LAB_LCP_BUDGET_MS) {
+        console.log(`    FAIL  ${path} lab LCP ${lcp.value.toFixed(0)}ms > ${LAB_LCP_BUDGET_MS}ms | ${detail}${resource}${timing}`);
+        failures++;
+      } else {
+        console.log(`    ok    ${path} lab LCP ${lcp.value.toFixed(0)}ms <= ${LAB_LCP_BUDGET_MS}ms | ${detail}${resource}${timing}`);
+      }
+    } catch (e) {
+      console.log(`    FAIL  ${path} lab LCP navigation: ${e.message.split('\n')[0]}`);
+      failures++;
+    }
+    await context.close();
+  }
+}
+
 await browser.close();
 if (server) server.close();
 

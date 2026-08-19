@@ -37,7 +37,9 @@ finders-book-site/
     │   ├── bonus-5-digital-legacy-link-and-qr-guide.webp
     │   ├── continuity-snapshot-400.webp
     │   ├── continuity-snapshot.webp
+    │   ├── cover-400.avif
     │   ├── cover-400.jpg
+    │   ├── cover-800.avif
     │   ├── cover.jpg
     │   ├── credit-cards-400.webp
     │   ├── credit-cards.webp
