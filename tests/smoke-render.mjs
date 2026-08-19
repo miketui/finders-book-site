@@ -56,6 +56,7 @@ const VIEWPORTS = [
   { name: 'desktop', width: 1280, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
 ];
+const RESPONSIVE_MATRIX_WIDTHS = [320, 360, 375, 390, 412, 430, 768, 1024, 1280];
 
 /**
  * Vercel injects Analytics at the edge; it is absent in local static serving.
@@ -252,6 +253,96 @@ for (const { path, must, mobileMust = [] } of PAGES) {
 
   await context.close();
 }
+}
+
+// --- 5a. required responsive width matrix ---
+// The full render/a11y suite above intentionally remains at one desktop and one
+// representative mobile viewport. This focused matrix closes the launch audit's
+// explicit width coverage requirement without multiplying every Axe/LCP pass.
+console.log('\n  required responsive width matrix');
+for (const width of RESPONSIVE_MATRIX_WIDTHS) {
+  const height = width <= 430 ? 844 : width <= 768 ? 900 : 1024;
+  for (const path of ['/', '/order.html', '/contact.html']) {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      ignoreHTTPSErrors: true,
+    });
+    const page = await context.newPage();
+    const jsErrors = [];
+    page.on('pageerror', (e) => jsErrors.push(String(e)));
+
+    console.log(`  matrix ${String(width).padStart(4)}px ${path}`);
+    try {
+      await page.goto(BASE + path, { waitUntil: 'load', timeout: 30000 });
+      await page.waitForTimeout(600);
+
+      const overflow = await page.evaluate(() =>
+        Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      );
+      if (overflow > 1) {
+        console.log(`    FAIL  horizontal overflow ${overflow}px`);
+        failures++;
+      } else {
+        console.log('    ok    no horizontal overflow');
+      }
+
+      let target;
+      if (path === '/') target = page.locator('#callSkip');
+      else if (path === '/order.html') target = page.locator('[data-checkout]:visible').first();
+      else target = page.locator('#cfSubmit');
+
+      if (await target.count() === 0) {
+        console.log('    FAIL  required interaction target missing');
+        failures++;
+      } else {
+        await target.scrollIntoViewIfNeeded().catch(() => {});
+        const hit = await target.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          const under = document.elementFromPoint(x, y);
+          const cs = getComputedStyle(el);
+          return {
+            width: rect.width,
+            height: rect.height,
+            reachable: Boolean(under && (under === el || el.contains(under))),
+            blockedBy: under ? `${under.tagName.toLowerCase()}.${under.className}`.slice(0, 60) : 'nothing',
+            visible: cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0.9,
+          };
+        });
+        if (!hit.visible || !hit.reachable) {
+          console.log(`    FAIL  interaction target blocked/hidden (${JSON.stringify(hit)})`);
+          failures++;
+        } else {
+          console.log(`    ok    interaction target reachable (${Math.round(hit.width)}x${Math.round(hit.height)})`);
+        }
+      }
+
+      if (path === '/') {
+        const toggle = page.locator('.nav-toggle');
+        if (await toggle.isVisible()) {
+          const box = await toggle.boundingBox();
+          if (!box || box.width < 44 || box.height < 44) {
+            console.log(`    FAIL  nav toggle touch target ${box ? `${box.width}x${box.height}` : 'missing'}`);
+            failures++;
+          } else {
+            console.log(`    ok    nav toggle touch target ${box.width}x${box.height}`);
+          }
+        }
+      }
+
+      if (jsErrors.length) {
+        jsErrors.forEach((e) => console.log(`    FAIL  uncaught JS error: ${e.split('\n')[0]}`));
+        failures += jsErrors.length;
+      } else {
+        console.log('    ok    no uncaught JS errors');
+      }
+    } catch (e) {
+      console.log(`    FAIL  matrix navigation/interaction: ${e.message.split('\n')[0]}`);
+      failures++;
+    }
+    await context.close();
+  }
 }
 
 // --- 5. mobile navigation opens, exposes links, and closes with Escape ---
