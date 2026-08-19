@@ -34,21 +34,19 @@ row. Do not mark a row green from inspection — every row needs an observation.
 
 ## 2. Contact form — all three kinds
 
-Run once per kind: **question**, **feedback**, **licensing**.
+Run once per kind: **question**, **feedback**, **licensing**. The production route is intentionally **not** a MailerLite subscription path.
 
 | # | Step | Expected |
 |---|---|---|
 | 2.1 | Submit the form | 200 and the on-page confirmation |
-| 2.2 | MailerLite groups | Lands in *its own* contact group only |
-| 2.3 | Leads group | **Not** present — a support question must never enter the nurture sequence |
-| 2.4 | Owner alert | The configured endpoint receives the message |
+| 2.2 | MailerLite subscriber/groups | **No subscriber or group mutation** caused by the support submission |
+| 2.3 | Marketing protection | The sender is not added to `Leads`, a buyer group, or any contact-marketing group merely for asking for support |
+| 2.4 | Owner alert | The configured `CONTACT_NOTIFY_WEBHOOK_URL` endpoint receives the message |
 | 2.5 | Reply | A human replies within the stated response window |
 
 ## 3. Purchase — one controlled order
 
-Use the single explicitly authorized **$49 Ultimate QA purchase** for this
-launch pass, then refund that same order in §4. Do not create a second paid QA
-transaction without a new authorization.
+**Execution record:** the authorized launch QA order was already completed on 2026-08-18 as a **$2 real discounted payment against the $49 Ultimate product**, and that exact order was fully refunded in §4. **Do not create another paid QA transaction without new authorization.** Use the existing transaction and provider evidence for the rows below; only re-observe non-destructive reporting/provider state as needed.
 
 | # | Step | Expected |
 |---|---|---|
@@ -62,10 +60,12 @@ transaction without a new authorization.
 
 ## 4. Refund
 
+**Execution record:** the controlled 2026-08-18 Ultimate QA order has already been fully refunded. Do not issue another refund or create a replacement paid order merely to repeat this section.
+
 | # | Step | Expected |
 |---|---|---|
 | 4.1 | Refund the controlled order in full | Webhook returns 200 `refund_flagged` |
-| 4.2 | MailerLite | Added to `Refunded`; removed from that tier, `Review Requested`, `Leads`; other valid tiers untouched; `All Customers` removed when no other paid tier remains |
+| 4.2 | MailerLite | Added to `Refunded`; removed from that tier, `Review Requested`, `Leads`; other valid tiers untouched; `All Customers` removed when no other paid tier remains. **Separately verify the already-running tier automation is canceled; the 2026-08-18 QA run exposed this as an open provider/UI defect.** |
 | 4.3 | GA4 | One `refund` event with the refunded amount |
 | 4.4 | Redeliver the same refund webhook if safe redelivery is available | 200 `duplicate_ignored`, no duplicate group churn or analytics side effect |
 
