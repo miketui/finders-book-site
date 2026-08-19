@@ -16,6 +16,11 @@
 .order-hero-txt h2{ margin:.3em 0 .5em }
 .order-hero-txt .ticks{ margin:1.2rem 0 }
 
+/* The order cover is an above-the-fold LCP candidate, not part of the
+   homepage's earned book-reveal choreography. Keep its final visual state
+   from first paint so loaded image bytes are never held behind motion. */
+html.fx .order-hero .book3d{ opacity:1; transform:none; transition:none }
+
 /* ============================================================
    2. TICK LISTS
    ============================================================ */
