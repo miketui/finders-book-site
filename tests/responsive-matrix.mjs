@@ -67,7 +67,7 @@ function startServer() {
         res.end(readFileSync(p));
       } else {
         res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(readFileSync(join(ROOT, '404.html'));
+        res.end(readFileSync(join(ROOT, '404.html')));
       }
     });
     server.listen(PORT, () => resolve(server));
