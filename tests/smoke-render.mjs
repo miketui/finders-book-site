@@ -524,6 +524,9 @@ console.log('\n  mobile lab LCP (throttled regression guard)');
   for (const path of LAB_PATHS) {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+      deviceScaleFactor: 3,
       ignoreHTTPSErrors: true,
     });
     await context.addInitScript(() => {
