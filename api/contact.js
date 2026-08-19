@@ -3,13 +3,14 @@
  *
  * Support contact is deliberately NOT a marketing subscription event.
  * This route validates the message, applies abuse controls, and sends it to
- * the configured owner-routing webhook. It does not create or update a
+ * the configured transactional owner-email route. It does not create or update a
  * MailerLite subscriber and therefore cannot trigger marketing DOI or the
  * legacy MailerLite Contact Acknowledgement workflow.
  *
- * CONTACT_NOTIFY_WEBHOOK_URL is authoritative for delivery and must be HTTPS.
- * If owner routing is unavailable, fail loudly so the page can show the
- * support-email fallback instead of pretending a message was delivered.
+ * RESEND_CONTACT_API_KEY is authoritative for delivery. CONTACT_NOTIFY_WEBHOOK_URL
+ * is optional secondary alerting only. If owner email delivery is unavailable,
+ * fail loudly so the page can show the support-email fallback instead of
+ * pretending a message was delivered.
  */
 
 import { notifyConfigured, notifyOwner } from '../lib/notify.js';
