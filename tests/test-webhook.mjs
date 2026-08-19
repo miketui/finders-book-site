@@ -314,6 +314,35 @@ assert('measurement id and api secret travel in the query string, never the body
   String(purchaseCall?.url).includes('measurement_id=G-TEST12345')
   && String(purchaseCall?.url).includes('api_secret=test-ga4-secret'));
 
+// A consented browser can pass its pseudonymous GA ids through Payhip metadata,
+// allowing the server purchase to join the same GA session.
+calls = [];
+membership = new Set();
+const attributedBody = paid(['Y1O7B'], {
+  id: 'TX-ga4-attributed',
+  metadata: { ga_client_id: '123456789.987654321', ga_session_id: '1787100000' },
+});
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: attributedBody }, mockRes());
+const attributedCall = ga4Calls()[0]?.body;
+assert('consented Payhip metadata reuses browser GA client and session ids',
+  attributedCall?.client_id === '123456789.987654321'
+  && attributedCall?.events?.[0]?.params?.session_id === '1787100000',
+  JSON.stringify(attributedCall ?? null));
+
+// Arbitrary checkout metadata must never replace the validated fallback ids.
+calls = [];
+membership = new Set();
+const malformedAttributionBody = paid(['Y1O7B'], {
+  id: 'TX-ga4-malformed-attribution',
+  metadata: { ga_client_id: 'not-a-client', ga_session_id: '-1' },
+});
+await handler({ method: 'POST', query: { t: 'test-token-abc' }, headers: {}, body: malformedAttributionBody }, mockRes());
+const malformedAttributionCall = ga4Calls()[0]?.body;
+assert('malformed attribution metadata falls back without a session id',
+  /^\d+\.\d+$/.test(String(malformedAttributionCall?.client_id ?? ''))
+  && malformedAttributionCall?.client_id !== 'not-a-client'
+  && !('session_id' in (malformedAttributionCall?.events?.[0]?.params ?? {})));
+
 // Redelivery after a complete success is short-circuited before any second
 // MailerLite or GA4 side effect. Failed attempts are never marked processed.
 calls = [];

@@ -61,4 +61,15 @@ check('site event bus drops events without granted consent', () => {
   assert.match(analytics, /fbAnalyticsConsent !== "granted"/);
 });
 
+check('checkout attribution bridge is consent-gated and uses Payhip metadata', () => {
+  assert.match(consent, /fbGaMeasurementId = GA_ID/);
+  assert.match(analytics, /window\.fbAnalyticsConsent === "granted"/);
+  assert.match(analytics, /gtag\("get", window\.fbGaMeasurementId, "client_id"/);
+  assert.match(analytics, /gtag\("get", window\.fbGaMeasurementId, "session_id"/);
+  assert.match(analytics, /metadata\[ga_client_id\]/);
+  assert.match(analytics, /metadata\[ga_session_id\]/);
+  assert.match(analytics, /url\.pathname = "\/buy"/);
+  assert.match(analytics, /url\.searchParams\.set\("link", match\[1\]\)/);
+});
+
 console.log(`\n${'='.repeat(46)}\n  ${pass} passed\n${'='.repeat(46)}\n`);
