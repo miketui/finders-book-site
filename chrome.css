@@ -283,3 +283,115 @@ html.fx .book3d-hint{ transition:opacity var(--dur-2) var(--ease) }
   html.fx .book3d model-viewer,html.fx .book3d-hint{ transition:none!important }
   html.fx .hdr.tuck{ transform:none!important }
 }
+
+/* ============================================================
+   9. HOME PRICING LEDGER — explicit responsive placement
+   The ledger has four children per tier (image, price, copy, CTA).
+   Explicit grid areas prevent auto-placement collisions and keep the
+   purchase action inside each card at every supported viewport width.
+   ============================================================ */
+.ledger .tier{
+  grid-template-columns:112px 76px minmax(0,1fr) minmax(190px,auto);
+  grid-template-areas:"image price body action";
+  column-gap:clamp(1rem,2vw,1.5rem);
+  row-gap:.75rem;
+}
+.ledger .tier > img{
+  grid-area:image;
+  width:112px!important;
+  max-width:112px;
+  margin:0!important;
+  align-self:center;
+  border-radius:10px!important;
+  box-shadow:var(--shadow-sm);
+}
+.ledger .tier-price{grid-area:price;align-self:center}
+.ledger .tier-body{grid-area:body;align-self:center}
+.ledger .tier > .btn{
+  grid-area:action;
+  justify-self:end;
+  min-height:48px;
+  max-width:250px;
+}
+
+@media (min-width:721px) and (max-width:1000px){
+  .ledger .tier{
+    grid-template-columns:96px 70px minmax(0,1fr);
+    grid-template-areas:
+      "image price body"
+      "image . action";
+    align-items:start;
+  }
+  .ledger .tier > img{width:96px!important;max-width:96px}
+  .ledger .tier > .btn{justify-self:start;margin-top:.35rem;max-width:none}
+}
+
+@media (max-width:720px){
+  #pricing.band{padding-top:clamp(3.25rem,9vw,4.5rem);padding-bottom:clamp(3.25rem,9vw,4.5rem)}
+  #pricing .pricing-head{margin-bottom:1.75rem}
+  .tiers.ledger{display:grid;gap:1rem;max-width:560px;margin:0 auto}
+  .ledger .tier,
+  .ledger .tier:first-child{
+    grid-template-columns:96px minmax(0,1fr);
+    grid-template-areas:
+      "image body"
+      "price body"
+      "action action";
+    gap:.8rem 1rem;
+    align-items:start;
+    background:var(--paper);
+    border:1px solid var(--hair);
+    border-radius:10px;
+    padding:1.25rem;
+    box-shadow:0 12px 32px -26px rgba(11,31,25,.45);
+  }
+  .ledger .tier-lead{
+    background:var(--pine);
+    border-color:var(--pine);
+    padding:1.35rem;
+    margin:0;
+    box-shadow:var(--shadow-sm);
+  }
+  .ledger .tier > img{
+    width:96px!important;
+    max-width:96px;
+    align-self:start;
+  }
+  .ledger .tier-price{
+    align-self:start;
+    font-size:2.25rem;
+    line-height:1;
+    margin:.15rem 0 0;
+  }
+  .ledger .tier-lead .tier-price{font-size:2.5rem}
+  .ledger .tier-body{align-self:start;min-width:0}
+  .ledger .tier-name{font-size:.68rem;line-height:1.35;margin-bottom:.45rem}
+  .ledger .tier-desc{font-size:.98rem;line-height:1.5;margin-bottom:.65rem}
+  .ledger .tier-list{font-size:.86rem;line-height:1.45}
+  .ledger .tier-list li{padding:.22rem 0 .22rem 1rem}
+  .ledger .tier-list li::before{top:.78rem}
+  .ledger .tier > .btn{
+    width:100%;
+    max-width:none;
+    justify-self:stretch;
+    margin-top:.3rem;
+    min-height:52px;
+    padding:.95rem 1rem;
+    white-space:normal;
+    line-height:1.25;
+  }
+  .pricing-license{margin-top:1.65rem;text-align:left}
+}
+
+@media (max-width:390px){
+  .ledger .tier,
+  .ledger .tier:first-child{
+    grid-template-columns:84px minmax(0,1fr);
+    padding:1.05rem;
+    gap:.7rem .85rem;
+  }
+  .ledger .tier-lead{padding:1.15rem}
+  .ledger .tier > img{width:84px!important;max-width:84px}
+  .ledger .tier-price{font-size:2.05rem}
+  .ledger .tier-lead .tier-price{font-size:2.3rem}
+}
