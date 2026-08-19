@@ -101,6 +101,7 @@ finders-book-site/
     │   ├── hydrate-assets.mjs
     │   └── regen-manifests.mjs
     ├── tests/
+    │   ├── responsive-matrix.mjs
     │   ├── smoke-render.mjs
     │   ├── test-consent.mjs
     │   ├── test-contact.mjs
