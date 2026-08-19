@@ -17,6 +17,7 @@
   /* ---- configuration ---- */
   var ENDPOINT = "/api/contact";
   var SUPPORT  = "info@familyfindersbook.com";
+  var REQUEST_TIMEOUT_MS = 12000;
 
   var out    = document.getElementById("cfMsgOut");
   var submit = document.getElementById("cfSubmit");
@@ -68,9 +69,15 @@
     if (busy) return;
     clearErrors();
 
-    /* Honeypot */
+    /* Honeypot. Password managers and browser autofill occasionally populate
+       hidden text fields despite autocomplete=off. Never turn that into a silent
+       no-op for a real visitor: clear the client-side value and continue. Direct
+       bot POSTs are still rejected by the server-side honeypot and rate limit. */
     var hp = form.querySelector('input[name="company_website"]');
-    if (hp && hp.value) return;
+    if (hp && hp.value) {
+      track("contact_honeypot_autofill_recovered", {});
+      hp.value = "";
+    }
 
     var nameEl  = form.querySelector('input[name="name"]');
     var emailEl = form.querySelector('input[name="email"]');
@@ -93,10 +100,16 @@
     }
 
     busy = true;
-    if (submit) { submit.disabled = true; submit.textContent = "Sending…"; }
+    if (submit) {
+      submit.disabled = true;
+      submit.setAttribute("aria-busy", "true");
+      submit.textContent = "Sending…";
+    }
     say("ok", "Sending…");
 
-    fetch(ENDPOINT, {
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = controller ? window.setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS) : null;
+    var request = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -106,7 +119,10 @@
         kind: kind,
         company_website: (hp && hp.value) || ""
       })
-    })
+    };
+    if (controller) request.signal = controller.signal;
+
+    fetch(ENDPOINT, request)
     .then(function (r) {
       return r.json().catch(function () { return { ok: r.ok }; });
     })
@@ -122,13 +138,21 @@
         track("contact_submit_error", { kind: kind, reason: (data && data.error) || "rejected" });
       }
     })
-    .catch(function () {
-      say("err", "That did not go through. Email " + SUPPORT + " and we will pick it up there.");
-      track("contact_submit_error", { kind: kind, reason: "network" });
+    .catch(function (err) {
+      var timedOut = err && err.name === "AbortError";
+      say("err", timedOut
+        ? ("That took too long. Please try once more, or email " + SUPPORT + ".")
+        : ("That did not go through. Email " + SUPPORT + " and we will pick it up there."));
+      track("contact_submit_error", { kind: kind, reason: timedOut ? "timeout" : "network" });
     })
     .finally(function () {
+      if (timer) window.clearTimeout(timer);
       busy = false;
-      if (submit) { submit.disabled = false; submit.textContent = "Send message"; }
+      if (submit) {
+        submit.disabled = false;
+        submit.removeAttribute("aria-busy");
+        submit.textContent = "Send message";
+      }
     });
   });
 })();

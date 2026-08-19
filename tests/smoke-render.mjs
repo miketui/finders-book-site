@@ -22,7 +22,7 @@
  *   BASE_URL=https://example.com node tests/...     # against a deploy
  */
 import { createServer } from 'node:http';
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
@@ -89,6 +89,32 @@ function startServer() {
     });
     server.listen(PORT, () => resolve(server));
   });
+}
+
+// Root-level browser scripts are mutable filenames, so Vercel must force
+// revalidation. /assets is intentionally immutable and excluded here. Scan the
+// HTML instead of maintaining a second manual script list so future handlers
+// cannot silently fall out of the cache policy.
+{
+  const rootScripts = new Set();
+  for (const file of readdirSync(ROOT).filter((name) => name.endsWith('.html'))) {
+    const html = readFileSync(join(ROOT, file), 'utf8');
+    for (const match of html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/gi)) {
+      const src = match[1].split('?')[0].replace(/^\//, '');
+      if (!src || /^https?:\/\//i.test(src) || src.startsWith('assets/') || src.includes('/')) continue;
+      if (src.endsWith('.js')) rootScripts.add(src);
+    }
+  }
+  const config = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'));
+  const revalidateSource = (config.headers || [])
+    .find((rule) => String(rule.source || '').includes(':file(') &&
+      (rule.headers || []).some((header) => /must-revalidate/i.test(String(header.value || ''))))
+    ?.source || '';
+  const missing = [...rootScripts].filter((script) => !revalidateSource.includes(script));
+  if (missing.length) {
+    console.error(`smoke-render: mutable root scripts missing Vercel revalidation: ${missing.join(', ')}`);
+    process.exit(1);
+  }
 }
 
 let chromium;
@@ -245,8 +271,99 @@ for (const { path, must, mobileMust = [] } of PAGES) {
     console.log('    ok    no horizontal overflow');
   }
 
+  // Visible primary controls must pass Playwright's receive-events/actionability
+  // check. `trial: true` performs the same settled scroll + hit test as a real
+  // click without triggering navigation. This avoids false positives from the
+  // site's smooth-scroll animation while still catching overlays that steal taps.
+  const pageDecline = page.locator('.consent-decline');
+  if (await pageDecline.isVisible().catch(() => false)) await pageDecline.click();
+  const controls = page.locator(
+    'main button:not([disabled]), main a.btn, main input[type="submit"]:not([disabled]), main input[type="button"]:not([disabled])'
+  );
+  const controlIssues = [];
+  for (let i = 0; i < await controls.count(); i++) {
+    const control = controls.nth(i);
+    if (!await control.isVisible().catch(() => false)) continue;
+    const label = ((await control.textContent().catch(() => '')) ||
+      (await control.getAttribute('aria-label').catch(() => '')) ||
+      (await control.getAttribute('id').catch(() => '')) || 'control').trim().slice(0, 50);
+    try {
+      await control.click({ trial: true, timeout: 2000 });
+    } catch (error) {
+      controlIssues.push({ label, reason: String(error.message || error).split('\n')[0] });
+    }
+  }
+  if (controlIssues.length) {
+    controlIssues.forEach((issue) => console.log(`    FAIL  control "${issue.label}" is not clickable: ${issue.reason}`));
+    failures += controlIssues.length;
+  } else {
+    console.log('    ok    visible primary controls pass settled click actionability');
+  }
+
   await context.close();
 }
+}
+
+// --- contact form must actually submit, including browser-autofill recovery ---
+console.log('\n  contact form interaction');
+for (const viewport of VIEWPORTS) {
+  const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
+  const page = await context.newPage();
+  let captured = null;
+  await page.route('**/api/contact', async (route) => {
+    try { captured = route.request().postDataJSON(); } catch { captured = null; }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, kind: 'question' }) });
+  });
+  await page.goto(BASE + '/contact.html', { waitUntil: 'load', timeout: 30000 });
+  const decline = page.locator('.consent-decline');
+  if (await decline.isVisible().catch(() => false)) await decline.click();
+  await page.locator('#cfName').fill('AGM QA');
+  await page.locator('#cfEmail').fill('qa@example.com');
+  await page.locator('#cfMsg').fill('Regression test for the contact submit button.');
+  await page.evaluate(() => {
+    const hp = document.querySelector('#cfCo');
+    hp.removeAttribute('readonly');
+    hp.value = 'https://browser-autofill.example';
+  });
+
+  const submit = page.locator('#cfSubmit');
+  try {
+    await submit.click({ trial: true, timeout: 2000 });
+  } catch (error) {
+    console.log(`    FAIL  ${viewport.name} contact submit is not directly clickable: ${String(error.message || error).split('\n')[0]}`);
+    failures++;
+    await context.close();
+    continue;
+  }
+
+  await submit.click();
+  await page.waitForTimeout(50);
+  const pending = await page.evaluate(() => ({
+    disabled: document.querySelector('#cfSubmit')?.disabled,
+    busy: document.querySelector('#cfSubmit')?.getAttribute('aria-busy'),
+    text: document.querySelector('#cfSubmit')?.textContent,
+    status: document.querySelector('#cfMsgOut')?.textContent,
+  }));
+  if (!pending.disabled || pending.busy !== 'true' || pending.text !== 'Sending…' || pending.status !== 'Sending…') {
+    console.log(`    FAIL  ${viewport.name} contact submit gives no immediate busy feedback (${JSON.stringify(pending)})`);
+    failures++;
+  }
+
+  await page.waitForFunction(() => /Message received\./.test(document.querySelector('#cfMsgOut')?.textContent || ''), null, { timeout: 3000 }).catch(() => {});
+  const done = await page.evaluate(() => ({
+    disabled: document.querySelector('#cfSubmit')?.disabled,
+    busy: document.querySelector('#cfSubmit')?.hasAttribute('aria-busy'),
+    text: document.querySelector('#cfSubmit')?.textContent,
+    status: document.querySelector('#cfMsgOut')?.textContent,
+  }));
+  if (!captured || captured.company_website !== '' || done.disabled || done.busy || done.text !== 'Send message' || !/Message received\./.test(done.status || '')) {
+    console.log(`    FAIL  ${viewport.name} contact submit did not recover/send/reset (${JSON.stringify({ captured, done })})`);
+    failures++;
+  } else {
+    console.log(`    ok    ${viewport.name} contact submit recovers autofill, sends, confirms, and re-enables`);
+  }
+  await context.close();
 }
 
 // --- 5. mobile navigation opens, exposes links, and closes with Escape ---
