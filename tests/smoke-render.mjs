@@ -271,39 +271,33 @@ for (const { path, must, mobileMust = [] } of PAGES) {
     console.log('    ok    no horizontal overflow');
   }
 
-  // Visible primary controls must receive their own pointer hit. This catches
-  // transparent overlays, fixed headers, and motion layers that leave a button
-  // looking enabled while every click lands somewhere else.
-  const controlIssues = await page.evaluate(async () => {
-    const candidates = [...document.querySelectorAll(
-      'main button, main a.btn, main input[type="submit"], main input[type="button"]'
-    )];
-    const issues = [];
-    for (const el of candidates) {
-      const cs = getComputedStyle(el);
-      if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) <= 0.01 || el.disabled) continue;
-      el.scrollIntoView({ block: 'center', inline: 'center' });
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      const rect = el.getBoundingClientRect();
-      if (rect.width < 1 || rect.height < 1) continue;
-      const x = Math.max(0, Math.min(innerWidth - 1, rect.left + rect.width / 2));
-      const y = Math.max(0, Math.min(innerHeight - 1, rect.top + rect.height / 2));
-      const hit = document.elementFromPoint(x, y);
-      if (hit?.closest?.('.consent-banner')) continue; // consent controls have a dedicated test below
-      if (!(hit === el || (hit && el.contains(hit)))) {
-        issues.push({
-          label: (el.textContent || el.getAttribute('aria-label') || el.id || el.tagName).trim().slice(0, 50),
-          blockedBy: hit ? `${hit.tagName.toLowerCase()}${hit.id ? `#${hit.id}` : ''}` : 'nothing',
-        });
-      }
+  // Visible primary controls must pass Playwright's receive-events/actionability
+  // check. `trial: true` performs the same settled scroll + hit test as a real
+  // click without triggering navigation. This avoids false positives from the
+  // site's smooth-scroll animation while still catching overlays that steal taps.
+  const pageDecline = page.locator('.consent-decline');
+  if (await pageDecline.isVisible().catch(() => false)) await pageDecline.click();
+  const controls = page.locator(
+    'main button:not([disabled]), main a.btn, main input[type="submit"]:not([disabled]), main input[type="button"]:not([disabled])'
+  );
+  const controlIssues = [];
+  for (let i = 0; i < await controls.count(); i++) {
+    const control = controls.nth(i);
+    if (!await control.isVisible().catch(() => false)) continue;
+    const label = ((await control.textContent().catch(() => '')) ||
+      (await control.getAttribute('aria-label').catch(() => '')) ||
+      (await control.getAttribute('id').catch(() => '')) || 'control').trim().slice(0, 50);
+    try {
+      await control.click({ trial: true, timeout: 2000 });
+    } catch (error) {
+      controlIssues.push({ label, reason: String(error.message || error).split('\n')[0] });
     }
-    return issues;
-  });
+  }
   if (controlIssues.length) {
-    controlIssues.forEach((issue) => console.log(`    FAIL  control "${issue.label}" click lands on ${issue.blockedBy}`));
+    controlIssues.forEach((issue) => console.log(`    FAIL  control "${issue.label}" is not clickable: ${issue.reason}`));
     failures += controlIssues.length;
   } else {
-    console.log('    ok    visible primary controls receive their own clicks');
+    console.log('    ok    visible primary controls pass settled click actionability');
   }
 
   await context.close();
@@ -334,13 +328,10 @@ for (const viewport of VIEWPORTS) {
   });
 
   const submit = page.locator('#cfSubmit');
-  const box = await submit.boundingBox();
-  const hit = box ? await page.evaluate(({ x, y }) => {
-    const el = document.elementFromPoint(x, y);
-    return { id: el?.id || '', within: Boolean(el?.closest?.('#cfSubmit')) };
-  }, { x: box.x + box.width / 2, y: box.y + box.height / 2 }) : { id: '', within: false };
-  if (!box || !hit.within) {
-    console.log(`    FAIL  ${viewport.name} contact submit is not directly clickable (hit=${hit.id || 'unknown'})`);
+  try {
+    await submit.click({ trial: true, timeout: 2000 });
+  } catch (error) {
+    console.log(`    FAIL  ${viewport.name} contact submit is not directly clickable: ${String(error.message || error).split('\n')[0]}`);
     failures++;
     await context.close();
     continue;
