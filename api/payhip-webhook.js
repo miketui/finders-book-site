@@ -182,6 +182,20 @@ export function tierForKey(key) {
   return tiers[0] ?? null;
 }
 
+/** Extract consent-gated GA browser context echoed by Payhip checkout metadata. */
+export function ga4ContextFromMetadata(body) {
+  const metadata = body?.metadata;
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return {};
+  const rawClientId = typeof metadata.ga_client_id === 'string' ? metadata.ga_client_id.trim() : '';
+  const rawSessionId = String(metadata.ga_session_id ?? '').trim();
+  const clientId = /^\d+\.\d+$/.test(rawClientId) ? rawClientId : '';
+  const sessionId = /^\d+$/.test(rawSessionId) && Number(rawSessionId) > 0 ? rawSessionId : '';
+  return {
+    ...(clientId ? { clientId } : {}),
+    ...(sessionId ? { sessionId } : {}),
+  };
+}
+
 /**
  * Report revenue to GA4 from the server, because the browser hands the visitor
  * to Payhip and never learns whether the order completed. Deliberately awaited
@@ -190,11 +204,16 @@ export function tierForKey(key) {
  */
 async function reportToGa4(eventName, body, amountMinorUnits) {
   try {
+    const browserContext = ga4ContextFromMetadata(body);
     const result = await sendGa4Event(eventName, {
       transactionId: String(body?.id ?? ''),
       amountMinorUnits,
       currency: body?.currency,
       items: ga4Items(body?.items, tierForKey),
+      clientId: browserContext.clientId,
+      // Session attribution is meaningful for the purchase. A later refund is
+      // tied to the transaction/client but should not be forced into an old session.
+      sessionId: eventName === 'purchase' ? browserContext.sessionId : undefined,
     });
     if (result.sent) console.log(`[payhip] ga4 ${eventName} recorded`, { txId: String(body?.id ?? '') });
     else if (result.reason !== 'not_configured') {

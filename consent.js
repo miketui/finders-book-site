@@ -10,6 +10,7 @@
 
   var STORAGE_KEY = "fb_analytics_consent_v1";
   var GA_ID = "G-ZXX0M4VYT5";
+  window.fbGaMeasurementId = GA_ID;
   var loaded = false;
 
   function readChoice() {

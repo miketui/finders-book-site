@@ -50,12 +50,12 @@ Run once per kind: **question**, **feedback**, **licensing**. The production rou
 
 | # | Step | Expected |
 |---|---|---|
-| 3.1 | Buy from a homepage CTA with `?utm_source=qa&utm_medium=test&utm_campaign=verify` | Payhip checkout opens with the UTMs carried on the URL |
+| 3.1 | From a consented analytics session, open a homepage CTA with `?utm_source=qa&utm_medium=test&utm_campaign=verify` | Payhip direct checkout opens; UTMs remain on the URL and consent-gated `metadata[ga_client_id]` / `metadata[ga_session_id]` are present |
 | 3.2 | Complete the order | Payhip delivers the files |
 | 3.3 | Vercel logs | `[payhip] paid -> <tier> <txid>` and `[payhip] ga4 purchase recorded` |
 | 3.4 | MailerLite | Added to `All Customers` + the matching tier; removed from `Leads` and `Refunded` |
 | 3.5 | Buyer onboarding email | Arrives, correct edition, correct links |
-| 3.6 | GA4 Realtime / DebugView | Exactly **one** `purchase`, correct `value`, `currency`, `transaction_id`, `items` |
+| 3.6 | GA4 Realtime / DebugView, then processed standard report | Exactly **one** `purchase`, correct `value`, `currency`, `transaction_id`, `items`; processed purchase inherits the originating session source / medium / campaign rather than `(not set)` |
 | 3.7 | Ask Payhip to redeliver the same webhook if the dashboard supports safe redelivery | Second delivery returns 200 `duplicate_ignored`; no second MailerLite or GA4 side effect occurs |
 
 ## 4. Refund

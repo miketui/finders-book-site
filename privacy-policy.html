@@ -170,10 +170,10 @@ receive only the order confirmation: what was bought, for how much, and the emai
 <table>
   <thead><tr><th>Processor</th><th>Role</th><th>Data involved</th></tr></thead>
   <tbody>
-    <tr><td data-l="Processor"><strong>Payhip</strong></td><td data-l="Role">Checkout, payment, file delivery</td><td data-l="Data">Email, order and payment details</td></tr>
+    <tr><td data-l="Processor"><strong>Payhip</strong></td><td data-l="Role">Checkout, payment, file delivery</td><td data-l="Data">Email, order and payment details; if you allow analytics, pseudonymous Google Analytics client/session identifiers carried as checkout metadata solely to match a completed order to the same analytics session</td></tr>
     <tr><td data-l="Processor"><strong>MailerLite</strong></td><td data-l="Role">Email delivery and list management</td><td data-l="Data">Email, optional first name, engagement</td></tr>
     <tr><td data-l="Processor"><strong>Vercel Web Analytics</strong></td><td data-l="Role">Privacy-focused page and conversion measurement</td><td data-l="Data">Page path, referrer, approximate region, device type, and named site events</td></tr>
-    <tr><td data-l="Processor"><strong>Google Analytics 4</strong></td><td data-l="Role">Website analytics and conversion measurement</td><td data-l="Data">Page path, referrer, approximate location, device and browser info, site interactions, and conversion events</td></tr>
+    <tr><td data-l="Processor"><strong>Google Analytics 4</strong></td><td data-l="Role">Website analytics and conversion measurement</td><td data-l="Data">Page path, referrer, approximate location, device and browser info, pseudonymous client/session identifiers, site interactions, and conversion events</td></tr>
     <tr><td data-l="Processor"><strong>Our hosting provider</strong></td><td data-l="Role">Serving the website and API routes</td><td data-l="Data">Standard server logs and form requests</td></tr>
     <tr><td data-l="Processor"><strong>Configured owner-notification service, if enabled</strong></td><td data-l="Role">Alerting us that a contact-form message needs a reply</td><td data-l="Data">Name, email, message category and message text</td></tr>
   </tbody>
@@ -197,7 +197,7 @@ above is not currently active on the site, no data flows to it.</p>
   <li><strong>Session storage</strong> holds campaign parameters (such as <code>utm_source</code>) for the
   length of your visit, so we can tell which channel sent you. It is cleared when you close the tab.</li>
   <li><strong>Vercel Web Analytics</strong> measures aggregate page views and named site events without setting analytics cookies by default. It is not loaded until you allow analytics.</li>
-  <li><strong>Google Analytics 4</strong> is not loaded until you allow analytics. Once allowed, it sets first-party cookies (such as <code>_ga</code> and <code>_ga_*</code>) to distinguish visitors and measure conversions. These cookies expire after up to 2 years. Google&rsquo;s privacy terms are at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.</li>
+  <li><strong>Google Analytics 4</strong> is not loaded until you allow analytics. Once allowed, it sets first-party cookies (such as <code>_ga</code> and <code>_ga_*</code>) to distinguish visitors and measure conversions. For a checkout you start while analytics is allowed, the site may place the resulting pseudonymous GA client and session identifiers in Payhip checkout metadata; Payhip echoes that metadata to our purchase webhook so the completed order can be measured in the same analytics session. If you decline or withdraw analytics consent, those GA metadata values are not added to checkout links. These cookies expire after up to 2 years. Google&rsquo;s privacy terms are at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.</li>
   <li><strong>No advertising pixel is currently active</strong> on this site.</li>
 </ul>
 <p>Use the <strong>Privacy choices</strong> control at the bottom of any page to allow, decline, or withdraw
