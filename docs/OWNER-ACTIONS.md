@@ -10,7 +10,7 @@ from the assumption in an older document.
 |---|---|---|
 | MailerLite generic `Buyer Onboarding` | ⛔ **open / UI archive-or-rename required** | It is disabled and has sent 0 messages, so there is no current duplicate-send path. It still targets all three buyer groups, so an accidental re-enable would overlap tier-specific onboarding. Keep it off until it is safely archived/renamed in the UI. |
 | MailerLite plaintext + visible postal footer | ⛔ **open / UI required** | All 18 enabled email steps still expose MailerLite's generic plaintext fallback; public HTML previews contain unsubscribe wiring but no visible postal address. Active automations cannot be edited through the supported API. |
-| MailerLite Contact Acknowledgement | ⚠️ **provider cleanup only after C12 merge** | The production contact route in this remediation batch no longer creates MailerLite subscribers or contact-group membership, so the enabled acknowledgement automation becomes unreachable from the site. It still has 0 sends/0 queued and should be archived/disabled in the MailerLite UI as housekeeping; do not make support contacts marketable to force a receipt. |
+| MailerLite Contact Acknowledgement | ⚠️ **code-side closed; provider housekeeping remains** | The merged production contact route no longer creates MailerLite subscribers or contact-group membership, so the enabled acknowledgement automation becomes unreachable from the site. It still has 0 sends/0 queued and should be archived/disabled in the MailerLite UI as housekeeping; do not make support contacts marketable to force a receipt. |
 | DKIM / SPF | ✅ **done** | Existing DNS authentication is working; do not rerun domain authentication. |
 | DMARC tightening | ⏳ **post-launch** | Remains `p=none`; inspect aggregate alignment before any protected DNS change. |
 | GA4 Measurement Protocol config | ✅ **armed** | Vercel has the GA4 configuration keys and health reports the integration path; unit tests prove a 4900-cent Payhip payload maps to value 49 USD. |
@@ -204,3 +204,8 @@ came before the next:
    question is who you are. **Done.**
 6. ~~§6 Essentials decision~~ — before promoting the $29 tier. **Done** —
    genuinely a reduced edition, card stays.
+
+### AGM execution update — PR #38 merged 2026-08-18
+
+PR #38 (`Launch remediation: non-marketing support contact routing`) merged to protected `main` as `b0fa741fde2376c1ccd8615116f70e776ac3bd18`. Both required GitHub checks passed and Vercel promoted the exact merge commit to production. The live site contact route is therefore structurally decoupled from MailerLite marketing subscription. One fresh production contact submission is still required to close the owner-delivery acceptance proof; the legacy MailerLite Contact Acknowledgement can be archived as UI housekeeping and must not be made reachable by turning support contacts into marketing subscribers.
+
