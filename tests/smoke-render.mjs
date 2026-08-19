@@ -485,20 +485,22 @@ console.log('\n  contact submit interaction');
   await page.locator('#cfEmail').fill('qa@example.com');
   await page.locator('#cfMsg').fill('This is a rendered contact interaction regression test.');
   await page.locator('input[name="contact_trap"]').evaluate((el) => { el.value = 'https://autofilled.example'; });
-  await page.locator('#cfSubmit').click({ timeout: 5000 });
-  const message = page.locator('#cfMsgOut');
   try {
-    await message.waitFor({ state: 'visible', timeout: 5000 });
-    const text = (await message.textContent() || '').trim();
-    const reset = await page.locator('#cfEmail').inputValue() === '';
-    if (!text.startsWith('Message received.') || !reset) {
-      console.log(`    FAIL  contact submit did not complete after honeypot autofill: "${text}" reset=${reset}`);
-      failures++;
-    } else {
-      console.log('    ok    contact submit survives hidden-field autofill and resets form');
-    }
+    const [response] = await Promise.all([
+      page.waitForResponse((r) => r.url().endsWith('/api/contact') && r.request().method() === 'POST', { timeout: 5000 }),
+      page.locator('#cfSubmit').click({ timeout: 5000 }),
+    ]);
+    if (response.status() !== 200) throw new Error(`contact mock returned ${response.status()}`);
+    await page.waitForFunction(() => {
+      const text = (document.querySelector('#cfMsgOut')?.textContent || '').trim();
+      const email = document.querySelector('#cfEmail');
+      return text.startsWith('Message received.') && email?.value === '';
+    }, null, { timeout: 5000 });
+    console.log('    ok    contact submit survives hidden-field autofill and resets form');
   } catch (e) {
-    console.log(`    FAIL  contact submit produced no visible result: ${e.message.split('\n')[0]}`);
+    const text = (await page.locator('#cfMsgOut').textContent() || '').trim();
+    const reset = await page.locator('#cfEmail').inputValue() === '';
+    console.log(`    FAIL  contact submit did not complete after honeypot autofill: "${text}" reset=${reset} (${e.message.split('\n')[0]})`);
     failures++;
   }
   await context.close();
