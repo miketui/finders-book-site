@@ -77,6 +77,7 @@ finders-book-site/
     │   ├── LAUNCH-READINESS.md
     │   ├── OPERATIONS.md
     │   ├── OWNER-ACTIONS.md
+    │   ├── PAYHIP-PACKAGE-MATRIX.md
     │   ├── PRIVATE-PAYHIP-FILES.md
     │   ├── PRODUCTION-VERIFICATION.md
     │   ├── redesign-direction.html
