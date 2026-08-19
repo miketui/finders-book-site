@@ -26,7 +26,7 @@ This document records current launch evidence for the three live Finder’s Book
 
 The byte sizes above match the currently attached Payhip files shown in the product editors after normal binary-to-MiB display rounding.
 
-## Delivered package matrix
+## Delivered package matrix (physical files and buyer entitlements)
 
 | Delivered file / entitlement | Essentials | Ultimate | Family | Expected | Observed |
 |---|:---:|:---:|:---:|---|---|
@@ -43,6 +43,8 @@ The byte sizes above match the currently attached Payhip files shown in the prod
 | Family Coordination Guide | — | — | ✅ | Family only | PASS |
 | Three-Household License | — | — | ✅ | Family only | PASS |
 | SHA256SUMS | ✅ | ✅ | ✅ | all tiers | PASS |
+| README_FIRST.txt | ✅ | ✅ | ✅ | all tiers | PASS |
+| README_FIRST_FAMILY_BUNDLE.txt | — | — | ✅ | Family only | PASS |
 
 All supplied `SHA256SUMS.txt` entries verified successfully against the materialized ZIP contents.
 
@@ -52,11 +54,11 @@ All supplied `SHA256SUMS.txt` entries verified successfully against the material
 
 The Essentials and Ultimate books intentionally share a 49-page core structure, but the Essentials core removes or rewrites Ultimate-only bonus references. Verified examples include pages 8, 13, 16, and 41. No Ultimate bonus PDF is present in the Essentials ZIP.
 
-Package counts:
+Physical ZIP file counts (directories excluded; every file entry counted, including README/license/checksum files):
 
-- Essentials: 6 delivered files
-- Ultimate: 11 delivered files
-- Family: 13 delivered files
+- Essentials: 6 physical files
+- Ultimate: 11 physical files
+- Family: 13 physical files
 
 Ultimate adds five implementation tools. Family adds the Family Coordination Guide plus the three-household license. The older concern that Essentials might simply be the same product sold twice is therefore closed.
 
