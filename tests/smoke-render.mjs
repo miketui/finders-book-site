@@ -512,6 +512,62 @@ console.log('\n  weight budgets (uncompressed)');
   await context.close();
 }
 
+// --- 10. mobile lab LCP regression guard ---
+// This is a deterministic CI regression signal, not field/Core Web Vitals evidence.
+// The profile mirrors the broad Lighthouse mobile shape: 4x CPU slowdown,
+// ~1.6 Mbps downstream, ~750 Kbps upstream, and 150ms request latency.
+console.log('\n  mobile lab LCP (throttled regression guard)');
+{
+  const LAB_LCP_BUDGET_MS = 2500;
+  const LAB_PATHS = ['/', '/order.html'];
+  for (const path of LAB_PATHS) {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      ignoreHTTPSErrors: true,
+    });
+    await context.addInitScript(() => {
+      window.__labLcp = 0;
+      try {
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            window.__labLcp = Math.max(window.__labLcp, entry.startTime || 0);
+          }
+        }).observe({ type: 'largest-contentful-paint', buffered: true });
+      } catch {}
+    });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 150,
+      downloadThroughput: 200_000,
+      uploadThroughput: 93_750,
+      connectionType: 'cellular4g',
+    });
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+
+    try {
+      await page.goto(BASE + path, { waitUntil: 'load', timeout: 30000 });
+      await page.waitForTimeout(1200);
+      const lcp = await page.evaluate(() => window.__labLcp || 0);
+      if (!Number.isFinite(lcp) || lcp <= 0) {
+        console.log(`    FAIL  ${path} no LCP entry observed`);
+        failures++;
+      } else if (lcp > LAB_LCP_BUDGET_MS) {
+        console.log(`    FAIL  ${path} lab LCP ${lcp.toFixed(0)}ms > ${LAB_LCP_BUDGET_MS}ms`);
+        failures++;
+      } else {
+        console.log(`    ok    ${path} lab LCP ${lcp.toFixed(0)}ms <= ${LAB_LCP_BUDGET_MS}ms`);
+      }
+    } catch (e) {
+      console.log(`    FAIL  ${path} lab LCP navigation: ${e.message.split('\n')[0]}`);
+      failures++;
+    }
+    await context.close();
+  }
+}
+
 await browser.close();
 if (server) server.close();
 
