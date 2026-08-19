@@ -3,6 +3,7 @@ process.env.MAILERLITE_API_KEY = 'test-mailerlite-key';
 process.env.PAYHIP_API_KEY = 'test-payhip-key';
 process.env.PAYHIP_WEBHOOK_TOKEN = 'test-private-health-token';
 process.env.GAP_CHECK_TOKEN_SECRET = 'test-gap-check-secret-that-is-at-least-32-bytes';
+process.env.RESEND_CONTACT_API_KEY = 'test-resend-contact-key';
 
 const { default: health } = await import('../api/health.js');
 
@@ -35,7 +36,7 @@ check('non-GET rejected', res.statusCode === 405);
 res = mockRes();
 health({ method: 'GET', query: { t: process.env.PAYHIP_WEBHOOK_TOKEN } }, res);
 const serialised = JSON.stringify(res.payload);
-check('correct token returns config presence', res.statusCode === 200 && res.payload?.secrets_present?.GAP_CHECK_TOKEN_SECRET === true);
+check('correct token returns config presence', res.statusCode === 200 && res.payload?.secrets_present?.GAP_CHECK_TOKEN_SECRET === true && res.payload?.secrets_present?.RESEND_CONTACT_API_KEY === true && res.payload?.behaviour?.contact_owner_email === true);
 check('health response never echoes secret values', !serialised.includes(process.env.MAILERLITE_API_KEY) && !serialised.includes(process.env.PAYHIP_API_KEY) && !serialised.includes(process.env.PAYHIP_WEBHOOK_TOKEN));
 check('health does not expose group IDs, fingerprints, signatures, or product-map contents',
   !serialised.includes('194226') &&
