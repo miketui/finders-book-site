@@ -1,25 +1,12 @@
 /* ============================================================
    THE FINDER'S BOOK — CONTACT & FEEDBACK
 
-   Posts to /api/contact, the site's own serverless route, for the
-   same reasons the Gap Check form posts to /api/gap-check-subscribe:
-   the MailerLite key stays server-side, and the honeypot and rate
-   limit live where devtools cannot reach them.
-
-   This replaces an earlier client-side MailerLite JSONP stub that
-   was never wired up (ML_FORM and all three group IDs were blank,
-   so every submission fell through to the support address). That
-   approach could not have worked regardless: the site CSP allows
-   connect-src 'self' and connect.mailerlite.com, but NOT
-   assets.mailerlite.com, where the JSONP endpoint lives.
-
-   ROUTING RULE (unchanged)
-   Contact and feedback must NOT land in the Leads group. Someone
-   asking where their download is should never be dropped into the
-   Gap Check nurture sequence. Each message kind gets its own group
-   and its own event. The routing now lives in api/contact.js.
-
-   No manual setup remains. Groups, fields, and the route all exist.
+   Posts only to the site's same-origin /api/contact route.
+   A support message is not a marketing opt-in: the server validates the
+   message and routes it directly to the configured owner-notification
+   endpoint. It does not create a MailerLite subscriber or contact-group
+   membership. If owner routing is unavailable, the API returns an error and
+   this client shows the support-email fallback rather than claiming success.
    ============================================================ */
 (function () {
   "use strict";
