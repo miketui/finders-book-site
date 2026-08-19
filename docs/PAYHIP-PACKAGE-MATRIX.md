@@ -93,3 +93,15 @@ One defect remains outside the Payhip package itself: MailerLite continues to sh
 Re-read and archive the exact current public Finder’s Book Payhip refund-policy window/text. The policy URL is present in current product/package copy, but the connected Payhip API does not expose the public policy page and browser automation was unavailable during this verification pass.
 
 Do not change product packaging merely to close that documentation-only gap; the attached files, tier differentiation, checksums, pricing, visibility, support path, and tested Ultimate fulfillment are already verified.
+
+## Customer-forwarded download verification — 2026-08-18
+
+Two ZIP files forwarded from the actual Payhip customer download path were compared against the canonical packages used for this audit. The customer-forwarded copies are exact byte-for-byte matches; the local `(1)` suffix is only the device duplicate-download filename and is not part of the archive content.
+
+| Tier | Customer-forwarded bytes | SHA-256 | Canonical match | Internal checksums |
+|---|---:|---|---|---|
+| Essentials | 28,876,111 | `a62f80eecd2ea2297be1473dfbabddd1cf799c8420cd9e84f9ccc819845e7ff9` | exact | all 5 listed entries PASS |
+| Family | 28,145,047 | `caa9990772ec7396eb6a8fe0f1dd559e44d12f001a9eb130b25f66bea5022361` | exact | all 12 listed entries PASS |
+
+This upgrades C06 evidence from “dashboard filename/size plus canonical package inspection” to direct proof that the **Essentials and Family files actually delivered to a customer are the same vetted archives**. Ultimate delivery was separately exercised through the controlled paid QA journey. The only remaining C06 evidence gap is the exact current public Payhip refund-policy wording/window.
+
