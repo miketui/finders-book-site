@@ -88,11 +88,18 @@ Verified outcomes:
 
 One defect remains outside the Payhip package itself: MailerLite continues to show the refunded test subscriber as queued inside the already-running Ultimate onboarding sequence. Track that under the MailerLite/refund-suppression launch gate rather than treating it as a Payhip fulfillment failure.
 
-## Remaining evidence gap before C06 is fully closed
+## C06 refund-policy verification — closed 2026-08-18
 
-Re-read and archive the exact current public Finder’s Book Payhip refund-policy window/text. The policy URL is present in current product/package copy, but the connected Payhip API does not expose the public policy page and browser automation was unavailable during this verification pass.
+The owner supplied the exact current text from the canonical public refund-policy page at `https://www.familyfindersbook.com/refund-policy.html`. The policy states:
 
-Do not change product packaging merely to close that documentation-only gap; the attached files, tier differentiation, checksums, pricing, visibility, support path, and tested Ultimate fulfillment are already verified.
+- full refunds are available for files that cannot be downloaded/opened after support attempts, corrupted/incomplete/materially misdescribed files, duplicate charges, and unauthorized orders;
+- those covered refund requests must be made within **30 days** of purchase;
+- routine change-of-mind refunds are not offered once the digital download has been accessed;
+- UK/EU customers retain the normal 14-day cancellation right only while the files have not yet been downloaded, with immediate digital supply acknowledged at checkout;
+- approved refunds return to the original payment method, with a stated typical bank-posting window of 5–10 business days; and
+- a refund ends the customer’s licence to use the refunded files.
+
+This closes the final C06 documentation gap. Combined with the direct Payhip dashboard evidence, canonical-package checksum verification, customer-forwarded Essentials/Family hash matches, and the controlled Ultimate purchase/download/refund journey, C06 is now fully verified.
 
 ## Customer-forwarded download verification — 2026-08-18
 
@@ -103,5 +110,5 @@ Two ZIP files forwarded from the actual Payhip customer download path were compa
 | Essentials | 28,876,111 | `a62f80eecd2ea2297be1473dfbabddd1cf799c8420cd9e84f9ccc819845e7ff9` | exact | all 5 listed entries PASS |
 | Family | 28,145,047 | `caa9990772ec7396eb6a8fe0f1dd559e44d12f001a9eb130b25f66bea5022361` | exact | all 12 listed entries PASS |
 
-This upgrades C06 evidence from “dashboard filename/size plus canonical package inspection” to direct proof that the **Essentials and Family files actually delivered to a customer are the same vetted archives**. Ultimate delivery was separately exercised through the controlled paid QA journey. The only remaining C06 evidence gap is the exact current public Payhip refund-policy wording/window.
+This upgrades C06 evidence from “dashboard filename/size plus canonical package inspection” to direct proof that the **Essentials and Family files actually delivered to a customer are the same vetted archives**. Ultimate delivery was separately exercised through the controlled paid QA journey. The final C06 refund-policy wording/window gap is closed by the owner-supplied canonical public policy text recorded above.
 
