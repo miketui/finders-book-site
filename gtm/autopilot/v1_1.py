@@ -238,15 +238,29 @@ def normalize_owner_facing_fields(output, qa: dict) -> None:
     )
     if unapproved_actions:
         output.next_action = (
-            "Prepare the proposed external action privately, then request the required "
-            "owner approval before execution."
+            "Continue private preparation only. Any external action remains withheld "
+            "until an applicable owner approval is recorded."
         )
-        output.blockers.append(
-            "External action was proposed without a matching recorded approval: "
+        output.evidence.append(
+            "Unapproved external action suggestion was neutralized without execution: "
             + ", ".join(unapproved_actions)
             + "."
         )
-        unsafe = True
+        output.approval_requests.append(
+            engine.ApprovalRequest(
+                title="Future external action withheld",
+                action=(
+                    "Decide whether the withheld external action may be considered "
+                    "in a later approved run."
+                ),
+                approval_class="YELLOW",
+                reason=(
+                    "The model suggested external action types without a prior "
+                    "approval: " + ", ".join(unapproved_actions) + "."
+                ),
+                blocking=False,
+            )
+        )
 
     if not qa.get("passed"):
         qa_blocker = (
