@@ -1,15 +1,22 @@
 {
-  "program": "finders-book-30-day-gtm",
-  "version": "1.0.0",
-  "mode": "THIRTY_DAY",
+  "program": "finders-book-gtm-autopilot",
+  "version": "1.1.0",
+  "mode": "PHASE0",
   "status": "READY",
+  "foundation_cursor": 0,
+  "completed_foundation_sections": [],
+  "foundation_qa_passed": false,
   "current_day": 1,
   "completed_days": [],
-  "started_at": "2026-08-20T00:00:00-07:00",
+  "started_at": null,
+  "last_run_id": null,
   "last_run_at": null,
   "last_run_status": null,
+  "last_completed_local_date": null,
+  "last_completed_day": null,
   "blocking_approval_ids": [],
   "notes": [
-    "Runtime state is persisted by the GTM Autopilot workflow. Do not store secrets here."
+    "Phase 0 executes all 12 section AGM prompts before Day 1.",
+    "Runtime state is persisted outside the public source tree and encrypted at rest by the workflow. Do not store secrets here."
   ]
 }
