@@ -18,7 +18,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
-      GTM_RUNTIME_ROOT: ${{ runner.temp }}/finders-gtm-export-runtime
+      GTM_RUNTIME_ROOT: ${{ github.workspace }}/../finders-gtm-export-runtime
     steps:
       - name: Checkout trusted main source
         uses: actions/checkout@v5
