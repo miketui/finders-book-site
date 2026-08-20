@@ -99,7 +99,9 @@ finders-book-site/
     │   │   ├── main.py
     │   │   └── pyproject.toml
     │   ├── ebook/
-    │   │   └── build_epub.py
+    │   │   ├── build_epub.py
+    │   │   ├── manuscript-template.json
+    │   │   └── README.md
     │   ├── prompts/
     │   │   ├── agents.md
     │   │   ├── orchestrator.md
