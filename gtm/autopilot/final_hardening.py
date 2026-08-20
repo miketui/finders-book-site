@@ -371,18 +371,19 @@ def latest_blocker_summaries(last_run_id: object) -> list[str]:
         return []
 
     reports = engine.RUNTIME_ROOT / "reports"
-    matches = sorted(
-        reports.glob(f"*-{last_run_id}.json"),
-        key=lambda path: path.stat().st_mtime,
-        reverse=True,
-    )
+    matches: list[tuple[float, dict]] = []
+    for path in reports.glob("*.json"):
+        try:
+            payload = json.loads(path.read_text())
+            modified = path.stat().st_mtime
+        except (OSError, json.JSONDecodeError):
+            continue
+        if str(payload.get("run_id")) == str(last_run_id):
+            matches.append((modified, payload))
     if not matches:
         return []
 
-    try:
-        payload = json.loads(matches[0].read_text())
-    except (OSError, json.JSONDecodeError):
-        return ["Latest run report is unavailable or unreadable."]
+    payload = max(matches, key=lambda match: match[0])[1]
 
     summaries: list[str] = []
     for value in payload.get("blockers", [])[:5]:
@@ -390,14 +391,24 @@ def latest_blocker_summaries(last_run_id: object) -> list[str]:
         if not text:
             continue
         text = re.sub(
-            r"(?i)\b(password|passphrase|api[_ -]?key|secret|access[_ -]?token|"
-            r"recovery[_ -]?code|pin)\b\s*[:=]\s*\S+",
-            r"\1=[REDACTED]",
+            r"(?i)\b(?:authorization\s*:\s*)?bearer\s+\S+",
+            "[REDACTED_CREDENTIAL]",
             text,
         )
         text = re.sub(
-            r"\b(?:sk|ghp|github_pat|glpat)-?[A-Za-z0-9_-]{12,}\b",
+            r"(?i)\b[A-Z0-9_]*(?:API_KEY|SECRET|ACCESS_TOKEN|TOKEN|PASSWORD|"
+            r"PASSPHRASE|RECOVERY_CODE|PIN)[A-Z0-9_]*\b\s*[:=]\s*\S+",
             "[REDACTED_CREDENTIAL]",
+            text,
+        )
+        text = re.sub(
+            r"\b(?:sk|ghp|github_pat|glpat)[-_][A-Za-z0-9_-]{12,}\b",
+            "[REDACTED_CREDENTIAL]",
+            text,
+        )
+        text = re.sub(
+            r"\b[A-Za-z0-9._~+/-]{40,}\b",
+            "[REDACTED_HIGH_ENTROPY_VALUE]",
             text,
         )
         summaries.append(text[:300])

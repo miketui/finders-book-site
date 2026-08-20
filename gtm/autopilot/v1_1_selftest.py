@@ -365,17 +365,31 @@ def check_production_import_order() -> None:
             (reports / "2026-08-20-section-12-safe-run.json").write_text(
                 json.dumps(
                     {
+                        "run_id": "safe-run",
                         "blockers": [
                             "Verify two current source citations.",
                             "API key: sk-examplecredential123456",
+                            "THIRD_PARTY_API_SECRET=supersecretvalue123456",
+                            "Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456",
                         ]
+                    }
+                )
+            )
+            (reports / "2026-08-20-section-12-not-safe-run.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "not-safe-run",
+                        "blockers": ["Wrong report selected."],
                     }
                 )
             )
             summaries = final_hardening.latest_blocker_summaries("safe-run")
             assert summaries[0] == "Verify two current source citations."
             assert "examplecredential" not in summaries[1]
-            assert "[REDACTED]" in summaries[1]
+            assert all("supersecretvalue" not in item for item in summaries)
+            assert all("abcdefghijklmnopqrstuvwxyz" not in item for item in summaries)
+            assert all("Wrong report selected" not in item for item in summaries)
+            assert sum("[REDACTED_CREDENTIAL]" in item for item in summaries) == 3
         finally:
             engine.RUNTIME_ROOT = prior_runtime
 
