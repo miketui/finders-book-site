@@ -189,13 +189,13 @@ jobs:
         run: uv sync --project gtm/autopilot --locked
 
       - name: Compile hardened Autopilot and EPUB builder
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/ebook/build_epub.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
 
       - name: Execute hardened Autopilot control plane
         shell: bash
         run: |
           uv run --project gtm/autopilot python -c \
-            'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane, final_hardening; final_hardening.main()' \
+            'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane, final_hardening, render_contracts; final_hardening.main()' \
             --mode "$AUTOPILOT_MODE" \
             --approval-id "$AUTOPILOT_APPROVAL_ID" \
             --note "$AUTOPILOT_NOTE" \
