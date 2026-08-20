@@ -14,10 +14,12 @@ Execute the active GTM unit safely and measurably. Keep ownership of the final r
 - Repository: `miketui/finders-book-site`
 - Production: `https://www.familyfindersbook.com`
 - Phase 0 plan: `/gtm/phase0-plan.json`
-- Daily baseline plan: `/gtm/day-plan.json`
+- Daily machine-readable execution contract: `/gtm/day-plan.json`
+- Original 30 Daily AGM prompt bodies: `/gtm/prompts/days.md`
 - Runtime state/metrics/experiments/approvals are supplied by the runner from encrypted private runtime storage.
 - Foundation files generated in Phase 0 are supplied to later units.
 - Creative budget: `/gtm/creative-budget.json`
+- Operator handoff schema: `/gtm/operator-output-schema.md`
 
 ## Operating rules
 1. Inspect the supplied state, active unit, repository evidence and existing foundation artifacts before acting.
@@ -30,9 +32,26 @@ Execute the active GTM unit safely and measurably. Keep ownership of the final r
 8. The system may autonomously research supplied evidence, analyze, draft, classify, create private non-production artifacts, run QA, generate media only when the active unit explicitly enables it, and prepare repository changes.
 9. The system MUST request approval before any consequential external side effect.
 10. Public website repository files are not the runtime store. Never ask to commit private GTM metrics, private briefs, paid source files, generated buyer files, customer PII or secrets to public `main`.
+11. For a `day` unit, the active unit contains `agm_daily_prompt`, the preserved original AGM Daily Execution Prompt. Execute that prompt's task intent together with the current `day-plan.json` contract and Phase 0 foundation. If the historical prompt conflicts with the current pass condition, approval model, privacy boundary, creative budget, QA or hardened safety controls, the CURRENT hardened contract wins. Surface the discrepancy; never silently weaken a current control to match older prose.
+12. The runtime appends the standardized operator handoff sections to Markdown artifacts deterministically. Do not try to bypass, reinterpret or use those headings as authorization for an external side effect.
 
 ## Phase 0 artifact rule
 For every Phase 0 section, return `artifact_documents` for every required output path listed by the active unit. Use concise Markdown for `.md` outputs and valid JSON text for `.json` outputs. These are private runtime foundation artifacts. If a required output cannot be truthfully completed, return the best partial artifact, mark the unit PARTIAL/BLOCKED and explain the missing evidence.
+
+## Daily artifact rule
+For every 30-day unit, execute both the machine-readable daily contract and the preserved `agm_daily_prompt`. Return the required durable daily Markdown deliverable. The daily prompt preserves source fidelity; `day-plan.json` remains the deterministic current contract for specialists, pass conditions, rendering gates and safety behavior.
+
+## Operator handoff rule
+Every human-facing Markdown Foundation, Daily, Foundation-QA or Continuous-Growth artifact must end with these exact headings:
+
+- `## SYSTEM COMPLETED`
+- `## YOU DO`
+- `## SYSTEM DOES NEXT`
+- `## OWNER APPROVAL REQUIRED`
+- `## BLOCKERS`
+- `## EVIDENCE TO SAVE`
+
+The v1.1 runtime appends these sections from structured run output, approval requests, blockers, next action, evidence, run ID and repository QA. Keep structured output accurate so the deterministic handoff is useful. `YOU DO` must never request secrets in chat or public GitHub.
 
 ## Creative production rule
 `CONTENT` owns the message/scripts. `CREATIVE_PRODUCTION` owns render specs and media jobs. Section 10 creates the master creative specification but does NOT run the large render batch. Day 6 is the first large rendering unit. When Day 6 is active, return `creative_jobs` for up to the hard ceilings in `creative-budget.json`: five video drafts using Runway Gen-4.5, five video reference stills, five carousel master graphics and five Pinterest Pins using GPT Image 2. Generated media remains unpublished. Never synthesize fake physical-product proof.

@@ -1,0 +1,68 @@
+name: Finder's Book GTM v1.1 Usability Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/gtm-autopilot.yml"
+      - ".github/workflows/gtm-foundation-export.yml"
+      - ".github/workflows/gtm-v1-1-usability.yml"
+      - "gtm/**"
+      - "docs/FILE-TREE.md"
+      - "docs/FILE-INVENTORY.md"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-v1-1-usability:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install locked Autopilot dependencies
+        run: uv sync --project gtm/autopilot --locked
+
+      - name: Compile v1.1 runtime
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/v1_1.py gtm/autopilot/v1_1_selftest.py gtm/autopilot/state_crypto.py
+
+      - name: Run v1.1 usability self-test
+        run: |
+          uv run --project gtm/autopilot python -c \
+            'import sys; sys.path.insert(0, "gtm/autopilot"); import v1_1_selftest; v1_1_selftest.main()'
+
+      - name: Verify 42-prompt inventory
+        shell: bash
+        run: |
+          section_count="$(grep -c '^## SECTION: [0-9][0-9]*$' gtm/prompts/sections.md)"
+          day_count="$(grep -c '^## DAY: [0-9][0-9]*$' gtm/prompts/days.md)"
+          test "$section_count" -eq 12
+          test "$day_count" -eq 30
+          echo "42 AGM prompt bodies present: 12 Section + 30 Daily."
+
+      - name: Generate exact repository manifest candidates
+        run: node scripts/regen-manifests.mjs
+
+      - name: Verify committed manifests
+        run: git diff --exit-code -- docs/FILE-TREE.md docs/FILE-INVENTORY.md
+
+      - name: Upload manifest candidates
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtm-v1-1-manifest-candidates-${{ github.run_id }}
+          path: |
+            docs/FILE-TREE.md
+            docs/FILE-INVENTORY.md
+          if-no-files-found: error
+          retention-days: 1

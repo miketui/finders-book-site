@@ -8,6 +8,8 @@ finders-book-site/
     │   └── workflows/
     │       ├── gtm-autopilot.yml
     │       ├── gtm-final-hardening.yml
+    │       ├── gtm-foundation-export.yml
+    │       ├── gtm-v1-1-usability.yml
     │       ├── regenerate-manifests.yml
     │       └── validate.yml
     ├── api/
@@ -103,7 +105,10 @@ finders-book-site/
     │   │   ├── network_guard.py
     │   │   ├── pyproject.toml
     │   │   ├── render_contracts.py
-    │   │   └── uv.lock
+    │   │   ├── state_crypto.py
+    │   │   ├── uv.lock
+    │   │   ├── v1_1_selftest.py
+    │   │   └── v1_1.py
     │   ├── ebook/
     │   │   ├── build_epub.py
     │   │   ├── manuscript-template.json
@@ -111,6 +116,7 @@ finders-book-site/
     │   │   └── README.md
     │   ├── prompts/
     │   │   ├── agents.md
+    │   │   ├── days.md
     │   │   ├── orchestrator.md
     │   │   └── sections.md
     │   ├── approvals.json
@@ -118,10 +124,12 @@ finders-book-site/
     │   ├── day-plan.json
     │   ├── experiments.json
     │   ├── metrics.json
+    │   ├── operator-output-schema.md
     │   ├── phase0-plan.json
     │   ├── README.md
     │   ├── SETUP.md
-    │   └── state.json
+    │   ├── state.json
+    │   └── V1_1-USABILITY.md
     ├── lib/
     │   ├── ga4.js
     │   └── notify.js

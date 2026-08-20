@@ -735,6 +735,13 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
             f"Pass condition: {unit['pass_condition']}. "
             "Use the Phase 0 foundation artifacts as governing strategy. "
         )
+        if unit.get("agm_daily_prompt"):
+            specific += (
+                "\n\nAUTHORITATIVE DAILY AGM SOURCE PROMPT:\n"
+                + str(unit["agm_daily_prompt"])
+                + "\n\nThe current hardened machine-readable contract and "
+                "approval/privacy controls remain authoritative on conflicts."
+            )
         if unit.get("rendering_enabled"):
             specific += (
                 "This unit explicitly enables autonomous rendering. Return creative_jobs that stay "
@@ -758,8 +765,11 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
     prompt_map = load_agent_prompts()
     specialists = build_agents(prompt_map)
     enable_web = (
-        unit["kind"] == "section"
-        and int(unit.get("section", 0)) in {1, 4, 6, 7, 8, 9, 11, 12}
+        (
+            unit["kind"] == "section"
+            and int(unit.get("section", 0)) in {1, 4, 6, 7, 8, 9, 11, 12}
+        )
+        or (unit["kind"] == "day" and bool(unit.get("requires_web_search")))
     )
     orchestrator = build_orchestrator(
         specialists, unit.get("specialists", []), enable_web_search=enable_web
