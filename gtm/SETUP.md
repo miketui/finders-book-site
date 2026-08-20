@@ -4,92 +4,107 @@
 
 | Platform | Role |
 |---|---|
-| GitHub repository | Public source of truth for the Autopilot engine, state schemas and configuration templates |
-| GitHub Actions | Daily scheduler and autonomous runner |
-| OpenAI API + Agents SDK | Orchestrator reasoning, seven specialist agents and structured daily output |
-| Encrypted state branch | Stores only `gtm/runtime-state.enc`; plaintext Founder Briefs, metrics, experiments and approvals are never committed to the public repository |
-| Vercel | Existing production website only; `/gtm/` is excluded from deployment |
-| MailerLite | Lead/buyer email execution after API/connector wiring and approval |
-| Payhip | Existing digital commerce; authoritative digital purchase/refund source |
-| Lulu Direct | Physical hero checkout/fulfillment; normal Direct Checkout Link from website |
-| GA4 / Search Console / Ads | Measurement and acquisition inputs once credentials/API access are wired |
-| Etsy / Amazon KDP / B&N / IngramSpark | Marketplace/distribution execution surfaces; publishing remains approval-gated |
-| Optional Composio/MCP middleware | Recommended bridge when a platform lacks a clean direct API or when one broker can standardize multiple tools |
+| GitHub repository | Public source of truth for Autopilot code, prompts, state templates, Phase 0 plan and daily plan |
+| GitHub Actions | Scheduler, Phase 0 bootstrap runner, daily runner, approval interface and artifact host |
+| OpenAI API + Agents SDK | GPT-5.6 Orchestrator, nine specialist agents, hosted web search, structured outputs and GPT Image 2 rendering |
+| Runway API | Gen-4.5 video rendering for explicitly enabled creative-production units |
+| Encrypted state branch | Stores only the newest encrypted runtime snapshot + non-secret key-scheme metadata |
+| GitHub Actions artifacts | Stores generated image/video/EPUB binaries temporarily; these are not committed to the public repo |
+| Vercel | Existing production website only; `/gtm/` remains excluded from deployment |
+| MailerLite | Lead/buyer email execution after connector/API wiring and approval |
+| Payhip | Existing digital commerce and authoritative digital purchase/refund source |
+| Lulu Direct | Physical hero checkout/fulfillment via normal Direct Checkout Link |
+| GA4 / Search Console / Ads | Measurement and acquisition inputs as adapters are connected |
+| Etsy / Amazon KDP / B&N / IngramSpark | Marketplace/distribution surfaces; publication remains approval-gated |
+
+## Execution order
+
+The first real `run` begins in `PHASE0`, not Day 1.
+
+`Section 12 → 1 → 2 → 3 → 4 → 6 → 7 → 8 → 9 → 10 → 11 → 5 → Foundation QA → Day 1`
+
+The bootstrap workflow runs the remaining Phase 0 units sequentially in one Actions run and stops immediately on a blocking approval, BLOCKED result or PARTIAL result. Day 1 cannot leapfrog a failed foundation.
+
+Section 10 creates the creative master specification. It does not execute the large paid render batch. Day 6 is the first large autonomous rendering batch.
+
+## Nine agents
+
+SEO, Content, Growth, Commerce, Analytics, Partnerships, Release/QA, Creative Production and Ebook Production.
+
+- `CREATIVE_PRODUCTION`: GPT Image 2 stills + Runway Gen-4.5 video specifications/rendering inside hard ceilings.
+- `EBOOK_PRODUCTION`: separate non-fillable EPUB reading-edition architecture/build; never uploads the current fillable PDF unchanged.
 
 ## Security boundary
 
-The repository is public, so the code/configuration may be public but runtime business intelligence must not be.
+The repository is public, so runtime business intelligence and paid source material stay outside it.
 
-- `gtm/reports/` and `gtm/runtime-state.enc` are ignored by Git.
-- `/gtm/` is excluded from Vercel deployment.
-- The production Autopilot workflow does **not** execute on pull requests and therefore does not expose the OpenAI secret to PR-controlled code.
-- Pull requests continue to use the repository's protected static and rendered-page validation before merge.
-- Runtime state is bundled and encrypted before it is written to the isolated state branch.
+- Mutable state runs under the GitHub runner's temporary directory via `GTM_RUNTIME_ROOT`.
+- Repo validation sees only immutable checked-in templates, preventing runtime state from invalidating file manifests.
+- Runtime state, Founder Briefs and Phase 0 foundation files are bundled and encrypted before persistence.
+- The state branch is replaced with a fresh root snapshot each persistence cycle so opaque encrypted history does not grow without bound.
+- Generated media and EPUB binaries are uploaded as 30-day GitHub Actions artifacts and excluded from the encrypted Git branch snapshot.
+- The production workflow does not execute on pull requests, so PR-controlled code does not receive production provider secrets.
+- Paid PDFs, paid EPUB source/manuscript, customer PII and secrets never belong on public `main`.
 
-## One-time setup
+## GitHub secrets / variables
 
-1. Merge the Autopilot PR only after protected checks pass.
-2. In GitHub → Settings → Secrets and variables → Actions, add `OPENAI_API_KEY` using an active OpenAI project API key. Never commit it to the repository.
-3. Recommended: add a separate high-entropy `GTM_STATE_KEY` secret **before the first state-persisting run**. If it is absent, the normalized OpenAI API key itself is used as the PBKDF2 passphrase. If you later rotate that fallback key, migrate or reset the encrypted state first.
-4. Optional: set repository variable `GTM_OWNER_ALLOWLIST` to a comma-separated list of GitHub logins authorized to resolve RED approval gates. It defaults to `miketui`.
-5. Keep workflow permission at `contents: write`; runtime state is written only to the dedicated `gtm-autopilot-state` branch. The workflow does not push runtime state to protected `main`.
-6. The merge commit carrying `[gtm-autopilot-bootstrap]` performs the one-time Day 1 bootstrap. Ordinary future pushes to `main` do not advance the GTM clock.
-7. Use `workflow_dispatch` with `mode=approve` or `mode=reject` plus an approval ID to resolve gates. GitHub passes the authenticated actor to the runner.
-8. Add platform credentials incrementally. Do not add them until the corresponding adapter exists and has least-privilege scopes.
+Required:
 
-## Recommended execution stack
+- `OPENAI_API_KEY`
+- `RUNWAYML_API_SECRET` — required when a video-rendering unit executes; the current user has added the Runway secret in GitHub.
 
-### Core (required)
-- GitHub + GitHub Actions
-- OpenAI API / Agents SDK
-- Existing Vercel project
+Recommended:
 
-### Data/marketing integrations (phase 2)
-- GA4 + Search Console for measurement
-- MailerLite for email
-- Payhip for digital orders/refunds
-- Lulu Direct for physical order data where available
-- Google Ads, Meta, Pinterest, Etsy Ads, Amazon Ads for campaign read/write APIs
-
-### Why not make Vercel the scheduler?
-The marketing state belongs with the GTM operating system and needs auditable execution, approval records and repository QA context. GitHub Actions is the cleaner first scheduler. Vercel stays focused on serving the customer-facing website.
-
-## Approval model
-
-- GREEN actions may run autonomously.
-- YELLOW actions are prepared automatically and stop until owner approval when marked blocking.
-- RED actions are always blocking and are never performed automatically. A RED approval decision is accepted only when the authenticated GitHub actor is in `GTM_OWNER_ALLOWLIST`.
-
-No workflow may spend money, publish externally, send customer/partner messages, merge a PR, deploy production, change a price, or accept a legal agreement without the required approval.
-
-## GitHub settings
-
-Required secret:
-
-`OPENAI_API_KEY`
-
-Recommended independent state-encryption secret:
-
-`GTM_STATE_KEY`
+- `GTM_STATE_KEY` — independent high-entropy encryption passphrase. If absent, the current OpenAI key is used only as the state-encryption fallback. State snapshots record which key scheme was used, allowing later migration to `GTM_STATE_KEY` without making old ciphertext unreadable.
 
 Optional repository variable:
 
-`GTM_OWNER_ALLOWLIST`
+- `GTM_OWNER_ALLOWLIST` — comma-separated GitHub logins authorized to resolve RED gates; defaults to `miketui`.
 
-Optional future secrets should be added only when adapters are implemented, for example:
-`MAILERLITE_API_KEY`, `GA4_*`, advertising API credentials, marketplace API credentials.
+Future integration credentials should be added only when their least-privilege adapters exist.
 
-## Runtime output
+## Dependency reproducibility
 
-A successful run creates plaintext working files only inside the ephemeral Actions runner, including filenames such as:
+`gtm/autopilot/pyproject.toml` pins the primary Agents SDK and Runway SDK versions. `gtm/autopilot/uv.lock` is generated on the PR branch by the lock/manifest workflow and production installs use:
 
-- `/gtm/reports/<date>-day-01-<run_id>.json`
-- `/gtm/reports/<date>-day-01-<run_id>-founder-brief.md`
-- updated `state.json`
-- updated approval queue if any
+```bash
+uv sync --project gtm/autopilot --locked
+```
 
-Each execution generates one collision-resistant `run_id`, reused in the report names and approval IDs. Before persistence, these files are bundled and encrypted into `gtm/runtime-state.enc`; only the encrypted bundle is committed to the isolated state branch.
+## Approval model
 
-## Daily schedule
+- GREEN: autonomous research, analysis, private artifacts, repository QA and media rendering only when the active unit explicitly enables it and the hard budget ceiling is respected.
+- YELLOW: publish/send, paid-campaign activation, external outreach, price/offer changes, merge/deploy, or exceeding a configured creative/spend ceiling.
+- RED: banking/tax/identity/legal/contract/credential/physical-proof actions; RED decisions require an authenticated actor in `GTM_OWNER_ALLOWLIST`.
 
-The scheduler runs at `15:00 UTC`, which is 8:00 AM PDT during the initial launch window. GitHub cron is UTC-based, so the local wall-clock time changes when Los Angeles leaves daylight-saving time.
+## Creative production budget
+
+`creative-budget.json` currently limits a Day 6 run to at most:
+
+- 15 GPT Image 2 image jobs;
+- 5 Runway Gen-4.5 videos;
+- 5 seconds per video;
+- 25 total video seconds;
+- 300 Runway credits using the 12-credits/second guardrail.
+
+Target Day 6 output: five video drafts, five video reference stills, five carousel master graphics and five Pinterest Pins. Synthetic physical-product proof is prohibited.
+
+## EPUB workstream
+
+The public repo contains only the EPUB builder and source-free template. The real manuscript must be generated from the full authoritative source in private runtime storage:
+
+`$GTM_RUNTIME_ROOT/ebook/ebook-manuscript.json`
+
+Then run:
+
+```bash
+uv run --project gtm/autopilot python gtm/autopilot/main.py --mode ebook-build
+```
+
+The finished EPUB remains a private Actions artifact until validation and owner approval. See `ebook/README.md`.
+
+## Scheduler
+
+The scheduler runs at `15:00 UTC`, which is 8:00 AM PDT during the initial launch window. The state machine prevents two successful 30-day units from being consumed on the same Los Angeles calendar date.
+
+The one-time merge commit marker `[gtm-autopilot-bootstrap]` starts Phase 0 after merge. Ordinary future pushes to `main` do not advance the GTM clock.
