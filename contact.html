@@ -145,8 +145,9 @@
 
             <!-- honeypot: a real person never fills this -->
             <div class="cf-hp" aria-hidden="true">
-              <label for="cfCo">Company website</label>
-              <input id="cfCo" name="contact_trap" type="text" tabindex="-1" autocomplete="new-password" data-form-type="other">
+              <label for="cfCo">Leave this field empty</label>
+              <input id="cfCo" name="company_website" type="text" tabindex="-1" autocomplete="off"
+                     readonly data-1p-ignore="true" data-lpignore="true" data-form-type="other">
             </div>
 
             <button class="btn btn-primary" id="cfSubmit" type="submit">Send message</button>
@@ -250,6 +251,6 @@
 <script src="analytics.js" defer></script>
 <script src="chrome.js" defer></script>
 <script src="motion.js" defer></script>
-<script src="contact.js?v=20260818-2" defer></script>
+<script src="contact.js?v=20260819-1" defer></script>
 </body>
 </html>
