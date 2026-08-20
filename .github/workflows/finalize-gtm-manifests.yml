@@ -18,10 +18,10 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Remove this one-shot workflow before inventory generation
-        run: rm .github/workflows/finalize-gtm-manifests.yml
+      - name: Stage this one-shot workflow for deletion before inventory generation
+        run: git rm .github/workflows/finalize-gtm-manifests.yml
 
-      - name: Regenerate repository manifests from final tree
+      - name: Regenerate repository manifests from final tracked tree
         run: node scripts/regen-manifests.mjs
 
       - name: Commit final generated manifests and self-delete
@@ -31,6 +31,6 @@ jobs:
         run: |
           git config user.name "finders-book-manifest-finalizer"
           git config user.email "actions@users.noreply.github.com"
-          git add -A .github/workflows/finalize-gtm-manifests.yml docs/FILE-TREE.md docs/FILE-INVENTORY.md
+          git add docs/FILE-TREE.md docs/FILE-INVENTORY.md
           git commit -m "chore: finalize repository manifests"
           git push origin "HEAD:$PR_HEAD_REF"
