@@ -36,12 +36,6 @@ jobs:
   render:
     name: Rendered-page smoke test
     runs-on: ubuntu-latest
-    # Static validation compares MARKUP. It cannot see that an element is
-    # present, correct, and invisible. On 2026-08-01 a GSAP rewrite silently
-    # left the hero headline, subhead and product image at opacity 0 on
-    # about/order/contact with zero console errors and zero 404s. This job
-    # renders every page in a real browser and fails the build if
-    # above-the-fold content is not actually visible.
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -69,3 +63,216 @@ jobs:
 
       - name: Render smoke test
         run: npm run test:render
+
+  gtm-autopilot:
+    name: GTM Autopilot static validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify locked dependencies
+        run: uv sync --project gtm/autopilot --locked
+
+      - name: Compile hardened GTM runtime
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
+
+      - name: Validate GTM architecture and control-plane contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          root = Path('gtm')
+          phase0 = json.loads((root / 'phase0-plan.json').read_text())
+          day_plan = json.loads((root / 'day-plan.json').read_text())
+          state = json.loads((root / 'state.json').read_text())
+          budget = json.loads((root / 'creative-budget.json').read_text())
+          agents_text = (root / 'prompts' / 'agents.md').read_text()
+          sections_text = (root / 'prompts' / 'sections.md').read_text()
+          control_text = (root / 'autopilot' / 'control_plane.py').read_text()
+          hardening_text = (root / 'autopilot' / 'final_hardening.py').read_text()
+          render_contracts_text = (root / 'autopilot' / 'render_contracts.py').read_text()
+          network_text = (root / 'autopilot' / 'network_guard.py').read_text()
+          epub_text = (root / 'ebook' / 'build_epub.py').read_text()
+          workflow_text = Path('.github/workflows/gtm-autopilot.yml').read_text()
+
+          expected_order = [12, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 5]
+          actual_order = phase0['execution_order']
+          assert actual_order == expected_order, (actual_order, expected_order)
+          assert sorted(actual_order) == list(range(1, 13))
+          assert len(phase0['sections']) == 12
+
+          section_headers = re.findall(r'^## SECTION: (\d+)\s*$', sections_text, flags=re.M)
+          assert sorted(map(int, section_headers)) == list(range(1, 13)), section_headers
+
+          agent_headers = re.findall(r'^## AGENT: ([A-Z_]+)\s*$', agents_text, flags=re.M)
+          expected_agents = {
+              'SEO', 'CONTENT', 'GROWTH', 'COMMERCE', 'ANALYTICS',
+              'PARTNERSHIPS', 'RELEASE_QA', 'CREATIVE_PRODUCTION', 'EBOOK_PRODUCTION'
+          }
+          assert set(agent_headers) == expected_agents, agent_headers
+          assert len(agent_headers) == 9
+
+          assert state['mode'] == 'PHASE0'
+          assert state['foundation_cursor'] == 0
+          assert state['current_day'] == 1
+
+          section5 = next(x for x in phase0['sections'] if x['section'] == 5)
+          assert 'foundation_reconciliation.status' in section5['pass_condition']
+          assert 'contradictions' in section5['pass_condition']
+
+          assert len(day_plan['days']) == 30
+          for day in day_plan['days']:
+              assert day.get('outputs'), f"Day {day['day']} missing durable output contract"
+          day6 = next(day for day in day_plan['days'] if day['day'] == 6)
+          assert day6.get('rendering_enabled') is True
+          assert 'CREATIVE_PRODUCTION' in day6['specialists']
+          assert budget['image']['model'] == 'gpt-image-2'
+          assert budget['video']['model'] == 'gen4.5'
+          assert budget['image']['enabled'] is True
+          assert budget['video']['enabled'] is True
+          assert budget['image']['max_images_per_run'] == 15
+          assert budget['video']['max_videos_per_run'] == 5
+          assert budget['video']['max_total_seconds_per_run'] <= 25
+          assert budget['approval_rules']['synthetic_physical_product_proof'] == 'PROHIBITED'
+
+          section1 = next(x for x in phase0['sections'] if x['section'] == 1)
+          assert 'EBOOK_PRODUCTION' in section1['specialists']
+          assert Path('gtm/ebook/build_epub.py').exists()
+          assert Path('gtm/ebook/README.md').exists()
+          assert Path('gtm/ebook/PRIVATE-INGESTION.md').exists()
+
+          # Base hardened control-plane invariants.
+          assert 'Path(tempfile.gettempdir()) / "finders-book-gtm-runtime"' in control_text
+          assert 'approval_class not in {"YELLOW", "RED"}' in control_text
+          assert '_authorized_owner(actor)' in control_text
+          assert 'output.run_status == "PASS" and not output.pass_condition_met' in control_text
+          assert 'output.run_status = "PARTIAL"' in control_text
+          assert '"PROVIDER_FAILED"' in control_text
+          assert 'provider_failures' in control_text
+          assert 'rich_execution_context' in control_text
+          assert 'latest_120_observations' in control_text
+          assert 'guarded_foundation_qa' in control_text
+          assert 'foundation_reconciliation' in control_text
+          assert 'RUNWAYML_API_SECRET missing for video rendering' in control_text
+          assert 'provider is disabled by creative-budget.json' in control_text
+
+          # Final autonomy/privacy contracts.
+          for category in ('video_reference_still', 'carousel_master', 'pinterest_pin', 'video'):
+              assert category in hardening_text
+          assert 'pending_approval_index' in hardening_text
+          assert 'GTM_EBOOK_SOURCE_URL' in hardening_text
+          assert 'GTM_EBOOK_SOURCE_SHA256' in hardening_text
+          assert 'current-run reference image' in hardening_text
+          assert 'Rejected out-of-contract artifact paths' in hardening_text
+          assert 'normalized_output_name' in render_contracts_text
+          assert '.png' in render_contracts_text and '.mp4' in render_contracts_text
+
+          # Provider download trust-boundary invariants: pinned public IP + TLS hostname verification.
+          assert 'def guarded_download_url' in network_text
+          assert 'parsed.scheme.lower() != "https"' in network_text
+          assert 'ip.is_private' in network_text
+          assert 'class PinnedHTTPSConnection' in network_text
+          assert 'self._validated_ip' in network_text
+          assert 'server_hostname=self.host' in network_text
+          assert 'urllib.request' not in network_text
+          assert 'MAX_DOWNLOAD_BYTES' in network_text
+          assert 'engine.download_url = guarded_download_url' in network_text
+
+          # Trusted workflow + persistence ordering invariants.
+          assert 'ref: main' in workflow_text
+          assert 'Runtime archive path validation passed.' in workflow_text
+          assert 'AUTOPILOT_MODE' in workflow_text
+          assert 'OPENAI_API_KEY is required for autonomous run mode.' in workflow_text
+          assert 'GTM_STATE_KEY is required' in workflow_text
+          assert 'final_hardening.main()' in workflow_text
+          assert 'Resolve browser for Autopilot QA' in workflow_text
+          assert 'ebook-ingest' in workflow_text
+          persist_pos = workflow_text.index('name: Encrypt and persist bounded runtime state')
+          upload_pos = workflow_text.index('name: Upload generated creative artifacts')
+          assert persist_pos < upload_pos
+          assert '${{ env.GTM_RUNTIME_ROOT }}/ebook/*.epub' not in workflow_text
+
+          # EPUB validity/identity/revision contracts.
+          assert 'def stable_identifier' in epub_text
+          assert 'metadata.identifier is required and must remain stable across rebuilds' in epub_text
+          assert 'def modified_timestamp' in epub_text
+          assert 'ET.fromstring' in epub_text
+          assert 'malformed XHTML' in epub_text
+
+          print('PASS: Phase 0, nine-agent, Day 6, private runtime, network, EPUB and final hardening contracts validated.')
+          PY
+
+      - name: Exercise provider network guardrails
+        shell: bash
+        run: |
+          PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python - <<'PY'
+          import network_guard
+
+          bad = [
+              'http://example.com/file',
+              'https://127.0.0.1/file',
+              'https://169.254.169.254/latest/meta-data/',
+              'https://[::1]/file',
+          ]
+          for url in bad:
+              try:
+                  network_guard._validate_https_public_url(url)
+              except ValueError:
+                  continue
+              raise SystemExit(f'Unsafe provider URL unexpectedly passed: {url}')
+          print('PASS: provider network guard rejects non-HTTPS/private destinations.')
+          PY
+
+      - name: Exercise EPUB validity and stable-identity guardrails
+        shell: bash
+        run: |
+          tmpdir="$(mktemp -d)"
+          cat > "$tmpdir/valid.json" <<'JSON'
+          {
+            "metadata": {
+              "title": "Finder Test Reading Edition",
+              "creator": "Test",
+              "language": "en-US",
+              "identifier": "urn:uuid:11111111-2222-3333-4444-555555555555",
+              "modified": "2026-08-20T13:00:00Z"
+            },
+            "chapters": [{"id":"1-one","title":"One","body_xhtml":"<p>A &amp; B</p>"}]
+          }
+          JSON
+          python gtm/ebook/build_epub.py --input "$tmpdir/valid.json" --output "$tmpdir/valid.epub"
+          test -s "$tmpdir/valid.epub"
+
+          cat > "$tmpdir/malformed.json" <<'JSON'
+          {
+            "metadata": {"identifier":"urn:uuid:11111111-2222-3333-4444-555555555555"},
+            "chapters": [{"id":"one","title":"One","body_xhtml":"<p>A & B</p>"}]
+          }
+          JSON
+          if python gtm/ebook/build_epub.py --input "$tmpdir/malformed.json" --output "$tmpdir/bad.epub"; then
+            echo "Malformed XHTML unexpectedly passed."
+            exit 1
+          fi
+
+          cat > "$tmpdir/no-id.json" <<'JSON'
+          {
+            "metadata": {"title":"Finder Test Reading Edition","identifier":""},
+            "chapters": [{"id":"one","title":"One","paragraphs":["Safe text"]}]
+          }
+          JSON
+          if python gtm/ebook/build_epub.py --input "$tmpdir/no-id.json" --output "$tmpdir/no-id.epub"; then
+            echo "Missing stable identifier unexpectedly passed."
+            exit 1
+          fi
+          echo "PASS: EPUB builder rejects malformed XHTML and unstable identity."

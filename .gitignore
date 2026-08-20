@@ -7,3 +7,7 @@ node_modules/
 Thumbs.db
 *.log
 coverage/
+
+# GTM Autopilot runtime business intelligence is never committed in plaintext.
+gtm/reports/
+gtm/runtime-state.enc

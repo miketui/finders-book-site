@@ -1,0 +1,231 @@
+{
+  "program": "finders-book-30-day-gtm",
+  "version": "1.2.0",
+  "timezone": "America/Los_Angeles",
+  "start_date": "2026-08-20",
+  "days": [
+    {
+      "day": 1,
+      "objective": "Lock offer, funnel and KPI baseline",
+      "specialists": ["ANALYTICS", "GROWTH"],
+      "outputs": ["reports/day-01-deliverable.md"],
+      "pass_condition": "Baseline, funnel map, UTM convention, channel dashboard structure documented."
+    },
+    {
+      "day": 2,
+      "objective": "Build SEO keyword-to-page map",
+      "specialists": ["SEO"],
+      "outputs": ["reports/day-02-deliverable.md"],
+      "pass_condition": "Keyword map complete; existing-page overlap checked; first SEO asset brief ready."
+    },
+    {
+      "day": 3,
+      "objective": "Prepare physical print master",
+      "specialists": ["COMMERCE", "RELEASE_QA"],
+      "outputs": ["reports/day-03-deliverable.md"],
+      "pass_condition": "Physical production master passes preflight requirements; owner proof action identified."
+    },
+    {
+      "day": 4,
+      "objective": "Build Amazon KDP metadata package",
+      "specialists": ["COMMERCE", "SEO"],
+      "outputs": ["reports/day-04-deliverable.md"],
+      "pass_condition": "KDP title/subtitle/description/7 keyword phrases/categories/format decision package ready."
+    },
+    {
+      "day": 5,
+      "objective": "Build Etsy shop and listing architecture",
+      "specialists": ["COMMERCE", "SEO"],
+      "outputs": ["reports/day-05-deliverable.md"],
+      "pass_condition": "Etsy draft, tags, production-partner/shipping-origin requirements and proof-photo plan ready."
+    },
+    {
+      "day": 6,
+      "objective": "Run first large autonomous creative rendering batch",
+      "specialists": ["CONTENT", "CREATIVE_PRODUCTION"],
+      "outputs": ["reports/day-06-deliverable.md"],
+      "rendering_enabled": true,
+      "pass_condition": "Using the Phase 0 Section 10 creative master specification and creative-budget ceilings, produce 5 video drafts, 5 video reference stills, 5 carousel master graphics and 5 Pinterest Pins, plus scripts/copy/manifests; generated media remains unpublished."
+    },
+    {
+      "day": 7,
+      "objective": "Final pre-traffic conversion QA",
+      "specialists": ["RELEASE_QA", "ANALYTICS"],
+      "outputs": ["reports/day-07-deliverable.md"],
+      "pass_condition": "Critical CTAs and funnel assumptions checked; analytics QA evidence recorded."
+    },
+    {
+      "day": 8,
+      "objective": "Prepare Google Search launch test",
+      "specialists": ["GROWTH", "ANALYTICS"],
+      "outputs": ["reports/day-08-deliverable.md"],
+      "pass_condition": "Search campaign structure, keywords, negatives, ads, conversion objective and $15/day ceiling ready for approval."
+    },
+    {
+      "day": 9,
+      "objective": "Prepare Pinterest discovery launch",
+      "specialists": ["CONTENT", "CREATIVE_PRODUCTION", "GROWTH", "SEO"],
+      "outputs": ["reports/day-09-deliverable.md"],
+      "pass_condition": "5 organic pins plus paid test package and destination strategy ready."
+    },
+    {
+      "day": 10,
+      "objective": "Prepare Meta launch test after event QA",
+      "specialists": ["GROWTH", "ANALYTICS", "CONTENT", "CREATIVE_PRODUCTION"],
+      "outputs": ["reports/day-10-deliverable.md"],
+      "pass_condition": "Three distinct creative angles and measurement gate ready; no spend activated."
+    },
+    {
+      "day": 11,
+      "objective": "Ship SEO cornerstone asset #1",
+      "specialists": ["SEO", "CONTENT", "RELEASE_QA"],
+      "outputs": ["reports/day-11-deliverable.md"],
+      "pass_condition": "Existing intent checked; optimized/new asset package, internal links and social cutdowns ready."
+    },
+    {
+      "day": 12,
+      "objective": "Begin partner traffic outreach",
+      "specialists": ["PARTNERSHIPS", "CONTENT"],
+      "outputs": ["reports/day-12-deliverable.md"],
+      "pass_condition": "25-target partner list and first 10 personalized outreach drafts with tracking plan ready."
+    },
+    {
+      "day": 13,
+      "objective": "Run three-emotion creative test design",
+      "specialists": ["CONTENT", "CREATIVE_PRODUCTION", "GROWTH", "ANALYTICS"],
+      "outputs": ["reports/day-13-deliverable.md"],
+      "pass_condition": "Pain/Relief/Dream variants defined with stable variables and measurement plan."
+    },
+    {
+      "day": 14,
+      "objective": "Week-2 optimization review",
+      "specialists": ["ANALYTICS", "GROWTH"],
+      "outputs": ["reports/day-14-deliverable.md"],
+      "pass_condition": "Channel scorecard, losers/winners, negatives and no-scale decision documented."
+    },
+    {
+      "day": 15,
+      "objective": "Lulu proof and Direct setup package",
+      "specialists": ["COMMERCE", "RELEASE_QA"],
+      "outputs": ["reports/day-15-deliverable.md"],
+      "pass_condition": "Lulu project/proof checklist, economics capture and owner-only proof/order actions ready."
+    },
+    {
+      "day": 16,
+      "objective": "Etsy physical listing launch package",
+      "specialists": ["COMMERCE", "SEO", "CONTENT"],
+      "outputs": ["reports/day-16-deliverable.md"],
+      "pass_condition": "Proof-dependent Etsy listing package complete and publish action approval-gated."
+    },
+    {
+      "day": 17,
+      "objective": "Amazon KDP submission package",
+      "specialists": ["COMMERCE", "RELEASE_QA"],
+      "outputs": ["reports/day-17-deliverable.md"],
+      "pass_condition": "KDP files/metadata/preview checklist complete and submission approval-gated."
+    },
+    {
+      "day": 18,
+      "objective": "Amazon detail page and Sponsored Products prep",
+      "specialists": ["COMMERCE", "CONTENT", "CREATIVE_PRODUCTION", "GROWTH"],
+      "outputs": ["reports/day-18-deliverable.md"],
+      "pass_condition": "Detail-page conversion assets and $5/day Sponsored Products test package ready."
+    },
+    {
+      "day": 19,
+      "objective": "Launch physical-edition discovery content + website routing",
+      "specialists": ["CONTENT", "CREATIVE_PRODUCTION", "COMMERCE", "RELEASE_QA", "ANALYTICS"],
+      "outputs": ["reports/day-19-deliverable.md"],
+      "pass_condition": "Physical content package, normal Lulu Direct checkout button plan and physical_checkout_click tracking plan ready."
+    },
+    {
+      "day": 20,
+      "objective": "Email the physical-edition story",
+      "specialists": ["CONTENT", "ANALYTICS"],
+      "outputs": ["reports/day-20-deliverable.md"],
+      "pass_condition": "Lead/buyer segmented physical-edition email package and click-tagging plan ready; send gated."
+    },
+    {
+      "day": 21,
+      "objective": "Marketplace quality review",
+      "specialists": ["COMMERCE", "ANALYTICS", "RELEASE_QA"],
+      "outputs": ["reports/day-21-deliverable.md"],
+      "pass_condition": "Etsy/Amazon/Lulu QA scorecards and fixes prioritized."
+    },
+    {
+      "day": 22,
+      "objective": "Turn Google search terms into a moat",
+      "specialists": ["GROWTH", "SEO", "ANALYTICS"],
+      "outputs": ["reports/day-22-deliverable.md"],
+      "pass_condition": "Search-term mining, negatives, exact/phrase promotions and landing-page alignment decisions ready."
+    },
+    {
+      "day": 23,
+      "objective": "Build Meta retargeting creative",
+      "specialists": ["GROWTH", "CONTENT", "CREATIVE_PRODUCTION", "ANALYTICS"],
+      "outputs": ["reports/day-23-deliverable.md"],
+      "pass_condition": "Audience/exclusion logic and objection-handling retargeting assets ready."
+    },
+    {
+      "day": 24,
+      "objective": "Promote best Pinterest concept",
+      "specialists": ["CONTENT", "CREATIVE_PRODUCTION", "GROWTH", "ANALYTICS"],
+      "outputs": ["reports/day-24-deliverable.md"],
+      "pass_condition": "Winning concept identified from evidence or marked unverified; two variants and budget recommendation ready."
+    },
+    {
+      "day": 25,
+      "objective": "Prepare small Etsy Ads test",
+      "specialists": ["GROWTH", "COMMERCE", "ANALYTICS"],
+      "outputs": ["reports/day-25-deliverable.md"],
+      "pass_condition": "Proof/listing readiness gate and $1-$3/day Etsy Ads proposal ready."
+    },
+    {
+      "day": 26,
+      "objective": "Prepare Amazon Sponsored Products launch",
+      "specialists": ["GROWTH", "COMMERCE", "ANALYTICS"],
+      "outputs": ["reports/day-26-deliverable.md"],
+      "pass_condition": "$5/day automatic campaign and future manual/negative logic ready."
+    },
+    {
+      "day": 27,
+      "objective": "Ship SEO cornerstone asset #2 or #3",
+      "specialists": ["SEO", "CONTENT", "ANALYTICS"],
+      "outputs": ["reports/day-27-deliverable.md"],
+      "pass_condition": "Demand-led SEO asset selected with cannibalization check and repurposing package ready."
+    },
+    {
+      "day": 28,
+      "objective": "Run micro-influencer and educator outreach",
+      "specialists": ["PARTNERSHIPS", "CONTENT", "CREATIVE_PRODUCTION", "ANALYTICS"],
+      "outputs": ["reports/day-28-deliverable.md"],
+      "pass_condition": "15 targeted outreach drafts, review-copy angle, rights/ROI checklist and tracking plan ready."
+    },
+    {
+      "day": 29,
+      "objective": "Test the offer stack",
+      "specialists": ["ANALYTICS", "COMMERCE", "CONTENT"],
+      "outputs": ["reports/day-29-deliverable.md"],
+      "pass_condition": "Physical vs Ultimate vs Family evidence summarized; $69.99 bundle remains hypothesis unless approved."
+    },
+    {
+      "day": 30,
+      "objective": "Executive review and transition decision",
+      "specialists": ["ANALYTICS", "GROWTH", "SEO", "COMMERCE", "PARTNERSHIPS", "CONTENT", "CREATIVE_PRODUCTION", "RELEASE_QA"],
+      "outputs": ["reports/day-30-deliverable.md"],
+      "pass_condition": "Month-1 review names winners, losers, economics, next theme and transition to Continuous Growth Mode."
+    }
+  ],
+  "continuous_growth": {
+    "enabled_after_day": 30,
+    "cadence": {
+      "monday": "Analytics + SEO opportunity discovery",
+      "tuesday": "Content + creative production",
+      "wednesday": "Distribution + partnerships",
+      "thursday": "Optimization + experiments",
+      "friday": "Marketplace + B2B development",
+      "saturday": "Evergreen content + creative refresh",
+      "sunday": "Executive review + next-week planning"
+    }
+  }
+}

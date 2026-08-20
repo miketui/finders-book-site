@@ -1,0 +1,9 @@
+{
+  "pending": [],
+  "resolved": [],
+  "classes": {
+    "GREEN": "autonomous preparation/research/QA",
+    "YELLOW": "owner approval before external side effect",
+    "RED": "owner-only action"
+  }
+}

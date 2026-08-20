@@ -1,0 +1,20 @@
+{
+  "as_of": null,
+  "definitions": {
+    "sessions": "Qualified website sessions",
+    "gap_check_leads": "Completed Family Readiness Gap Check leads",
+    "checkout_clicks": "Tracked checkout intent events",
+    "purchases": "Confirmed purchases from authoritative commerce sources",
+    "revenue": "Confirmed gross revenue USD",
+    "ad_spend": "Confirmed paid media spend USD",
+    "cpl": "ad_spend / attributable leads",
+    "cpa": "ad_spend / attributable purchases",
+    "site_cvr": "purchases / sessions",
+    "contribution": "revenue - platform fees - print cost - shipping subsidy - refunds - ad spend"
+  },
+  "channels": {},
+  "history": [],
+  "missing_data": [
+    "Populate only from connected/authoritative systems. Do not estimate production metrics."
+  ]
+}

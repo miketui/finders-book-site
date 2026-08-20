@@ -1,0 +1,35 @@
+name: Verify repository manifests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "gtm/**"
+      - ".github/workflows/gtm-autopilot.yml"
+      - ".github/workflows/regenerate-manifests.yml"
+      - ".github/workflows/validate.yml"
+      - "scripts/regen-manifests.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify Autopilot lockfile is current
+        run: uv lock --project gtm/autopilot --check
+
+      - name: Regenerate manifests in working tree
+        run: node scripts/regen-manifests.mjs
+
+      - name: Require committed generated files to be current
+        run: git diff --exit-code -- gtm/autopilot/uv.lock docs/FILE-TREE.md docs/FILE-INVENTORY.md
