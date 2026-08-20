@@ -1,11 +1,12 @@
 [project]
 name = "finders-book-gtm-autopilot"
-version = "0.1.0"
+version = "0.2.0"
 description = "Guarded autonomous GTM orchestrator for The Finder's Book"
 requires-python = ">=3.12"
 dependencies = [
-  "openai-agents",
-  "pydantic>=2.10"
+  "openai-agents==0.19.2",
+  "runwayml==5.13.0",
+  "pydantic>=2.10,<3"
 ]
 
 [tool.uv]
