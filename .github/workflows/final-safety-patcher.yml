@@ -1,0 +1,96 @@
+name: One-shot final GTM safety patcher
+
+on:
+  push:
+    branches:
+      - feature/gtm-autopilot-v1
+    paths:
+      - .github/workflows/final-safety-patcher.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact feature branch
+        uses: actions/checkout@v5
+        with:
+          ref: feature/gtm-autopilot-v1
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply verified safety fixes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          hardening_path = Path('gtm/autopilot/final_hardening.py')
+          hardening = hardening_path.read_text()
+
+          replacements = [
+              (
+                  '_REJECTED_ARTIFACT_PATHS: list[str] = []\n',
+                  '_REJECTED_ARTIFACT_PATHS: list[str] = []\n_WRITTEN_ARTIFACT_PATHS: set[str] = set()\n',
+              ),
+              (
+                  '    global _REJECTED_ARTIFACT_PATHS\n    allowed = _allowed_artifact_paths(_ACTIVE_UNIT)\n',
+                  '    global _REJECTED_ARTIFACT_PATHS, _WRITTEN_ARTIFACT_PATHS\n    allowed = _allowed_artifact_paths(_ACTIVE_UNIT)\n',
+              ),
+              (
+                  '    return _RAW_WRITE_ARTIFACT_DOCUMENTS(accepted)\n\n\nasync def hardened_execute_unit(unit: dict) -> dict:\n    global _ACTIVE_UNIT, _REJECTED_ARTIFACT_PATHS\n    _ACTIVE_UNIT = copy.deepcopy(unit)\n    _REJECTED_ARTIFACT_PATHS = []\n',
+                  '    written = _RAW_WRITE_ARTIFACT_DOCUMENTS(accepted)\n    _WRITTEN_ARTIFACT_PATHS.update(written)\n    return written\n\n\nasync def hardened_execute_unit(unit: dict) -> dict:\n    global _ACTIVE_UNIT, _REJECTED_ARTIFACT_PATHS, _WRITTEN_ARTIFACT_PATHS\n    _ACTIVE_UNIT = copy.deepcopy(unit)\n    _REJECTED_ARTIFACT_PATHS = []\n    _WRITTEN_ARTIFACT_PATHS = set()\n',
+              ),
+              (
+                  '        one = output.model_copy(deep=True)\n        one_job = one.creative_jobs[0]\n        one_job.reference_image = reference_path\n        try:\n            result = control_plane._original_render_creative_jobs(\n                one, unit, run_id\n            )\n',
+                  '        one = output.model_copy(deep=True)\n        one.creative_jobs = [job]\n        one_job = one.creative_jobs[0]\n        one_job.reference_image = reference_path\n        try:\n            result = control_plane._original_render_creative_jobs(\n                one, unit, run_id\n            )\n',
+              ),
+              (
+                  '    ):\n        if _REJECTED_ARTIFACT_PATHS:\n',
+                  '    ):\n        if unit.get("kind") in {"section", "day", "continuous"}:\n            required_now = set(unit.get("required_outputs", []))\n            missing_current = sorted(required_now - _WRITTEN_ARTIFACT_PATHS)\n            if missing_current:\n                output.blockers.append(\n                    "Required outputs not written by current run: "\n                    + ", ".join(missing_current)\n                )\n                output.pass_condition_met = False\n                output.run_status = "BLOCKED"\n                required_ok = False\n        if _REJECTED_ARTIFACT_PATHS:\n',
+              ),
+          ]
+          for old, new in replacements:
+              if hardening.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one hardening match, found {hardening.count(old)} for: {old[:90]!r}')
+              hardening = hardening.replace(old, new, 1)
+          hardening_path.write_text(hardening)
+
+          network_path = Path('gtm/autopilot/network_guard.py')
+          network = network_path.read_text()
+          old = '''                    next_url = urllib.parse.urljoin(\n                        current_url, location\n                    )\n                    _validate_https_public_url(next_url)\n                    current_url = next_url\n                    continue\n'''
+          new = '''                    next_url = urllib.parse.urljoin(\n                        current_url, location\n                    )\n                    next_parsed, _ = _validate_https_public_url(next_url)\n                    current_origin = (\n                        parsed.scheme.lower(),\n                        (parsed.hostname or "").lower(),\n                        parsed.port or 443,\n                    )\n                    next_origin = (\n                        next_parsed.scheme.lower(),\n                        (next_parsed.hostname or "").lower(),\n                        next_parsed.port or 443,\n                    )\n                    if next_origin != current_origin:\n                        safe_headers = {\n                            key: value\n                            for key, value in safe_headers.items()\n                            if key.lower() != "authorization"\n                        }\n                    current_url = next_url\n                    continue\n'''
+          if network.count(old) != 1:
+              raise SystemExit(f'Expected exactly one redirect match, found {network.count(old)}')
+          network_path.write_text(network.replace(old, new, 1))
+
+          validation_path = Path('.github/workflows/gtm-final-hardening.yml')
+          validation = validation_path.read_text()
+          old = "          assert 'sha256_verified' in hardening\n\n          assert 'normalized_output_name' in render_contracts\n"
+          new = """          assert 'sha256_verified' in hardening\n          assert hardening.count('one.creative_jobs = [job]') >= 2\n          assert '_WRITTEN_ARTIFACT_PATHS' in hardening\n          assert 'Required outputs not written by current run' in hardening\n\n          assert 'normalized_output_name' in render_contracts\n"""
+          if validation.count(old) != 1:
+              raise SystemExit('Could not find hardening validation insertion point')
+          validation = validation.replace(old, new, 1)
+          old = "          assert 'MAX_DOWNLOAD_BYTES' in network\n\n          assert 'Resolve browser for Autopilot QA' in workflow\n"
+          new = """          assert 'MAX_DOWNLOAD_BYTES' in network\n          assert 'next_origin != current_origin' in network\n          assert 'key.lower() != \"authorization\"' in network\n\n          assert 'Resolve browser for Autopilot QA' in workflow\n"""
+          if validation.count(old) != 1:
+              raise SystemExit('Could not find network validation insertion point')
+          validation_path.write_text(validation.replace(old, new, 1))
+
+          # Sanity checks before committing.
+          compile(hardening_path.read_text(), str(hardening_path), 'exec')
+          compile(network_path.read_text(), str(network_path), 'exec')
+          print('Applied current-run output, per-video isolation, and cross-origin auth stripping fixes.')
+          PY
+
+      - name: Remove one-shot patcher and commit fixes
+        shell: bash
+        run: |
+          git rm .github/workflows/final-safety-patcher.yml
+          git config user.name "miketui"
+          git config user.email "208109316+miketui@users.noreply.github.com"
+          git add gtm/autopilot/final_hardening.py gtm/autopilot/network_guard.py .github/workflows/gtm-final-hardening.yml
+          git commit -m "fix(gtm): close final autonomy safety gaps"
+          git push origin HEAD:feature/gtm-autopilot-v1
