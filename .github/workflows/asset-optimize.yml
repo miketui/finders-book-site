@@ -1,0 +1,125 @@
+name: Optimize Finder's Book product assets
+
+on:
+  push:
+    branches:
+      - asset-migration-20260819
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: asset-migration-20260819
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Pillow
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Generate responsive production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps
+
+          root = Path('.')
+          incoming = root / 'assets' / 'incoming'
+          assets = root / 'assets'
+
+          specs = {
+              'finders-book-cover.png': ('finders-book-cover', 'cover'),
+              'essentials-product.png': ('essentials-product', 'square'),
+              'ultimate-product.png': ('ultimate-product', 'square'),
+              'family-bundle-product.png': ('family-bundle-product', 'square'),
+          }
+
+          def save_webp(source: Image.Image, out: Path, width: int, quality: int):
+              ratio = width / source.width
+              height = max(1, round(source.height * ratio))
+              resized = source.resize((width, height), Image.Resampling.LANCZOS)
+              if resized.mode not in ('RGB', 'RGBA'):
+                  resized = resized.convert('RGB')
+              resized.save(out, 'WEBP', quality=quality, method=6)
+              return resized.size
+
+          for filename, (stem, kind) in specs.items():
+              path = incoming / filename
+              im = Image.open(path)
+              im.load()
+              print(f'{filename}: source={im.width}x{im.height} bytes={path.stat().st_size}')
+              if im.width < 800 or im.height < 800:
+                  raise SystemExit(f'{filename}: source resolution is below 800px')
+              if kind == 'cover' and im.height <= im.width:
+                  raise SystemExit(f'{filename}: expected portrait cover')
+              if kind == 'square' and abs(im.width - im.height) / max(im.width, im.height) > 0.03:
+                  raise SystemExit(f'{filename}: expected near-square product tile')
+
+              for width, quality in ((400, 88), (800, 90)):
+                  out = assets / f'{stem}-{width}.webp'
+                  dims = save_webp(im, out, width, quality)
+                  print(f'  -> {out}: {dims[0]}x{dims[1]} bytes={out.stat().st_size}')
+
+          # Replace the existing social-preview asset with a cover-derived 1200x630 JPEG.
+          cover = Image.open(incoming / 'finders-book-cover.png').convert('RGB')
+          bg = cover.getpixel((0, 0))
+          canvas = Image.new('RGB', (1200, 630), bg)
+          fitted = ImageOps.contain(cover, (1160, 590), Image.Resampling.LANCZOS)
+          x = (1200 - fitted.width) // 2
+          y = (630 - fitted.height) // 2
+          canvas.paste(fitted, (x, y))
+          og = assets / 'og-finders-book.jpg'
+          canvas.save(og, 'JPEG', quality=90, optimize=True, progressive=True)
+          print(f'  -> {og}: 1200x630 bytes={og.stat().st_size}')
+
+          budgets = {
+              'finders-book-cover-400.webp': 220_000,
+              'finders-book-cover-800.webp': 500_000,
+              'essentials-product-400.webp': 250_000,
+              'essentials-product-800.webp': 600_000,
+              'ultimate-product-400.webp': 250_000,
+              'ultimate-product-800.webp': 600_000,
+              'family-bundle-product-400.webp': 250_000,
+              'family-bundle-product-800.webp': 600_000,
+              'og-finders-book.jpg': 450_000,
+          }
+          for name, limit in budgets.items():
+              size = (assets / name).stat().st_size
+              if size > limit:
+                  raise SystemExit(f'{name}: {size} bytes exceeds budget {limit}')
+          PY
+
+      - name: Commit optimized assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            assets/finders-book-cover-400.webp \
+            assets/finders-book-cover-800.webp \
+            assets/essentials-product-400.webp \
+            assets/essentials-product-800.webp \
+            assets/ultimate-product-400.webp \
+            assets/ultimate-product-800.webp \
+            assets/family-bundle-product-400.webp \
+            assets/family-bundle-product-800.webp \
+            assets/og-finders-book.jpg
+          if git diff --cached --quiet; then
+            echo 'No generated asset changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Generate optimized Finder book product assets'
+          git push origin HEAD:asset-migration-20260819
