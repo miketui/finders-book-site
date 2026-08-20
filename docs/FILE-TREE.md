@@ -96,6 +96,7 @@ finders-book-site/
     │   └── VERIFIED-STATE-2026-08-15.md
     ├── gtm/
     │   ├── autopilot/
+    │   │   ├── control_plane.py
     │   │   ├── main.py
     │   │   ├── pyproject.toml
     │   │   └── uv.lock
