@@ -450,6 +450,14 @@ def check_day_plan_contract_still_authoritative() -> None:
     assert "5 Pinterest Pins" in day6["pass_condition"]
 
 
+def check_section12_classification_contract() -> None:
+    source = (engine.REPO_ROOT / "gtm" / "autopilot" / "main.py").read_text()
+    assert "SECTION 12 CLASSIFICATION CONTRACT" in source
+    assert "classification, not successful verification of every claim" in source
+    assert "outputs from later Foundation sections" in source
+    assert "Do not mark the unit BLOCKED solely" in source
+
+
 def main() -> None:
     check_daily_prompt_fidelity()
     check_operator_schema()
@@ -460,6 +468,7 @@ def main() -> None:
     check_authenticated_integrity()
     check_production_import_order()
     check_day_plan_contract_still_authoritative()
+    check_section12_classification_contract()
     check_reload_safe_active_unit_patch()
     print("GTM Autopilot v1.1 usability self-test PASS")
 

@@ -729,6 +729,18 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
             "If live private dashboard evidence is unavailable, mark it UNVERIFIED and produce a concrete verification checklist rather than inventing facts.\n\n"
             f"SECTION PROMPT:\n{section_prompt}"
         )
+        if int(unit.get("section", 0)) == 12:
+            specific += (
+                "\n\nSECTION 12 CLASSIFICATION CONTRACT: The pass condition is complete "
+                "classification, not successful verification of every claim. A material "
+                "claim classified UNVERIFIED satisfies this unit when the source ledger "
+                "records its impact and a concrete authoritative verification checklist. "
+                "Do not require rendered-page results, private dashboard evidence, "
+                "protected-check/merge/deployment alignment, final-file marketplace "
+                "economics, outputs from later Foundation sections, or Foundation QA as "
+                "prerequisites for Section 12. Do not mark the unit BLOCKED solely because "
+                "those later or private inputs are unavailable."
+            )
     else:
         specific = (
             f"Execute {unit['id']}: {unit['objective']}. "
