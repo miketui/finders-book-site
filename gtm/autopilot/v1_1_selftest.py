@@ -408,6 +408,18 @@ def check_production_import_order() -> None:
                 "Credential-bearing blocker suppressed."
             ]
 
+            (reports / "2026-08-20-section-12-oauth.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "oauth-run",
+                        "blockers": ["Investigate gho_abcdefghijklmnop exposure."],
+                    }
+                )
+            )
+            assert final_hardening.latest_blocker_summaries("oauth-run") == [
+                "Credential-bearing blocker suppressed."
+            ]
+
             for run_id, malformed in (
                 ("null-run", None),
                 ("object-run", {"unexpected": "shape"}),

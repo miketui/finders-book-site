@@ -402,8 +402,9 @@ def latest_blocker_summaries(last_run_id: object) -> list[str]:
             r"(?i)(?:\b(?:authorization\s*:\s*)?bearer\s+\S+|"
             r"\b[A-Z0-9_]*(?:API[_ -]?KEY|SECRET|ACCESS[_ -]?TOKEN|TOKEN|"
             r"PASSWORD|PASSPHRASE|RECOVERY[_ -]?CODE|PIN)[A-Z0-9_]*\b|"
-            r"\b(?:sk|ghp|github_pat|glpat)[-_][A-Za-z0-9_-]{12,}\b|"
-            r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b)",
+            r"\b(?:sk[-_]|gh[opusr]_|github_pat_|glpat-)[A-Za-z0-9_-]{12,}\b|"
+            r"\bxox[baprs]-[A-Za-z0-9-]{12,}\b|"
+            r"\bAIza[A-Za-z0-9_-]{20,}\b|\b(?:AKIA|ASIA)[A-Z0-9]{16}\b)",
             text,
         )
         if credential_marker:
