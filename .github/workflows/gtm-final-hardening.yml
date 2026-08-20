@@ -74,6 +74,7 @@ jobs:
           assert 'resume-ledger.json' in render_contracts
           assert 'PROVIDER_FAILED_AMBIGUOUS' in render_contracts
           assert 'automatic rerendering is blocked to prevent duplicate spend' in render_contracts
+          assert 'unit.get("kind") == "foundation_qa"' in render_contracts
 
           assert 'class PinnedHTTPSConnection' in network
           assert 'server_hostname=self.host' in network
@@ -102,15 +103,16 @@ jobs:
           assert 'RESERVED_OUTPUT_BASENAMES' in epub
           assert Path('gtm/ebook/PRIVATE-INGESTION.md').exists()
 
-          print('PASS: final GTM autonomy, resume safety, privacy, Day 6, filename, network and EPUB contracts validated.')
+          print('PASS: final GTM autonomy, resume safety, Foundation QA, privacy, Day 6, filename, network and EPUB contracts validated.')
           PY
 
-      - name: Exercise hardened active-unit, status and render filename schemas
+      - name: Exercise hardened active-unit, Foundation QA, status and render schemas
         shell: bash
         run: |
           PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python - <<'PY'
           import os
           import tempfile
+          from pathlib import Path
 
           os.environ['GTM_RUNTIME_ROOT'] = tempfile.mkdtemp(prefix='gtm-hardening-')
           import final_hardening as fh
@@ -142,6 +144,22 @@ jobs:
           assert rc.normalized_output_name(video) == 'video.mp4'
 
           fh.engine.RUNTIME_ROOT.mkdir(parents=True, exist_ok=True)
+          persisted = fh.engine.RUNTIME_ROOT / 'foundation' / 'persisted-section.md'
+          persisted.parent.mkdir(parents=True, exist_ok=True)
+          persisted.write_text('persisted from a prior section run')
+          rc._CURRENT_WRITTEN_PATHS.clear()
+          qa_ok, qa_missing = rc.current_run_required_outputs_exist({
+              'kind': 'foundation_qa',
+              'required_outputs': ['foundation/persisted-section.md'],
+          })
+          assert qa_ok and not qa_missing
+          day_ok, day_missing = rc.current_run_required_outputs_exist({
+              'kind': 'day',
+              'required_outputs': ['foundation/persisted-section.md'],
+          })
+          assert not day_ok
+          assert day_missing == ['foundation/persisted-section.md']
+
           (fh.engine.RUNTIME_ROOT / 'approvals.json').write_text(
               '{"pending":[{"id":"abc","approval_class":"RED","blocking":true,"status":"PENDING","reason":"private","max_spend_usd":999}],"resolved":[]}'
           )
@@ -152,7 +170,7 @@ jobs:
           item = payload['pending_approval_index'][0]
           assert set(item) == {'id', 'approval_class', 'blocking', 'status'}
           assert 'reason' not in item and 'max_spend_usd' not in item
-          print('PASS: durable outputs, filename normalization, categories and public-safe approval index validated.')
+          print('PASS: Foundation QA accepts persisted section outputs while daily units still require current-run writes.')
           PY
 
       - name: Exercise Day 6 paid-render resume without duplicate spend
