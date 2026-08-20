@@ -275,6 +275,17 @@ async def run_daily() -> None:
     if not isinstance(output, DailyRunOutput):
         output = DailyRunOutput.model_validate(output)
     persist_output(output, day, qa)
+    # Safe CI-visible summary only. Detailed briefs, metrics and approval reasons
+    # remain in encrypted runtime state rather than public GitHub Actions logs.
+    print(json.dumps({
+        "autopilot": "completed",
+        "active_day": day["day"],
+        "run_status": output.run_status,
+        "pass_condition_met": output.pass_condition_met,
+        "approval_count": len(output.approval_requests),
+        "blocker_count": len(output.blockers),
+        "repository_qa_passed": qa["passed"],
+    }, indent=2))
 
 
 def main() -> None:
@@ -291,7 +302,14 @@ def main() -> None:
         print(f"{args.mode.upper()}: {args.approval_id}")
         return
     if args.mode == "status":
-        print(json.dumps(load_json("state.json"), indent=2))
+        state = load_json("state.json")
+        print(json.dumps({
+            "mode": state.get("mode"),
+            "current_day": state.get("current_day"),
+            "status": state.get("status"),
+            "last_run_status": state.get("last_run_status"),
+            "blocking_approval_count": len(state.get("blocking_approval_ids", [])),
+        }, indent=2))
         return
     asyncio.run(run_daily())
 
