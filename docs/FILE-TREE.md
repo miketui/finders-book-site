@@ -97,7 +97,8 @@ finders-book-site/
     ├── gtm/
     │   ├── autopilot/
     │   │   ├── main.py
-    │   │   └── pyproject.toml
+    │   │   ├── pyproject.toml
+    │   │   └── uv.lock
     │   ├── ebook/
     │   │   ├── build_epub.py
     │   │   ├── manuscript-template.json
