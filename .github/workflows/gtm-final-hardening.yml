@@ -71,6 +71,9 @@ jobs:
           assert 'distinct normalized output filenames' in render_contracts
           assert 'must use a .png filename' in render_contracts
           assert 'must use a .mp4 filename' in render_contracts
+          assert 'resume-ledger.json' in render_contracts
+          assert 'PROVIDER_FAILED_AMBIGUOUS' in render_contracts
+          assert 'automatic rerendering is blocked to prevent duplicate spend' in render_contracts
 
           assert 'class PinnedHTTPSConnection' in network
           assert 'server_hostname=self.host' in network
@@ -86,14 +89,20 @@ jobs:
           assert '--exclude=\'ebook/*.epub\'' not in workflow
           assert '${{ env.GTM_RUNTIME_ROOT }}/ebook/*.epub' not in workflow
           assert 'Upload generated creative artifacts' in workflow
+          assert "'foundation', 'reports', 'ebook', 'creative'" in workflow
+          assert 'foundation reports ebook creative' in workflow
+          assert 'AUTOPILOT_BOOTSTRAP' in workflow
+          assert 'starting from checked-in PHASE0 templates' in workflow
 
           assert 'def modified_timestamp' in epub
           assert 'datetime.now(timezone.utc)' in epub
           assert 'if not re.match(r"^[A-Za-z_]", cleaned)' in epub
           assert 'metadata.identifier is required and must remain stable across rebuilds' in epub
+          assert 'RESERVED_PACKAGE_IDS' in epub
+          assert 'RESERVED_OUTPUT_BASENAMES' in epub
           assert Path('gtm/ebook/PRIVATE-INGESTION.md').exists()
 
-          print('PASS: final GTM autonomy, privacy, Day 6, filename, network and EPUB contracts validated.')
+          print('PASS: final GTM autonomy, resume safety, privacy, Day 6, filename, network and EPUB contracts validated.')
           PY
 
       - name: Exercise hardened active-unit, status and render filename schemas
@@ -146,7 +155,139 @@ jobs:
           print('PASS: durable outputs, filename normalization, categories and public-safe approval index validated.')
           PY
 
-      - name: Exercise EPUB validity, stable identity and OPF-safe IDs
+      - name: Exercise Day 6 paid-render resume without duplicate spend
+        shell: bash
+        run: |
+          PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python - <<'PY'
+          import os
+          import tempfile
+
+          os.environ['GTM_RUNTIME_ROOT'] = tempfile.mkdtemp(prefix='gtm-resume-')
+          os.environ['OPENAI_API_KEY'] = 'test-openai-key'
+          os.environ['RUNWAYML_API_SECRET'] = 'test-runway-key'
+
+          import final_hardening as fh
+          import render_contracts as rc
+
+          fh.engine.CreativeJob = fh.HardenedCreativeJob
+          fh.engine.RunOutput = fh.HardenedRunOutput
+
+          unit = fh.hardened_active_unit({
+              'mode': 'THIRTY_DAY', 'current_day': 6, 'status': 'READY'
+          })
+          unit['rendering_enabled'] = True
+
+          jobs = []
+          refs = []
+          for i in range(1, 6):
+              asset_id = f'ref-{i}'
+              refs.append(asset_id)
+              jobs.append(fh.HardenedCreativeJob(
+                  asset_id=asset_id,
+                  kind='image',
+                  category='video_reference_still',
+                  prompt=f'reference {i}',
+                  filename=f'reference-{i}.png',
+                  size_or_ratio='1024x1536',
+              ))
+          for i in range(1, 6):
+              jobs.append(fh.HardenedCreativeJob(
+                  asset_id=f'carousel-{i}',
+                  kind='image',
+                  category='carousel_master',
+                  prompt=f'carousel {i}',
+                  filename=f'carousel-{i}.png',
+                  size_or_ratio='1024x1536',
+              ))
+          for i in range(1, 6):
+              jobs.append(fh.HardenedCreativeJob(
+                  asset_id=f'pin-{i}',
+                  kind='image',
+                  category='pinterest_pin',
+                  prompt=f'pin {i}',
+                  filename=f'pin-{i}.png',
+                  size_or_ratio='1024x1536',
+              ))
+          for i in range(1, 6):
+              jobs.append(fh.HardenedCreativeJob(
+                  asset_id=f'video-{i}',
+                  kind='video',
+                  category='video',
+                  prompt=f'video {i}',
+                  filename=f'video-{i}.mp4',
+                  size_or_ratio='720:1280',
+                  duration_seconds=5,
+                  reference_image=refs[i - 1],
+              ))
+
+          output = fh.HardenedRunOutput(
+              run_status='PASS',
+              executive_summary='test',
+              pass_condition_met=True,
+              next_action='test',
+              founder_brief='test',
+              creative_jobs=jobs,
+          )
+
+          ledger, ledger_path, violations = rc._ensure_day6_resume_ledger(output, unit)
+          assert not violations
+          missing_id = 'pin-5'
+          for job in jobs:
+              if job.asset_id == missing_id:
+                  continue
+              path = rc._resume_asset_path(unit, job)
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(f'cached-{job.asset_id}'.encode())
+              rc._record_resume_status(
+                  ledger, ledger_path, job, status='RENDERED', path=path
+              )
+
+          calls = []
+          def fake_provider(one, active_unit, run_id):
+              job = one.creative_jobs[0]
+              calls.append(job.asset_id)
+              target = (
+                  fh.engine.RUNTIME_ROOT
+                  / 'creative'
+                  / active_unit['id']
+                  / run_id
+                  / rc.normalized_output_name(job)
+              )
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(b'new-paid-output')
+              return {
+                  'rendered': [{
+                      'asset_id': job.asset_id,
+                      'status': 'RENDERED',
+                      'path': str(target.relative_to(fh.engine.RUNTIME_ROOT)),
+                  }]
+              }
+
+          fh.control_plane._original_render_creative_jobs = fake_provider
+          result = rc.strict_render_creative_jobs(output, unit, 'resume-regression')
+          assert not result.get('violations'), result
+          assert calls == [missing_id], calls
+          assert len(result['rendered']) == 20
+          assert sum(bool(item.get('reused')) for item in result['rendered']) == 19
+
+          ledger = __import__('json').loads(ledger_path.read_text())
+          missing_job = next(job for job in jobs if job.asset_id == missing_id)
+          rc._record_resume_status(
+              ledger,
+              ledger_path,
+              missing_job,
+              status='PROVIDER_FAILED_AMBIGUOUS',
+              detail='simulated ambiguous provider outcome',
+          )
+          calls.clear()
+          blocked = rc.strict_render_creative_jobs(output, unit, 'ambiguous-regression')
+          assert blocked.get('violations')
+          assert calls == []
+          assert 'duplicate spend' in ' '.join(blocked['violations'])
+          print('PASS: Day 6 reuses 19 completed paid jobs, calls only the missing job, and blocks ambiguous retries.')
+          PY
+
+      - name: Exercise EPUB validity, stable identity and reserved package IDs
         shell: bash
         run: |
           tmpdir="$(mktemp -d)"
@@ -171,6 +312,42 @@ jobs:
           assert 'id="id-1-introduction"' in opf
           assert '2026-08-20T13:00:00Z' in opf
           print('PASS: EPUB uses stable revision metadata and OPF-safe IDs.')
+          PY
+
+          cat > "$tmpdir/reserved.json" <<'JSON'
+          {
+            "metadata": {
+              "identifier": "urn:uuid:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+              "modified": "2026-08-20T13:00:00Z"
+            },
+            "chapters": [
+              {"id":"nav","title":"Nav collision","body_xhtml":"<p>One</p>"},
+              {"id":"css","title":"CSS collision","body_xhtml":"<p>Two</p>"},
+              {"id":"book-id","title":"Book ID collision","body_xhtml":"<p>Three</p>"},
+              {"id":"styles","title":"Styles collision","body_xhtml":"<p>Four</p>"}
+            ]
+          }
+          JSON
+          python gtm/ebook/build_epub.py --input "$tmpdir/reserved.json" --output "$tmpdir/reserved.epub"
+          python - "$tmpdir/reserved.epub" <<'PY'
+          import re
+          import sys
+          import zipfile
+
+          with zipfile.ZipFile(sys.argv[1]) as zf:
+              names = zf.namelist()
+              opf = zf.read('OEBPS/content.opf').decode()
+
+          assert names.count('OEBPS/nav.xhtml') == 1
+          assert names.count('OEBPS/styles.css') == 1
+          ids = re.findall(r'\bid="([^"]+)"', opf)
+          assert len(ids) == len(set(ids)), ids
+          assert ids.count('nav') == 1
+          assert ids.count('css') == 1
+          assert ids.count('book-id') == 1
+          assert any(name.startswith('OEBPS/nav-chapter-') for name in names)
+          assert any(name.startswith('OEBPS/styles-chapter-') for name in names)
+          print('PASS: reserved OPF IDs and generated filenames cannot be overwritten by chapter IDs.')
           PY
 
           cat > "$tmpdir/malformed.json" <<'JSON'
