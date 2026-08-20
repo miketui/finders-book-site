@@ -88,10 +88,10 @@ jobs:
       - name: Verify locked dependencies
         run: uv sync --project gtm/autopilot --locked
 
-      - name: Compile Autopilot and EPUB builder
-        run: python -m py_compile gtm/autopilot/main.py gtm/ebook/build_epub.py
+      - name: Compile Autopilot, control plane and EPUB builder
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/ebook/build_epub.py
 
-      - name: Validate GTM architecture contracts
+      - name: Validate GTM architecture and control-plane contracts
         shell: bash
         run: |
           python - <<'PY'
@@ -106,6 +106,8 @@ jobs:
           budget = json.loads((root / 'creative-budget.json').read_text())
           agents_text = (root / 'prompts' / 'agents.md').read_text()
           sections_text = (root / 'prompts' / 'sections.md').read_text()
+          control_text = (root / 'autopilot' / 'control_plane.py').read_text()
+          workflow_text = Path('.github/workflows/gtm-autopilot.yml').read_text()
 
           expected_order = [12, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 5]
           actual_order = phase0['execution_order']
@@ -142,5 +144,18 @@ jobs:
           assert Path('gtm/ebook/build_epub.py').exists()
           assert Path('gtm/ebook/README.md').exists()
 
-          print('PASS: Phase 0, nine-agent, Day 6 creative, and EPUB contracts validated.')
+          # Final merge-gate control-plane invariants.
+          assert 'Path(tempfile.gettempdir()) / "finders-book-gtm-runtime"' in control_text
+          assert 'approval_class not in {"YELLOW", "RED"}' in control_text
+          assert '_authorized_owner(actor)' in control_text
+          assert 'output.run_status == "PASS" and not output.pass_condition_met' in control_text
+          assert 'output.run_status = "PARTIAL"' in control_text
+          assert '"pending_approvals": pending' in control_text
+          assert '"PROVIDER_FAILED"' in control_text
+          assert 'provider_failures' in control_text
+          assert 'gtm/autopilot/control_plane.py' in workflow_text
+          assert 'ref: main' in workflow_text
+          assert 'Runtime archive path validation passed.' in workflow_text
+
+          print('PASS: Phase 0, nine-agent, Day 6 creative, EPUB, and hardened control-plane contracts validated.')
           PY
