@@ -31,6 +31,9 @@ jobs:
       - name: Verify locked Autopilot dependencies
         run: uv sync --project gtm/autopilot --locked
 
+      - name: Verify repository secret scan after Python environment setup
+        run: node scripts/check-secrets.mjs
+
       - name: Compile hardened runtime
         run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/autopilot/network_guard.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
 
