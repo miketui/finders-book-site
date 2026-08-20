@@ -356,6 +356,83 @@ def check_production_import_order() -> None:
         is render_contracts.tracked_hardened_execute_unit
     )
 
+    with tempfile.TemporaryDirectory() as directory:
+        prior_runtime = engine.RUNTIME_ROOT
+        engine.RUNTIME_ROOT = Path(directory)
+        try:
+            reports = engine.RUNTIME_ROOT / "reports"
+            reports.mkdir()
+            (reports / "2026-08-20-section-12-safe-run.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "safe-run",
+                        "blockers": [
+                            "Verify two current source citations.",
+                            "API key: sk-examplecredential123456",
+                            "THIRD_PARTY_API_SECRET=supersecretvalue123456",
+                            "Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456",
+                            "PASSWORD correct horse battery staple",
+                        ]
+                    }
+                )
+            )
+            (reports / "2026-08-20-section-12-not-safe-run.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "not-safe-run",
+                        "blockers": ["Wrong report selected."],
+                    }
+                )
+            )
+            (reports / "2026-08-20-section-12-list.json").write_text(
+                json.dumps(["not a report object"])
+            )
+            summaries = final_hardening.latest_blocker_summaries("safe-run")
+            assert summaries[0] == "Verify two current source citations."
+            assert "examplecredential" not in summaries[1]
+            assert all("supersecretvalue" not in item for item in summaries)
+            assert all("abcdefghijklmnopqrstuvwxyz" not in item for item in summaries)
+            assert all("horse battery staple" not in item for item in summaries)
+            assert all("Wrong report selected" not in item for item in summaries)
+            assert summaries.count("Credential-bearing blocker suppressed.") == 4
+
+            (reports / "2026-08-20-section-12-aws.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "aws-run",
+                        "blockers": ["Investigate AKIAIOSFODNN7EXAMPLE exposure."],
+                    }
+                )
+            )
+            assert final_hardening.latest_blocker_summaries("aws-run") == [
+                "Credential-bearing blocker suppressed."
+            ]
+
+            (reports / "2026-08-20-section-12-oauth.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "oauth-run",
+                        "blockers": ["Investigate gho_abcdefghijklmnop exposure."],
+                    }
+                )
+            )
+            assert final_hardening.latest_blocker_summaries("oauth-run") == [
+                "Credential-bearing blocker suppressed."
+            ]
+
+            for run_id, malformed in (
+                ("null-run", None),
+                ("object-run", {"unexpected": "shape"}),
+            ):
+                (reports / f"2026-08-20-section-12-{run_id}.json").write_text(
+                    json.dumps({"run_id": run_id, "blockers": malformed})
+                )
+                assert final_hardening.latest_blocker_summaries(run_id) == [
+                    "Latest run blocker data is unavailable."
+                ]
+        finally:
+            engine.RUNTIME_ROOT = prior_runtime
+
 
 def check_day_plan_contract_still_authoritative() -> None:
     plan = json.loads((engine.CONFIG_ROOT / "day-plan.json").read_text())

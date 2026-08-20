@@ -365,6 +365,60 @@ def minimal_pending_approval_index() -> list[dict]:
     ]
 
 
+def latest_blocker_summaries(last_run_id: object) -> list[str]:
+    """Return bounded, credential-redacted blockers for status-only diagnosis."""
+    if not last_run_id:
+        return []
+
+    reports = engine.RUNTIME_ROOT / "reports"
+    matches: list[tuple[float, dict]] = []
+    for path in reports.glob("*.json"):
+        try:
+            payload = json.loads(path.read_text())
+            modified = path.stat().st_mtime
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        if str(payload.get("run_id")) == str(last_run_id):
+            matches.append((modified, payload))
+    if not matches:
+        return []
+
+    payload = max(matches, key=lambda match: match[0])[1]
+    blockers = payload.get("blockers")
+    if not isinstance(blockers, list):
+        return ["Latest run blocker data is unavailable."]
+
+    summaries: list[str] = []
+    for value in blockers[:5]:
+        if not isinstance(value, str):
+            summaries.append("Non-text blocker suppressed.")
+            continue
+        text = re.sub(r"\s+", " ", value).strip()
+        if not text:
+            continue
+        credential_marker = re.search(
+            r"(?i)(?:\b(?:authorization\s*:\s*)?bearer\s+\S+|"
+            r"\b[A-Z0-9_]*(?:API[_ -]?KEY|SECRET|ACCESS[_ -]?TOKEN|TOKEN|"
+            r"PASSWORD|PASSPHRASE|RECOVERY[_ -]?CODE|PIN)[A-Z0-9_]*\b|"
+            r"\b(?:sk[-_]|gh[opusr]_|github_pat_|glpat-)[A-Za-z0-9_-]{12,}\b|"
+            r"\bxox[baprs]-[A-Za-z0-9-]{12,}\b|"
+            r"\bAIza[A-Za-z0-9_-]{20,}\b|\b(?:AKIA|ASIA)[A-Z0-9]{16}\b)",
+            text,
+        )
+        if credential_marker:
+            text = "Credential-bearing blocker suppressed."
+        else:
+            text = re.sub(
+                r"\b[A-Za-z0-9._~+/-]{40,}\b",
+                "[REDACTED_HIGH_ENTROPY_VALUE]",
+                text,
+            )
+        summaries.append(text[:300])
+    return summaries
+
+
 def public_status_payload() -> dict:
     state = engine.load_runtime_json("state.json")
     active = engine.active_unit(state)
@@ -406,6 +460,9 @@ def public_status_payload() -> dict:
         "next_executable_unit": active.get("id"),
         "last_run_id": state.get("last_run_id"),
         "last_run_status": state.get("last_run_status"),
+        "latest_blocker_summaries": latest_blocker_summaries(
+            state.get("last_run_id")
+        ),
         "blocking_approval_count": len(
             state.get("blocking_approval_ids", [])
         ),
