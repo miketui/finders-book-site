@@ -1,0 +1,15 @@
+{
+  "program": "finders-book-30-day-gtm",
+  "version": "1.0.0",
+  "mode": "THIRTY_DAY",
+  "status": "READY",
+  "current_day": 1,
+  "completed_days": [],
+  "started_at": "2026-08-20T00:00:00-07:00",
+  "last_run_at": null,
+  "last_run_status": null,
+  "blocking_approval_ids": [],
+  "notes": [
+    "Runtime state is persisted by the GTM Autopilot workflow. Do not store secrets here."
+  ]
+}
