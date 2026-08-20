@@ -7,6 +7,7 @@ finders-book-site/
     ├── .github/
     │   └── workflows/
     │       ├── gtm-autopilot.yml
+    │       ├── gtm-final-hardening.yml
     │       ├── regenerate-manifests.yml
     │       └── validate.yml
     ├── api/
@@ -97,12 +98,16 @@ finders-book-site/
     ├── gtm/
     │   ├── autopilot/
     │   │   ├── control_plane.py
+    │   │   ├── final_hardening.py
     │   │   ├── main.py
+    │   │   ├── network_guard.py
     │   │   ├── pyproject.toml
+    │   │   ├── render_contracts.py
     │   │   └── uv.lock
     │   ├── ebook/
     │   │   ├── build_epub.py
     │   │   ├── manuscript-template.json
+    │   │   ├── PRIVATE-INGESTION.md
     │   │   └── README.md
     │   ├── prompts/
     │   │   ├── agents.md
