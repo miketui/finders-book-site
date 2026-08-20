@@ -1,15 +1,16 @@
 name: Final certification one-off
 
 on:
-  push:
-    branches: [agent/final-launch-certification-20260819]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   certify:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'agent/final-launch-certification-20260819' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Check out certification branch
