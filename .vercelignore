@@ -25,6 +25,7 @@ tests/
 apply-chrome.py
 protect_and_cleanup.sh
 .github/
+gtm
 
 # Local config references (dotfiles are not served, listed for intent)
 .env.example
