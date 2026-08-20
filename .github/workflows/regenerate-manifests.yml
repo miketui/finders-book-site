@@ -1,4 +1,4 @@
-name: Regenerate repository manifests
+name: Verify repository manifests
 
 on:
   pull_request:
@@ -11,39 +11,25 @@ on:
       - "scripts/regen-manifests.mjs"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  regenerate:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+  verify:
     runs-on: ubuntu-latest
     steps:
       - name: Check out PR branch
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Lock Autopilot dependencies
-        run: uv lock --project gtm/autopilot
+      - name: Verify Autopilot lockfile is current
+        run: uv lock --project gtm/autopilot --check
 
-      - name: Regenerate tracked-file manifests
+      - name: Regenerate manifests in working tree
         run: node scripts/regen-manifests.mjs
 
-      - name: Commit generated lock and manifests if changed
-        shell: bash
-        env:
-          PR_HEAD_REF: ${{ github.head_ref }}
-        run: |
-          if git diff --quiet -- gtm/autopilot/uv.lock docs/FILE-TREE.md docs/FILE-INVENTORY.md; then
-            echo "Lockfile and manifests already current."
-            exit 0
-          fi
-          git config user.name "finders-book-manifest-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add gtm/autopilot/uv.lock docs/FILE-TREE.md docs/FILE-INVENTORY.md
-          git commit -m "chore: regenerate GTM lock and repository manifests"
-          git push origin "HEAD:$PR_HEAD_REF"
+      - name: Require committed generated files to be current
+        run: git diff --exit-code -- gtm/autopilot/uv.lock docs/FILE-TREE.md docs/FILE-INVENTORY.md
