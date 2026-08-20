@@ -64,6 +64,14 @@ def _validate_https_public_url(
     return parsed, addresses
 
 
+def _origin(parsed: urllib.parse.SplitResult) -> tuple[str, str, int]:
+    return (
+        parsed.scheme.lower(),
+        (parsed.hostname or "").lower(),
+        parsed.port or 443,
+    )
+
+
 def _validate_target(target: Path) -> Path:
     resolved_root = engine.RUNTIME_ROOT.resolve()
     resolved = target.resolve()
@@ -200,7 +208,13 @@ def guarded_download_url(
                     next_url = urllib.parse.urljoin(
                         current_url, location
                     )
-                    _validate_https_public_url(next_url)
+                    next_parsed, _ = _validate_https_public_url(next_url)
+                    if _origin(next_parsed) != _origin(parsed):
+                        safe_headers = {
+                            key: value
+                            for key, value in safe_headers.items()
+                            if key.lower() != "authorization"
+                        }
                     current_url = next_url
                     continue
 
