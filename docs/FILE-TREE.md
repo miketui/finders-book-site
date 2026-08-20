@@ -79,6 +79,7 @@ finders-book-site/
     │   ├── DEPLOYMENT.md
     │   ├── FILE-INVENTORY.md
     │   ├── FILE-TREE.md
+    │   ├── FINAL-LAUNCH-CERTIFICATION-2026-08-19.md
     │   ├── implementation-brief.md
     │   ├── LAUNCH-READINESS.md
     │   ├── OPERATIONS.md
