@@ -24,13 +24,26 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
+
           p = Path('refund-policy.html')
           s = p.read_text()
-          old = "The product page shows twelve real interior pages from the actual book at full size, the complete table of every section, both editions, and every bonus."
-          new = "The product pages show real interior pages from the actual book at full size, the complete section overview, both formats, and every included bonus."
-          if old not in s:
-              raise SystemExit('Expected refund-policy sentence not found; refusing broad replacement')
-          p.write_text(s.replace(old, new, 1))
+          pattern = re.compile(
+              r'<p>The product page shows twelve real interior pages from the actual book at full size, the complete\s+'
+              r'table of every section, both editions, and every bonus\. Nothing on that page is a mockup or a\s+'
+              r'representative sample\. This is deliberate: you should be able to decide whether the book suits you\s+'
+              r'<strong>before</strong> any money changes hands, not after\.</p>'
+          )
+          replacement = (
+              '<p>The product pages show real interior pages from the actual book at full size, the complete section overview,\n'
+              'both formats, and every included bonus. Nothing on those pages is a mockup or a representative sample. This is\n'
+              'deliberate: you should be able to decide whether the book suits you <strong>before</strong> any money changes hands,\n'
+              'not after.</p>'
+          )
+          s, count = pattern.subn(replacement, s, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected exactly one refund-policy preview paragraph, matched {count}; refusing broad replacement')
+          p.write_text(s)
           PY
 
           cat > docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md <<'EOF'
