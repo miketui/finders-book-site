@@ -7,10 +7,13 @@ on:
       - ".github/workflows/gtm-autopilot.yml"
       - ".github/workflows/gtm-foundation-export.yml"
       - ".github/workflows/gtm-v1-1-usability.yml"
+      - ".github/workflows/gtm-v1-1-python-finalizer.yml"
       - "gtm/**"
+      - "docs/FILE-TREE.md"
+      - "docs/FILE-INVENTORY.md"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-v1-1-usability:
@@ -18,6 +21,25 @@ jobs:
     steps:
       - name: Checkout PR source
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply staged Python hardening once
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          ruby -ryaml -e 'wf=YAML.load_file(".github/workflows/gtm-v1-1-python-finalizer.yml", aliases: true); step=wf.fetch("jobs").fetch("patch").fetch("steps").find{|item| item["name"] == "Apply reviewed Python hardening"}; abort("missing finalizer step") unless step; File.write("/tmp/gtm-v1-1-apply.sh", step.fetch("run"))'
+          bash /tmp/gtm-v1-1-apply.sh
+          git config user.name "finders-book-v1-1-finalizer"
+          git config user.email "actions@users.noreply.github.com"
+          git add gtm/autopilot/main.py gtm/autopilot/v1_1.py gtm/autopilot/v1_1_selftest.py gtm/autopilot/state_crypto.py
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(gtm): harden v1.1 operator and fidelity runtime"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          else
+            echo "Staged Python hardening is already applied."
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -31,7 +53,7 @@ jobs:
         run: uv sync --project gtm/autopilot --locked
 
       - name: Compile v1.1 runtime
-        run: python -m py_compile gtm/autopilot/v1_1.py gtm/autopilot/v1_1_selftest.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/v1_1.py gtm/autopilot/v1_1_selftest.py gtm/autopilot/state_crypto.py
 
       - name: Run v1.1 usability self-test
         run: |
