@@ -46,9 +46,10 @@ jobs:
       STATE_BRANCH: gtm-autopilot-state
       GTM_RUNTIME_ROOT: ${{ runner.temp }}/finders-gtm-runtime
     steps:
-      - name: Checkout protected source
+      - name: Checkout trusted main source
         uses: actions/checkout@v5
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Normalize provider secrets
@@ -114,6 +115,27 @@ jobs:
             -in /tmp/gtm-runtime.enc \
             -out /tmp/gtm-runtime.tgz \
             -pass env:state_passphrase
+
+          python - <<'PY'
+          import tarfile
+          from pathlib import PurePosixPath
+
+          allowed_roots = {
+              'state.json', 'metrics.json', 'experiments.json', 'approvals.json',
+              'foundation', 'reports', 'ebook'
+          }
+          with tarfile.open('/tmp/gtm-runtime.tgz', 'r:gz') as archive:
+              for member in archive.getmembers():
+                  path = PurePosixPath(member.name)
+                  if path.is_absolute() or '..' in path.parts:
+                      raise SystemExit(f'Unsafe runtime archive path: {member.name}')
+                  if not path.parts or path.parts[0] not in allowed_roots:
+                      raise SystemExit(f'Unexpected runtime archive path: {member.name}')
+                  if member.issym() or member.islnk():
+                      raise SystemExit(f'Runtime archive links are prohibited: {member.name}')
+          print('Runtime archive path validation passed.')
+          PY
+
           tar -xzf /tmp/gtm-runtime.tgz -C "$GTM_RUNTIME_ROOT"
           echo "Encrypted GTM runtime state restored outside the public source tree."
 
