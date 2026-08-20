@@ -13,11 +13,11 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "run, approve, reject, status, or ebook-build"
+        description: "run, approve, reject, status, ebook-ingest, or ebook-build"
         required: true
         default: "run"
         type: choice
-        options: [run, approve, reject, status, ebook-build]
+        options: [run, approve, reject, status, ebook-ingest, ebook-build]
       approval_id:
         description: "Required for approve/reject"
         required: false
@@ -42,6 +42,9 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
       GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+      GTM_EBOOK_SOURCE_URL: ${{ secrets.GTM_EBOOK_SOURCE_URL }}
+      GTM_EBOOK_SOURCE_SHA256: ${{ secrets.GTM_EBOOK_SOURCE_SHA256 }}
+      GTM_EBOOK_SOURCE_BEARER: ${{ secrets.GTM_EBOOK_SOURCE_BEARER }}
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
       GTM_RUNTIME_ROOT: ${{ runner.temp }}/finders-gtm-runtime
@@ -76,14 +79,12 @@ jobs:
           fi
 
           clean_state="$(printf '%s' "${GTM_STATE_KEY:-}" | tr -d '[:space:]')"
-          if [[ "$AUTOPILOT_MODE" == "run" && -z "$clean_state" ]]; then
-            echo "GTM_STATE_KEY is required before autonomous run mode. Add it as a GitHub Actions repository secret."
+          if [[ -z "$clean_state" ]]; then
+            echo "GTM_STATE_KEY is required for GTM runtime state operations. Add it as a GitHub Actions repository secret."
             exit 1
           fi
-          if [[ -n "$clean_state" ]]; then
-            echo "::add-mask::$clean_state"
-            printf 'GTM_STATE_KEY=%s\n' "$clean_state" >> "$GITHUB_ENV"
-          fi
+          echo "::add-mask::$clean_state"
+          printf 'GTM_STATE_KEY=%s\n' "$clean_state" >> "$GITHUB_ENV"
           echo "Provider and state secrets normalized without exposing values."
 
       - name: Initialize private runtime directory
@@ -117,14 +118,10 @@ jobs:
           fi
 
           if [[ "$key_scheme" == "state_key" ]]; then
-            if [[ -z "${GTM_STATE_KEY:-}" ]]; then
-              echo "Existing state requires GTM_STATE_KEY but the secret is missing."
-              exit 1
-            fi
             state_passphrase="$GTM_STATE_KEY"
           else
             if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-              echo "Existing legacy state is encrypted with the OpenAI-key scheme; restore requires the prior OPENAI_API_KEY for this one-time migration."
+              echo "Existing legacy state uses the OpenAI-key encryption scheme; the prior OPENAI_API_KEY is required once to migrate it."
               exit 1
             fi
             state_passphrase="$OPENAI_API_KEY"
@@ -168,6 +165,18 @@ jobs:
       - name: Install site dependencies
         run: npm ci --ignore-scripts
 
+      - name: Resolve browser for Autopilot QA
+        shell: bash
+        run: |
+          chrome_path="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [[ -n "$chrome_path" ]]; then
+            echo "PLAYWRIGHT_CHROMIUM_PATH=$chrome_path" >> "$GITHUB_ENV"
+            "$chrome_path" --version
+          else
+            echo "No system Chrome found; installing Playwright Chromium."
+            npx playwright install --with-deps chromium
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -179,14 +188,14 @@ jobs:
       - name: Install locked Autopilot dependencies
         run: uv sync --project gtm/autopilot --locked
 
-      - name: Compile Autopilot, network guard, control plane and EPUB builder
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/ebook/build_epub.py
+      - name: Compile hardened Autopilot and EPUB builder
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/ebook/build_epub.py
 
       - name: Execute hardened Autopilot control plane
         shell: bash
         run: |
           uv run --project gtm/autopilot python -c \
-            'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane; control_plane.main()' \
+            'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane, final_hardening; final_hardening.main()' \
             --mode "$AUTOPILOT_MODE" \
             --approval-id "$AUTOPILOT_APPROVAL_ID" \
             --note "$AUTOPILOT_NOTE" \
@@ -207,14 +216,9 @@ jobs:
           fi
 
           tar -czf /tmp/gtm-runtime.tgz \
-            --exclude='ebook/*.epub' \
             -C "$GTM_RUNTIME_ROOT" \
             state.json metrics.json experiments.json approvals.json foundation reports ebook
 
-          if [[ -z "${GTM_STATE_KEY:-}" ]]; then
-            echo "GTM_STATE_KEY is required for all new runtime snapshots."
-            exit 1
-          fi
           state_passphrase="$GTM_STATE_KEY"
           key_scheme="state_key"
           export state_passphrase
@@ -245,13 +249,11 @@ jobs:
           git commit -m "chore(gtm): persist latest encrypted autopilot snapshot"
           git push --force origin "HEAD:$STATE_BRANCH"
 
-      - name: Upload generated creative and ebook artifacts
+      - name: Upload generated creative artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: finders-book-gtm-${{ github.run_id }}
-          path: |
-            ${{ env.GTM_RUNTIME_ROOT }}/creative
-            ${{ env.GTM_RUNTIME_ROOT }}/ebook/*.epub
+          name: finders-book-gtm-creative-${{ github.run_id }}
+          path: ${{ env.GTM_RUNTIME_ROOT }}/creative
           if-no-files-found: ignore
           retention-days: 30
