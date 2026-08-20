@@ -285,11 +285,22 @@ jobs:
           git commit -m "chore(gtm): persist latest encrypted autopilot snapshot"
           git push --force origin "HEAD:$STATE_BRANCH"
 
+      - name: Stage generated creative artifacts for upload
+        if: success() && env.AUTOPILOT_MODE == 'run'
+        shell: bash
+        run: |
+          upload_root="$GITHUB_WORKSPACE/.gtm-artifact-upload/creative"
+          rm -rf "$GITHUB_WORKSPACE/.gtm-artifact-upload"
+          mkdir -p "$upload_root"
+          if [[ -d "$GTM_RUNTIME_ROOT/creative" ]]; then
+            cp -a "$GTM_RUNTIME_ROOT/creative/." "$upload_root/"
+          fi
+
       - name: Upload generated creative artifacts
-        if: success()
+        if: success() && env.AUTOPILOT_MODE == 'run'
         uses: actions/upload-artifact@v4
         with:
           name: finders-book-gtm-creative-${{ github.run_id }}
-          path: ${{ env.GTM_RUNTIME_ROOT }}/creative
+          path: ${{ github.workspace }}/.gtm-artifact-upload/creative
           if-no-files-found: ignore
           retention-days: 30
