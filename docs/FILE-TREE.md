@@ -21,7 +21,11 @@ finders-book-site/
     │   │   ├── newsreader-latin-variable-italic.woff2
     │   │   └── newsreader-latin-variable-normal.woff2
     │   ├── incoming/
-    │   │   └── README.md
+    │   │   ├── essentials-product.png
+    │   │   ├── family-bundle-product.png
+    │   │   ├── finders-book-cover.png
+    │   │   ├── README.md
+    │   │   └── ultimate-product.png
     │   ├── vendor/
     │   │   ├── gsap.min.js
     │   │   ├── lenis.min.js
