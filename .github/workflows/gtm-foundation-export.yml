@@ -1,0 +1,207 @@
+name: Finder's Book GTM Foundation Export
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: finders-book-gtm-foundation-export
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    env:
+      GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
+      STATE_BRANCH: gtm-autopilot-state
+      GTM_RUNTIME_ROOT: ${{ runner.temp }}/finders-gtm-export-runtime
+    steps:
+      - name: Checkout trusted main source
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Authorize owner export request
+        shell: bash
+        env:
+          AUTOPILOT_ACTOR: ${{ github.actor }}
+        run: |
+          python - <<'PY'
+          import os
+          actor = os.environ.get('AUTOPILOT_ACTOR', '').strip()
+          allowed = {
+              item.strip()
+              for item in os.environ.get('GTM_OWNER_ALLOWLIST', 'miketui').split(',')
+              if item.strip()
+          }
+          if not actor or actor not in allowed:
+              raise SystemExit(
+                  f'Foundation export denied for actor {actor or "<missing>"}. '
+                  f'Authorized allow-list: {", ".join(sorted(allowed)) or "<empty>"}.'
+              )
+          print(f'Foundation export authorized for {actor}.')
+          PY
+
+      - name: Normalize state key
+        shell: bash
+        run: |
+          clean_state="$(printf '%s' "${GTM_STATE_KEY:-}" | tr -d '[:space:]')"
+          if [[ -z "$clean_state" ]]; then
+            echo "GTM_STATE_KEY is required for Foundation export."
+            exit 1
+          fi
+          echo "::add-mask::$clean_state"
+          printf 'GTM_STATE_KEY=%s\n' "$clean_state" >> "$GITHUB_ENV"
+
+          clean_openai="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '[:space:]')"
+          if [[ -n "$clean_openai" ]]; then
+            echo "::add-mask::$clean_openai"
+            printf 'OPENAI_API_KEY=%s\n' "$clean_openai" >> "$GITHUB_ENV"
+          fi
+
+      - name: Restore encrypted GTM state outside repository
+        shell: bash
+        run: |
+          rm -rf "$GTM_RUNTIME_ROOT"
+          mkdir -p "$GTM_RUNTIME_ROOT"
+          git fetch origin "$STATE_BRANCH"
+
+          if ! git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
+            echo "No encrypted GTM runtime snapshot exists yet."
+            exit 1
+          fi
+
+          git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
+          key_scheme="state_key"
+          if git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.meta" 2>/dev/null; then
+            git show "origin/$STATE_BRANCH:gtm/runtime-state.meta" > /tmp/gtm-runtime.meta
+            key_scheme="$(python - <<'PY'
+          import json
+          print(json.load(open('/tmp/gtm-runtime.meta')).get('key_scheme', 'openai'))
+          PY
+          )"
+          fi
+
+          if [[ "$key_scheme" == "state_key" ]]; then
+            state_passphrase="$GTM_STATE_KEY"
+          else
+            if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+              echo "Legacy snapshot requires the prior OPENAI_API_KEY for one-time decryption."
+              exit 1
+            fi
+            state_passphrase="$OPENAI_API_KEY"
+          fi
+          export state_passphrase
+
+          openssl enc -d -aes-256-cbc -pbkdf2 \
+            -in /tmp/gtm-runtime.enc \
+            -out /tmp/gtm-runtime.tgz \
+            -pass env:state_passphrase
+
+          python - <<'PY'
+          import tarfile
+          from pathlib import PurePosixPath
+          allowed_roots = {
+              'state.json', 'metrics.json', 'experiments.json', 'approvals.json',
+              'foundation', 'reports', 'ebook', 'creative'
+          }
+          with tarfile.open('/tmp/gtm-runtime.tgz', 'r:gz') as archive:
+              for member in archive.getmembers():
+                  path = PurePosixPath(member.name)
+                  if path.is_absolute() or '..' in path.parts:
+                      raise SystemExit(f'Unsafe runtime archive path: {member.name}')
+                  if not path.parts or path.parts[0] not in allowed_roots:
+                      raise SystemExit(f'Unexpected runtime archive path: {member.name}')
+                  if member.issym() or member.islnk() or not (member.isfile() or member.isdir()):
+                      raise SystemExit(f'Unsupported runtime archive member: {member.name}')
+          print('Runtime archive validation passed.')
+          PY
+
+          tar -xzf /tmp/gtm-runtime.tgz -C "$GTM_RUNTIME_ROOT"
+
+      - name: Build encrypted Phase 0 Binder
+        shell: bash
+        run: |
+          export_dir="${RUNNER_TEMP}/phase0-binder"
+          rm -rf "$export_dir"
+          mkdir -p "$export_dir/foundation"
+
+          mapfile -t foundation_files < <(
+            find "$GTM_RUNTIME_ROOT/foundation" -type f -name '*.md' -print | sort
+          )
+          if (( ${#foundation_files[@]} == 0 )); then
+            echo "No Phase 0 Markdown foundation files are available to export yet."
+            exit 1
+          fi
+
+          for source in "${foundation_files[@]}"; do
+            rel="${source#$GTM_RUNTIME_ROOT/foundation/}"
+            target="$export_dir/foundation/$rel"
+            mkdir -p "$(dirname "$target")"
+            cp "$source" "$target"
+          done
+
+          python - "$export_dir" <<'PY'
+          import json
+          import pathlib
+          import sys
+          from datetime import datetime, timezone
+          root = pathlib.Path(sys.argv[1])
+          files = sorted(
+              path.relative_to(root).as_posix()
+              for path in root.rglob('*.md')
+          )
+          (root / 'EXPORT-MANIFEST.json').write_text(
+              json.dumps(
+                  {
+                      'generated_at': datetime.now(timezone.utc).isoformat(),
+                      'file_count': len(files),
+                      'files': files,
+                      'privacy': 'Encrypted before upload; plaintext Foundation files are not uploaded.',
+                  },
+                  indent=2,
+              ) + '\n'
+          )
+          PY
+
+          tar -czf /tmp/finders-book-phase0-binder.tgz -C "$export_dir" .
+          export state_passphrase="$GTM_STATE_KEY"
+          openssl enc -aes-256-cbc -salt -pbkdf2 \
+            -in /tmp/finders-book-phase0-binder.tgz \
+            -out /tmp/finders-book-phase0-binder.tgz.enc \
+            -pass env:state_passphrase
+
+          rm -rf "$export_dir" /tmp/finders-book-phase0-binder.tgz
+          echo "Encrypted Phase 0 Binder prepared. No plaintext Foundation artifact will be uploaded."
+
+      - name: Write non-secret decryption instructions
+        shell: bash
+        run: |
+          cat > /tmp/PHASE0-BINDER-DECRYPT.txt <<'EOF'
+          Finder's Book Phase 0 Binder export
+
+          This artifact is encrypted because the website repository is public.
+          Use the same private GTM_STATE_KEY stored in your password manager/GitHub Actions secret.
+
+          macOS/Linux with OpenSSL:
+            export GTM_STATE_KEY='YOUR_PRIVATE_VALUE'
+            openssl enc -d -aes-256-cbc -pbkdf2 -in finders-book-phase0-binder.tgz.enc -out finders-book-phase0-binder.tgz -pass env:GTM_STATE_KEY
+            mkdir phase0-binder && tar -xzf finders-book-phase0-binder.tgz -C phase0-binder
+
+          Never paste GTM_STATE_KEY into ChatGPT, GitHub issues, logs, or the public repository.
+          EOF
+
+      - name: Upload encrypted Foundation export
+        uses: actions/upload-artifact@v4
+        with:
+          name: finders-book-phase0-binder-${{ github.run_id }}
+          path: |
+            /tmp/finders-book-phase0-binder.tgz.enc
+            /tmp/PHASE0-BINDER-DECRYPT.txt
+          if-no-files-found: error
+          retention-days: 1
