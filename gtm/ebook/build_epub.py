@@ -6,6 +6,7 @@ import json
 import re
 import zipfile
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -14,8 +15,11 @@ def esc(value: str) -> str:
 
 
 def safe_id(value: str, fallback: str) -> str:
-    cleaned = re.sub(r"[^a-zA-Z0-9_-]+", "-", value).strip("-")
-    return cleaned or fallback
+    cleaned = re.sub(r"[^a-zA-Z0-9_.-]+", "-", value).strip("-")
+    cleaned = cleaned or fallback
+    if not re.match(r"^[A-Za-z_]", cleaned):
+        cleaned = f"id-{cleaned}"
+    return cleaned
 
 
 def strip_unsafe_markup(value: str) -> str:
@@ -25,7 +29,6 @@ def strip_unsafe_markup(value: str) -> str:
 
 
 def validate_body_xhtml(body: str, chapter_title: str) -> str:
-    """Require well-formed XML/XHTML fragments before packaging the EPUB."""
     body = strip_unsafe_markup(body)
     wrapped = f'<div xmlns="http://www.w3.org/1999/xhtml">{body}</div>'
     try:
@@ -80,6 +83,39 @@ def stable_identifier(metadata: dict) -> str:
     return identifier
 
 
+def modified_timestamp(metadata: dict) -> str:
+    raw = str(
+        metadata.get("modified")
+        or metadata.get("revision_timestamp")
+        or ""
+    ).strip()
+    if not raw:
+        return (
+            datetime.now(timezone.utc)
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
+
+    normalized = raw.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise SystemExit(
+            "metadata.modified/revision_timestamp must be ISO-8601."
+        ) from exc
+    if parsed.tzinfo is None:
+        raise SystemExit(
+            "metadata.modified/revision_timestamp must include a timezone."
+        )
+    return (
+        parsed.astimezone(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
 def build_epub(source: Path, output: Path) -> None:
     data = json.loads(source.read_text())
     metadata = data.get("metadata", {})
@@ -87,6 +123,7 @@ def build_epub(source: Path, output: Path) -> None:
     creator = metadata.get("creator", "Joanne Godfrey and Michael David")
     language = metadata.get("language", "en-US")
     identifier = stable_identifier(metadata)
+    modified = modified_timestamp(metadata)
     description = metadata.get(
         "description",
         "A non-fillable reading edition of The Finder's Book, redesigned for reflowable ebook reading.",
@@ -101,7 +138,7 @@ def build_epub(source: Path, output: Path) -> None:
         chapter_title = str(chapter.get("title", f"Chapter {index}"))
         chapter_id = safe_id(str(chapter.get("id", "")), f"chapter-{index:02d}")
         while chapter_id in seen:
-            chapter_id = f"{chapter_id}-{index}"
+            chapter_id = safe_id(f"{chapter_id}-{index}", f"chapter-{index:02d}")
         seen.add(chapter_id)
         body = str(chapter.get("body_xhtml", "")).strip()
         if not body:
@@ -148,7 +185,7 @@ def build_epub(source: Path, output: Path) -> None:
     <dc:creator>{esc(creator)}</dc:creator>
     <dc:language>{esc(language)}</dc:language>
     <dc:description>{esc(description)}</dc:description>
-    <meta property="dcterms:modified">2026-08-20T00:00:00Z</meta>
+    <meta property="dcterms:modified">{esc(modified)}</meta>
   </metadata>
   <manifest>
     {''.join(manifest_items)}
