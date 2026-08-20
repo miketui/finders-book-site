@@ -356,6 +356,29 @@ def check_production_import_order() -> None:
         is render_contracts.tracked_hardened_execute_unit
     )
 
+    with tempfile.TemporaryDirectory() as directory:
+        prior_runtime = engine.RUNTIME_ROOT
+        engine.RUNTIME_ROOT = Path(directory)
+        try:
+            reports = engine.RUNTIME_ROOT / "reports"
+            reports.mkdir()
+            (reports / "2026-08-20-section-12-safe-run.json").write_text(
+                json.dumps(
+                    {
+                        "blockers": [
+                            "Verify two current source citations.",
+                            "API key: sk-examplecredential123456",
+                        ]
+                    }
+                )
+            )
+            summaries = final_hardening.latest_blocker_summaries("safe-run")
+            assert summaries[0] == "Verify two current source citations."
+            assert "examplecredential" not in summaries[1]
+            assert "[REDACTED]" in summaries[1]
+        finally:
+            engine.RUNTIME_ROOT = prior_runtime
+
 
 def check_day_plan_contract_still_authoritative() -> None:
     plan = json.loads((engine.CONFIG_ROOT / "day-plan.json").read_text())

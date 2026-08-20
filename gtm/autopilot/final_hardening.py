@@ -365,6 +365,45 @@ def minimal_pending_approval_index() -> list[dict]:
     ]
 
 
+def latest_blocker_summaries(last_run_id: object) -> list[str]:
+    """Return bounded, credential-redacted blockers for status-only diagnosis."""
+    if not last_run_id:
+        return []
+
+    reports = engine.RUNTIME_ROOT / "reports"
+    matches = sorted(
+        reports.glob(f"*-{last_run_id}.json"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    if not matches:
+        return []
+
+    try:
+        payload = json.loads(matches[0].read_text())
+    except (OSError, json.JSONDecodeError):
+        return ["Latest run report is unavailable or unreadable."]
+
+    summaries: list[str] = []
+    for value in payload.get("blockers", [])[:5]:
+        text = re.sub(r"\s+", " ", str(value)).strip()
+        if not text:
+            continue
+        text = re.sub(
+            r"(?i)\b(password|passphrase|api[_ -]?key|secret|access[_ -]?token|"
+            r"recovery[_ -]?code|pin)\b\s*[:=]\s*\S+",
+            r"\1=[REDACTED]",
+            text,
+        )
+        text = re.sub(
+            r"\b(?:sk|ghp|github_pat|glpat)-?[A-Za-z0-9_-]{12,}\b",
+            "[REDACTED_CREDENTIAL]",
+            text,
+        )
+        summaries.append(text[:300])
+    return summaries
+
+
 def public_status_payload() -> dict:
     state = engine.load_runtime_json("state.json")
     active = engine.active_unit(state)
@@ -406,6 +445,9 @@ def public_status_payload() -> dict:
         "next_executable_unit": active.get("id"),
         "last_run_id": state.get("last_run_id"),
         "last_run_status": state.get("last_run_status"),
+        "latest_blocker_summaries": latest_blocker_summaries(
+            state.get("last_run_id")
+        ),
         "blocking_approval_count": len(
             state.get("blocking_approval_ids", [])
         ),
