@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import final_hardening as hardening
 
 
 _prior_preflight = hardening._strict_creative_preflight
+_prior_hardened_write = hardening.hardened_write_artifact_documents
+_prior_hardened_execute = hardening.hardened_execute_unit
+_prior_required_outputs_exist = hardening.engine.required_outputs_exist
+_CURRENT_WRITTEN_PATHS: set[str] = set()
 
 
 def normalized_output_name(job) -> str:
@@ -39,4 +44,218 @@ def strict_filename_preflight(output, unit: dict) -> list[str]:
     return violations
 
 
+def tracked_hardened_write_artifact_documents(documents):
+    written = _prior_hardened_write(documents)
+    _CURRENT_WRITTEN_PATHS.update(Path(path).as_posix() for path in written)
+    return written
+
+
+async def tracked_hardened_execute_unit(unit: dict) -> dict:
+    _CURRENT_WRITTEN_PATHS.clear()
+    return await _prior_hardened_execute(unit)
+
+
+def current_run_required_outputs_exist(unit: dict) -> tuple[bool, list[str]]:
+    """A durable output only satisfies this run if this run wrote it."""
+    _, filesystem_missing = _prior_required_outputs_exist(unit)
+    required = [Path(path).as_posix() for path in unit.get("required_outputs", [])]
+    current_run_missing = [
+        path for path in required if path not in _CURRENT_WRITTEN_PATHS
+    ]
+    missing = list(dict.fromkeys([*filesystem_missing, *current_run_missing]))
+    return not missing, missing
+
+
+def strict_render_creative_jobs(output, unit: dict, run_id: str) -> dict:
+    """Render one paid provider job per call and verify the complete Day 6 batch."""
+    if not unit.get("rendering_enabled"):
+        return {
+            "enabled": False,
+            "rendered": [],
+            "skipped": len(output.creative_jobs),
+        }
+
+    violations = strict_filename_preflight(output, unit)
+    if violations:
+        return {"enabled": True, "rendered": [], "violations": violations}
+
+    rendered: list[dict] = []
+    failures: list[str] = []
+    current_image_paths: dict[str, str] = {}
+
+    images = [job for job in output.creative_jobs if job.kind == "image"]
+    videos = [job for job in output.creative_jobs if job.kind == "video"]
+
+    for job in images:
+        one = output.model_copy(deep=True)
+        one_job = next(
+            candidate
+            for candidate in one.creative_jobs
+            if candidate.asset_id == job.asset_id
+        )
+        one.creative_jobs = [one_job]
+        try:
+            result = hardening.control_plane._original_render_creative_jobs(
+                one, unit, run_id
+            )
+            rows = result.get("rendered", [])
+            for row in rows:
+                row["category"] = job.category
+                if row.get("status") == "RENDERED":
+                    path = str(row.get("path", ""))
+                    if Path(path).suffix.lower() != ".png":
+                        failures.append(
+                            f"Image asset {job.asset_id} did not produce a .png output."
+                        )
+                    else:
+                        current_image_paths[job.asset_id] = path
+            rendered.extend(rows)
+            for violation in result.get("violations", []):
+                failures.append(
+                    f"GPT Image 2 asset {job.asset_id}: "
+                    f"{hardening.control_plane._safe_text(violation, 300)}"
+                )
+        except Exception as exc:
+            failures.append(hardening._provider_failure(job, exc))
+            rendered.append(
+                {
+                    "asset_id": job.asset_id,
+                    "category": job.category,
+                    "status": "PROVIDER_FAILED",
+                    "provider": "GPT Image 2",
+                }
+            )
+
+    for job in videos:
+        reference_asset_id = str(job.reference_image or "")
+        reference_path = current_image_paths.get(reference_asset_id)
+        if not reference_path:
+            failures.append(
+                f"Runway asset {job.asset_id} has no successfully rendered "
+                "current-run reference image."
+            )
+            rendered.append(
+                {
+                    "asset_id": job.asset_id,
+                    "category": job.category,
+                    "status": "PROVIDER_FAILED",
+                    "provider": "Runway Gen-4.5",
+                }
+            )
+            continue
+
+        resolved = (hardening.engine.RUNTIME_ROOT / reference_path).resolve()
+        creative_root = (
+            hardening.engine.RUNTIME_ROOT / "creative" / unit["id"] / run_id
+        ).resolve()
+        if resolved != creative_root and creative_root not in resolved.parents:
+            failures.append(
+                f"Runway asset {job.asset_id} reference escaped the current creative run."
+            )
+            continue
+        if resolved.suffix.lower() != ".png":
+            failures.append(
+                f"Runway asset {job.asset_id} reference is not a current-run PNG image."
+            )
+            continue
+
+        one = output.model_copy(deep=True)
+        one_job = next(
+            candidate
+            for candidate in one.creative_jobs
+            if candidate.asset_id == job.asset_id
+        )
+        one.creative_jobs = [one_job]
+        one_job.reference_image = reference_path
+        try:
+            result = hardening.control_plane._original_render_creative_jobs(
+                one, unit, run_id
+            )
+            rows = result.get("rendered", [])
+            for row in rows:
+                row["category"] = job.category
+            rendered.extend(rows)
+            for violation in result.get("violations", []):
+                failures.append(
+                    f"Runway Gen-4.5 asset {job.asset_id}: "
+                    f"{hardening.control_plane._safe_text(violation, 300)}"
+                )
+        except Exception as exc:
+            failures.append(hardening._provider_failure(job, exc))
+            rendered.append(
+                {
+                    "asset_id": job.asset_id,
+                    "category": job.category,
+                    "status": "PROVIDER_FAILED",
+                    "provider": "Runway Gen-4.5",
+                }
+            )
+
+    if unit.get("id") == "day-06":
+        successful = [
+            item for item in rendered if item.get("status") == "RENDERED"
+        ]
+        expected = {
+            "video_reference_still": 5,
+            "carousel_master": 5,
+            "pinterest_pin": 5,
+            "video": 5,
+        }
+        actual = {key: 0 for key in expected}
+        for item in successful:
+            category = str(item.get("category", ""))
+            if category in actual:
+                actual[category] += 1
+        for category, count in expected.items():
+            if actual[category] != count:
+                failures.append(
+                    f"Day 6 requires {count} successfully rendered {category} "
+                    f"assets; received {actual[category]}."
+                )
+
+        ids = [str(item.get("asset_id", "")) for item in successful]
+        if len(ids) != 20 or len(set(ids)) != 20:
+            failures.append(
+                "Day 6 requires 20 distinct successfully rendered asset IDs."
+            )
+
+        paths = [str(item.get("path", "")) for item in successful]
+        normalized_paths = [Path(path).as_posix().lower() for path in paths if path]
+        if len(normalized_paths) != 20 or len(set(normalized_paths)) != 20:
+            failures.append(
+                "Day 6 requires 20 distinct successfully rendered output paths."
+            )
+
+    outdir = hardening.engine.RUNTIME_ROOT / "creative" / unit["id"] / run_id
+    outdir.mkdir(parents=True, exist_ok=True)
+    manifest = outdir / "render-manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "run_id": run_id,
+                "unit": unit["id"],
+                "generated_at": hardening.engine.datetime.now(
+                    hardening.engine.TZ
+                ).isoformat(),
+                "rendered": rendered,
+                "provider_failures": failures,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    result = {
+        "enabled": True,
+        "rendered": rendered,
+        "manifest": str(manifest.relative_to(hardening.engine.RUNTIME_ROOT)),
+    }
+    if failures:
+        result["violations"] = failures
+    return result
+
+
 hardening._strict_creative_preflight = strict_filename_preflight
+hardening.hardened_write_artifact_documents = tracked_hardened_write_artifact_documents
+hardening.hardened_execute_unit = tracked_hardened_execute_unit
+hardening.strict_render_creative_jobs = strict_render_creative_jobs
+hardening.engine.required_outputs_exist = current_run_required_outputs_exist
