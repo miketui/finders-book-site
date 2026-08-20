@@ -243,6 +243,9 @@ def check_owner_instruction_safety() -> None:
     assert output.run_status == "PASS"
     assert output.pass_condition_met is True
     assert output.blockers == []
+    assert len(output.approval_requests) == 1
+    assert output.approval_requests[0].approval_class == "YELLOW"
+    assert output.approval_requests[0].blocking is False
     assert "owner approval" in output.next_action.lower()
     assert any("without execution" in item for item in output.evidence)
     rendered = v1_1._operator_block(

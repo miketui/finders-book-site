@@ -246,6 +246,21 @@ def normalize_owner_facing_fields(output, qa: dict) -> None:
             + ", ".join(unapproved_actions)
             + "."
         )
+        output.approval_requests.append(
+            engine.ApprovalRequest(
+                title="Future external action withheld",
+                action=(
+                    "Decide whether the withheld external action may be considered "
+                    "in a later approved run."
+                ),
+                approval_class="YELLOW",
+                reason=(
+                    "The model suggested external action types without a prior "
+                    "approval: " + ", ".join(unapproved_actions) + "."
+                ),
+                blocking=False,
+            )
+        )
 
     if not qa.get("passed"):
         qa_blocker = (
