@@ -2,7 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 
 const root = new URL('../', import.meta.url);
-const ignoredDirs = new Set(['.git', '.vercel', 'node_modules']);
+const ignoredDirs = new Set(['.git', '.vercel', '.venv', 'node_modules']);
 const binaryExts = new Set(['.pdf', '.webp', '.jpg', '.jpeg', '.png', '.woff2', '.zip']);
 const findings = [];
 
@@ -14,6 +14,10 @@ async function walk(dirUrl) {
       await walk(url);
       continue;
     }
+    // Dependency environments can contain directory symlinks and other
+    // non-regular entries. They are not repository source and attempting to
+    // read them as UTF-8 can fail with EISDIR before the real scan begins.
+    if (!entry.isFile()) continue;
     if (binaryExts.has(extname(entry.name).toLowerCase())) continue;
     const path = relative(root.pathname, url.pathname);
     if (path === 'scripts/check-secrets.mjs') continue;
