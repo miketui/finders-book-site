@@ -58,6 +58,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Normalize OpenAI API key secret
+        shell: bash
+        run: |
+          CLEAN_OPENAI_API_KEY="$(printf '%s' "$OPENAI_API_KEY" | tr -d '[:space:]')"
+          if [[ -z "$CLEAN_OPENAI_API_KEY" ]]; then
+            echo "OPENAI_API_KEY is empty after normalization."
+            exit 1
+          fi
+          echo "::add-mask::$CLEAN_OPENAI_API_KEY"
+          printf 'OPENAI_API_KEY=%s\n' "$CLEAN_OPENAI_API_KEY" >> "$GITHUB_ENV"
+          echo "OpenAI API key secret normalized without exposing its value."
+
       - name: Restore encrypted GTM runtime state
         if: github.event_name != 'pull_request'
         shell: bash
