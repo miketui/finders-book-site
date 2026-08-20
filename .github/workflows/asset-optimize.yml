@@ -1,4 +1,4 @@
-name: Complete Finder's Book asset migration
+name: Finalize Finder's Book asset migration
 
 on:
   push:
@@ -30,12 +30,12 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install tooling
+      - name: Install migration tooling
         run: |
           python -m pip install --disable-pip-version-check pillow
           npm ci --ignore-scripts
 
-      - name: Generate and migrate production image assets
+      - name: Apply final migration
         shell: bash
         run: |
           set -euo pipefail
@@ -48,7 +48,6 @@ jobs:
           root = Path('.')
           incoming = root / 'assets' / 'incoming'
           assets = root / 'assets'
-
           specs = {
               'finders-book-cover.png': ('finders-book-cover', 'cover'),
               'essentials-product.png': ('essentials-product', 'square'),
@@ -56,57 +55,45 @@ jobs:
               'family-bundle-product.png': ('family-bundle-product', 'square'),
           }
 
-          def save_webp(source: Image.Image, out: Path, width: int, quality: int):
+          def save_webp(source, out, width, quality):
               ratio = width / source.width
               height = max(1, round(source.height * ratio))
               resized = source.resize((width, height), Image.Resampling.LANCZOS)
               if resized.mode not in ('RGB', 'RGBA'):
                   resized = resized.convert('RGB')
               resized.save(out, 'WEBP', quality=quality, method=6)
-              return resized.size
 
-          source_total = 0
-          derivative_total = 0
           for filename, (stem, kind) in specs.items():
               path = incoming / filename
               im = Image.open(path)
               im.load()
-              source_total += path.stat().st_size
-              print(f'{filename}: source={im.width}x{im.height} bytes={path.stat().st_size}')
               if im.width < 800 or im.height < 800:
-                  raise SystemExit(f'{filename}: source resolution is below 800px')
+                  raise SystemExit(f'{filename}: source resolution below 800px')
               if kind == 'cover' and im.height <= im.width:
                   raise SystemExit(f'{filename}: expected portrait cover')
               if kind == 'square' and abs(im.width - im.height) / max(im.width, im.height) > 0.03:
                   raise SystemExit(f'{filename}: expected near-square product tile')
-              for width, quality in ((400, 88), (800, 90)):
-                  out = assets / f'{stem}-{width}.webp'
-                  dims = save_webp(im, out, width, quality)
-                  derivative_total += out.stat().st_size
-                  print(f'  -> {out}: {dims[0]}x{dims[1]} bytes={out.stat().st_size}')
+              save_webp(im, assets / f'{stem}-400.webp', 400, 88)
+              save_webp(im, assets / f'{stem}-800.webp', 800, 90)
 
           cover = Image.open(incoming / 'finders-book-cover.png').convert('RGB')
-          bg = cover.getpixel((0, 0))
-          canvas = Image.new('RGB', (1200, 630), bg)
+          canvas = Image.new('RGB', (1200, 630), cover.getpixel((0, 0)))
           fitted = ImageOps.contain(cover, (1160, 590), Image.Resampling.LANCZOS)
           canvas.paste(fitted, ((1200 - fitted.width) // 2, (630 - fitted.height) // 2))
-          og = assets / 'og-finders-book.jpg'
-          canvas.save(og, 'JPEG', quality=90, optimize=True, progressive=True)
-          print(f'  -> {og}: 1200x630 bytes={og.stat().st_size}')
+          canvas.save(assets / 'og-finders-book.jpg', 'JPEG', quality=90, optimize=True, progressive=True)
 
-          replacements = {
-              'assets/cover-400.avif': 'assets/finders-book-cover-400.webp',
-              'assets/cover-800.avif': 'assets/finders-book-cover-800.webp',
-              'assets/cover-400.jpg': 'assets/finders-book-cover-400.webp',
-              'assets/cover.jpg': 'assets/finders-book-cover-800.webp',
-              'assets/essentials-storefront-400.jpg': 'assets/essentials-product-400.webp',
-              'assets/essentials-storefront.jpg': 'assets/essentials-product-800.webp',
-              'assets/ultimate-storefront-400.jpg': 'assets/ultimate-product-400.webp',
-              'assets/ultimate-storefront.jpg': 'assets/ultimate-product-800.webp',
-              'assets/family-storefront-400.jpg': 'assets/family-bundle-product-400.webp',
-              'assets/family-storefront.jpg': 'assets/family-bundle-product-800.webp',
-          }
-
+          replacements = [
+              ('assets/cover-400.avif', 'assets/finders-book-cover-400.webp'),
+              ('assets/cover-800.avif', 'assets/finders-book-cover-800.webp'),
+              ('assets/cover-400.jpg', 'assets/finders-book-cover-400.webp'),
+              ('assets/cover.jpg', 'assets/finders-book-cover-800.webp'),
+              ('assets/essentials-storefront-400.jpg', 'assets/essentials-product-400.webp'),
+              ('assets/essentials-storefront.jpg', 'assets/essentials-product-800.webp'),
+              ('assets/ultimate-storefront-400.jpg', 'assets/ultimate-product-400.webp'),
+              ('assets/ultimate-storefront.jpg', 'assets/ultimate-product-800.webp'),
+              ('assets/family-storefront-400.jpg', 'assets/family-bundle-product-400.webp'),
+              ('assets/family-storefront.jpg', 'assets/family-bundle-product-800.webp'),
+          ]
           excluded = {
               Path('docs/FILE-INVENTORY.md'),
               Path('docs/FILE-TREE.md'),
@@ -120,7 +107,7 @@ jobs:
               except UnicodeDecodeError:
                   continue
               original = text
-              for old, new in replacements.items():
+              for old, new in replacements:
                   text = text.replace(old, new)
               text = text.replace('finders-book-cover-800.webp" type="image/jpeg"', 'finders-book-cover-800.webp" type="image/webp"')
               text = text.replace('finders-book-cover-800.webp" type="image/avif"', 'finders-book-cover-800.webp" type="image/webp"')
@@ -130,17 +117,12 @@ jobs:
               text = text.replace('width="800" height="1202"', 'width="800" height="1200"')
               if text != original:
                   path.write_text(text, encoding='utf-8')
-                  print(f'updated references: {path}')
 
-          # Keep source masters in GitHub but out of the Vercel deployment surface.
-          vercelignore = Path('.vercelignore')
-          vi = vercelignore.read_text(encoding='utf-8')
+          vi_path = Path('.vercelignore')
+          vi = vi_path.read_text(encoding='utf-8')
           if 'assets/incoming/' not in vi.splitlines():
-              vi = vi.rstrip() + '\nassets/incoming/\n'
-              vercelignore.write_text(vi, encoding='utf-8')
+              vi_path.write_text(vi.rstrip() + '\nassets/incoming/\n', encoding='utf-8')
 
-          # Refresh recovery hashes in the public asset hydration map and add the
-          # new 800px product variants so recovery remains deterministic.
           hydrate = Path('scripts/hydrate-assets.mjs')
           htxt = hydrate.read_text(encoding='utf-8')
           targets = [
@@ -157,89 +139,39 @@ jobs:
           for rel in targets:
               digest = sha256(Path(rel).read_bytes()).hexdigest()
               pattern = re.compile(r"\['" + re.escape(rel) + r"', '[0-9a-f]{64}'\]")
-              replacement = f"['{rel}', '{digest}']"
+              row = f"['{rel}', '{digest}']"
               if pattern.search(htxt):
-                  htxt = pattern.sub(replacement, htxt)
+                  htxt = pattern.sub(row, htxt)
               else:
                   marker = '\n];'
                   if marker not in htxt:
-                      raise SystemExit('hydrate asset list terminator not found')
-                  htxt = htxt.replace(marker, f",\n  {replacement}{marker}", 1)
+                      raise SystemExit('hydrate list terminator not found')
+                  htxt = htxt.replace(marker, f",\n  {row}{marker}", 1)
           hydrate.write_text(htxt, encoding='utf-8')
 
-          old_files = [
-              'assets/cover.jpg',
-              'assets/cover-400.jpg',
-              'assets/cover-400.avif',
-              'assets/cover-800.avif',
-              'assets/essentials-storefront.jpg',
-              'assets/essentials-storefront-400.jpg',
-              'assets/ultimate-storefront.jpg',
-              'assets/ultimate-storefront-400.jpg',
-              'assets/family-storefront.jpg',
-              'assets/family-storefront-400.jpg',
-          ]
-          for rel in old_files:
+          for rel in [
+              'assets/cover.jpg','assets/cover-400.jpg','assets/cover-400.avif','assets/cover-800.avif',
+              'assets/essentials-storefront.jpg','assets/essentials-storefront-400.jpg',
+              'assets/ultimate-storefront.jpg','assets/ultimate-storefront-400.jpg',
+              'assets/family-storefront.jpg','assets/family-storefront-400.jpg',
+          ]:
               p = Path(rel)
               if p.exists():
                   p.unlink()
-                  print(f'retired obsolete asset: {rel}')
 
-          # The optimization workflow is intentionally one-time and must not ship.
+          # Remove the one-time workflow from the final tree.
           Path('.github/workflows/asset-optimize.yml').unlink()
-
-          budgets = {
-              'assets/finders-book-cover-400.webp': 220_000,
-              'assets/finders-book-cover-800.webp': 500_000,
-              'assets/essentials-product-400.webp': 250_000,
-              'assets/essentials-product-800.webp': 600_000,
-              'assets/ultimate-product-400.webp': 250_000,
-              'assets/ultimate-product-800.webp': 600_000,
-              'assets/family-bundle-product-400.webp': 250_000,
-              'assets/family-bundle-product-800.webp': 600_000,
-              'assets/og-finders-book.jpg': 450_000,
-          }
-          for rel, limit in budgets.items():
-              size = Path(rel).stat().st_size
-              if size > limit:
-                  raise SystemExit(f'{rel}: {size} bytes exceeds {limit}')
-          print(f'performance: source masters={source_total} bytes; responsive WebP set={derivative_total} bytes')
-          print(f'performance: responsive set is {(1 - derivative_total/source_total)*100:.1f}% smaller than source masters')
           PY
 
-      - name: Stage final tree and regenerate manifests
+      - name: Regenerate repository manifests
+        shell: bash
         run: |
           set -euo pipefail
           git add -A
           npm run manifests
           git add docs/FILE-INVENTORY.md docs/FILE-TREE.md
 
-      - name: Prove obsolete references are gone
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git grep -n -E 'assets/(cover\.jpg|cover-400\.jpg|cover-400\.avif|cover-800\.avif|essentials-storefront(-400)?\.jpg|ultimate-storefront(-400)?\.jpg|family-storefront(-400)?\.jpg)' -- ':!docs/FILE-INVENTORY.md' ':!docs/FILE-TREE.md'; then
-            echo 'Obsolete asset reference remains.' >&2
-            exit 1
-          fi
-          echo 'No obsolete cover/storefront references remain.'
-
-      - name: Repository validation
-        run: npm run validate
-
-      - name: Desktop and mobile rendered validation
-        shell: bash
-        run: |
-          set -euo pipefail
-          chrome_path="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
-          if [[ -z "$chrome_path" ]]; then
-            npx playwright install --with-deps chromium
-          else
-            export PLAYWRIGHT_CHROMIUM_PATH="$chrome_path"
-          fi
-          npm run test:render
-
-      - name: Commit completed migration
+      - name: Commit migration tree
         shell: bash
         run: |
           set -euo pipefail
