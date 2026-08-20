@@ -20,6 +20,8 @@ finders-book-site/
     │   │   ├── archivo-latin-variable-normal.woff2
     │   │   ├── newsreader-latin-variable-italic.woff2
     │   │   └── newsreader-latin-variable-normal.woff2
+    │   ├── incoming/
+    │   │   └── README.md
     │   ├── vendor/
     │   │   ├── gsap.min.js
     │   │   ├── lenis.min.js
