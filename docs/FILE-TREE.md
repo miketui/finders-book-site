@@ -100,7 +100,8 @@ finders-book-site/
     │   │   └── pyproject.toml
     │   ├── prompts/
     │   │   ├── agents.md
-    │   │   └── orchestrator.md
+    │   │   ├── orchestrator.md
+    │   │   └── sections.md
     │   ├── approvals.json
     │   ├── creative-budget.json
     │   ├── day-plan.json
