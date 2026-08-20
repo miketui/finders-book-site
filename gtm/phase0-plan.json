@@ -1,0 +1,118 @@
+{
+  "program": "finders-book-phase-0-foundation",
+  "version": "1.0.0",
+  "execution_order": [12, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 5],
+  "rules": {
+    "run_before_day_1": true,
+    "section_12_runs_first": true,
+    "section_5_runs_last": true,
+    "foundation_qa_required": true,
+    "publishing_sending_spend_deploy_merge": "approval-gated",
+    "paid_customer_files_in_public_repo": false
+  },
+  "sections": [
+    {
+      "section": 12,
+      "title": "Source Verification + Platform Reference Refresh",
+      "specialists": ["ANALYTICS", "COMMERCE", "GROWTH", "SEO", "RELEASE_QA"],
+      "outputs": ["foundation/12-source-ledger.md", "foundation/12-source-ledger.json"],
+      "pass_condition": "Current repository state and material external platform claims are classified as VERIFIED, CHANGED, UNVERIFIED or NOT_APPLICABLE, with impacts mapped to affected foundation sections and GTM days."
+    },
+    {
+      "section": 1,
+      "title": "POD + Omnichannel Sales Architecture",
+      "specialists": ["COMMERCE", "ANALYTICS", "EBOOK_PRODUCTION"],
+      "outputs": ["foundation/01-channel-architecture.md", "foundation/01-channel-architecture.json", "foundation/01-ebook-reading-edition-architecture.md"],
+      "pass_condition": "NOW/NEXT/LATER/SKIP channel architecture, SKU roles, prices, integration gates and ebook-vs-fillable-PDF separation are documented without changing the live funnel."
+    },
+    {
+      "section": 2,
+      "title": "Viral Emotional Book Marketing Framework",
+      "specialists": ["CONTENT", "CREATIVE_PRODUCTION"],
+      "outputs": ["foundation/02-message-framework.md", "foundation/02-message-framework.json"],
+      "pass_condition": "Pain/Relief/Dream/Safe-Mechanism/CTA system, safety guardrails, reusable content formulas and scheduling examples are complete."
+    },
+    {
+      "section": 3,
+      "title": "SEO Architecture + Keyword Map",
+      "specialists": ["SEO", "ANALYTICS", "RELEASE_QA"],
+      "outputs": ["foundation/03-seo-map.md", "foundation/03-seo-map.json"],
+      "pass_condition": "One primary intent is mapped to each existing indexable URL, cannibalization is checked, and the Month-1 backlog is prioritized."
+    },
+    {
+      "section": 4,
+      "title": "Paid Traffic + Full Promotion / Promoter System",
+      "specialists": ["GROWTH", "PARTNERSHIPS", "CONTENT", "ANALYTICS"],
+      "outputs": ["foundation/04-acquisition-promotion-system.md", "foundation/04-acquisition-promotion-system.json"],
+      "pass_condition": "Organic, paid, referral, creator, B2B and community channel roles, CTA routing, measurement gates and spend ceilings are documented."
+    },
+    {
+      "section": 6,
+      "title": "Etsy Physical Edition Setup",
+      "specialists": ["COMMERCE", "SEO", "CONTENT", "RELEASE_QA"],
+      "outputs": ["foundation/06-etsy-package.md", "foundation/06-etsy-package.json"],
+      "pass_condition": "A proof-dependent, policy-aware Etsy listing and fulfillment package is staged without publishing."
+    },
+    {
+      "section": 7,
+      "title": "Amazon KDP Physical Edition Setup",
+      "specialists": ["COMMERCE", "SEO", "CONTENT", "RELEASE_QA"],
+      "outputs": ["foundation/07-kdp-package.md", "foundation/07-kdp-package.json"],
+      "pass_condition": "Paperback format, metadata, preflight, proof, detail-page and ad-prep package is staged without publishing or ordering."
+    },
+    {
+      "section": 8,
+      "title": "Lulu Lay-Flat + Direct Checkout Setup",
+      "specialists": ["COMMERCE", "ANALYTICS", "RELEASE_QA"],
+      "outputs": ["foundation/08-lulu-package.md", "foundation/08-lulu-package.json"],
+      "pass_condition": "Lulu coil project, proof, economics, Direct Checkout Link, website tracking and buyer-segmentation implementation package is complete and approval-gated."
+    },
+    {
+      "section": 9,
+      "title": "Pricing Economics + Margin Guardrails",
+      "specialists": ["ANALYTICS", "COMMERCE", "GROWTH"],
+      "outputs": ["foundation/09-unit-economics.md", "foundation/09-unit-economics.json"],
+      "pass_condition": "Contribution models, CPA ceilings, break-even logic, sensitivity ranges and Hold/Test/Reject decisions are documented using verified values or clearly labeled unknowns."
+    },
+    {
+      "section": 10,
+      "title": "Creative Master Specification + Copy / Promotion Bank",
+      "specialists": ["CONTENT", "CREATIVE_PRODUCTION", "SEO", "GROWTH"],
+      "outputs": ["foundation/10-content-bank.md", "foundation/10-creative-master-spec.md", "foundation/10-creative-master-spec.json", "foundation/10-promotion-plays.md"],
+      "pass_condition": "Thirty hooks, exactly 12 scheduling-ready content packages, 30 promotion plays, and a machine-readable creative production specification are complete. Phase 0 does not render the large media batch."
+    },
+    {
+      "section": 11,
+      "title": "KPI Dashboard + Optimization Rules",
+      "specialists": ["ANALYTICS", "GROWTH", "SEO"],
+      "outputs": ["foundation/11-kpi-dashboard.md", "foundation/11-kpi-dashboard.json"],
+      "pass_condition": "Metric dictionary, attribution rules, baseline/data gaps, contribution view and seven-day decision tree are documented."
+    },
+    {
+      "section": 5,
+      "title": "30-Day Operating System Synthesis",
+      "specialists": ["ANALYTICS", "GROWTH", "SEO", "COMMERCE", "PARTNERSHIPS", "CONTENT", "CREATIVE_PRODUCTION", "EBOOK_PRODUCTION", "RELEASE_QA"],
+      "outputs": ["foundation/05-operating-system.md", "foundation/05-operating-system.json", "foundation/foundation-summary.md"],
+      "pass_condition": "The full 30-day command center is reconciled against Sections 1-4 and 6-12, dependencies are explicit, Day 6 is the first large rendering batch, and Day 1 is safe to begin."
+    }
+  ],
+  "foundation_qa": {
+    "title": "Phase 0 Foundation QA",
+    "specialists": ["RELEASE_QA", "ANALYTICS"],
+    "required_outputs": [
+      "foundation/01-channel-architecture.md",
+      "foundation/02-message-framework.md",
+      "foundation/03-seo-map.md",
+      "foundation/04-acquisition-promotion-system.md",
+      "foundation/05-operating-system.md",
+      "foundation/06-etsy-package.md",
+      "foundation/07-kdp-package.md",
+      "foundation/08-lulu-package.md",
+      "foundation/09-unit-economics.md",
+      "foundation/10-creative-master-spec.json",
+      "foundation/11-kpi-dashboard.json",
+      "foundation/12-source-ledger.json"
+    ],
+    "pass_condition": "All 12 section units passed, required foundation artifacts exist, contradictions are reconciled, repository QA passes, and no unresolved blocking approval remains."
+  }
+}
