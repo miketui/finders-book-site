@@ -9,16 +9,15 @@ on:
       - ".vercelignore"
       - ".gitignore"
   schedule:
-    # 08:00 PDT during the initial 30-day launch window.
     - cron: "0 15 * * *"
   workflow_dispatch:
     inputs:
       mode:
-        description: "run, approve, reject, or status"
+        description: "run, approve, reject, status, or ebook-build"
         required: true
         default: "run"
         type: choice
-        options: [run, approve, reject, status]
+        options: [run, approve, reject, status, ebook-build]
       approval_id:
         description: "Required for approve/reject"
         required: false
@@ -37,54 +36,86 @@ concurrency:
 
 jobs:
   run:
-    # The one-time bootstrap push runs only when the merge commit contains the
-    # explicit marker. Normal future pushes do not advance the GTM clock.
     if: github.event_name != 'push' || contains(github.event.head_commit.message, '[gtm-autopilot-bootstrap]')
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
       GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
+      GTM_RUNTIME_ROOT: ${{ runner.temp }}/finders-gtm-runtime
     steps:
       - name: Checkout protected source
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Normalize OpenAI API key secret
+      - name: Normalize provider secrets
         shell: bash
         run: |
-          clean_openai_api_key="$(printf '%s' "$OPENAI_API_KEY" | tr -d '[:space:]')"
-          if [[ -z "$clean_openai_api_key" ]]; then
+          clean_openai="$(printf '%s' "$OPENAI_API_KEY" | tr -d '[:space:]')"
+          if [[ -z "$clean_openai" ]]; then
             echo "OPENAI_API_KEY is empty after normalization."
             exit 1
           fi
-          echo "::add-mask::$clean_openai_api_key"
-          printf 'OPENAI_API_KEY=%s\n' "$clean_openai_api_key" >> "$GITHUB_ENV"
-          echo "OpenAI API key secret normalized without exposing its value."
+          echo "::add-mask::$clean_openai"
+          printf 'OPENAI_API_KEY=%s\n' "$clean_openai" >> "$GITHUB_ENV"
+
+          clean_runway="$(printf '%s' "${RUNWAYML_API_SECRET:-}" | tr -d '[:space:]')"
+          if [[ -n "$clean_runway" ]]; then
+            echo "::add-mask::$clean_runway"
+            printf 'RUNWAYML_API_SECRET=%s\n' "$clean_runway" >> "$GITHUB_ENV"
+          fi
+          echo "Provider secrets normalized without exposing values."
+
+      - name: Initialize private runtime directory
+        shell: bash
+        run: |
+          rm -rf "$GTM_RUNTIME_ROOT"
+          mkdir -p "$GTM_RUNTIME_ROOT"
+          cp gtm/state.json "$GTM_RUNTIME_ROOT/state.json"
+          cp gtm/metrics.json "$GTM_RUNTIME_ROOT/metrics.json"
+          cp gtm/experiments.json "$GTM_RUNTIME_ROOT/experiments.json"
+          cp gtm/approvals.json "$GTM_RUNTIME_ROOT/approvals.json"
 
       - name: Restore encrypted GTM runtime state
         shell: bash
         run: |
           git fetch origin "$STATE_BRANCH" || true
-          if git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
-            git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
-            if [[ -n "${GTM_STATE_KEY:-}" ]]; then
-              state_passphrase="$GTM_STATE_KEY"
-            else
-              state_passphrase="$OPENAI_API_KEY"
-            fi
-            export state_passphrase
-            openssl enc -d -aes-256-cbc -pbkdf2 \
-              -in /tmp/gtm-runtime.enc \
-              -out /tmp/gtm-runtime.tgz \
-              -pass env:state_passphrase
-            tar -xzf /tmp/gtm-runtime.tgz -C "$GITHUB_WORKSPACE"
-            echo "Encrypted GTM runtime state restored."
-          else
-            echo "No prior encrypted runtime state; starting from checked-in templates."
+          if ! git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
+            echo "No prior encrypted runtime state; using checked-in templates."
+            exit 0
           fi
+
+          git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
+          key_scheme="openai"
+          if git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.meta" 2>/dev/null; then
+            git show "origin/$STATE_BRANCH:gtm/runtime-state.meta" > /tmp/gtm-runtime.meta
+            key_scheme="$(python - <<'PY'
+          import json
+          print(json.load(open('/tmp/gtm-runtime.meta')).get('key_scheme', 'openai'))
+          PY
+          )"
+          fi
+
+          if [[ "$key_scheme" == "state_key" ]]; then
+            if [[ -z "${GTM_STATE_KEY:-}" ]]; then
+              echo "Existing state requires GTM_STATE_KEY but the secret is missing."
+              exit 1
+            fi
+            state_passphrase="$GTM_STATE_KEY"
+          else
+            state_passphrase="$OPENAI_API_KEY"
+          fi
+          export state_passphrase
+
+          openssl enc -d -aes-256-cbc -pbkdf2 \
+            -in /tmp/gtm-runtime.enc \
+            -out /tmp/gtm-runtime.tgz \
+            -pass env:state_passphrase
+          tar -xzf /tmp/gtm-runtime.tgz -C "$GTM_RUNTIME_ROOT"
+          echo "Encrypted GTM runtime state restored outside the public source tree."
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -93,7 +124,7 @@ jobs:
           cache: npm
 
       - name: Install site dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -103,11 +134,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Install Autopilot dependencies
-        run: uv sync --project gtm/autopilot
+      - name: Install locked Autopilot dependencies
+        run: uv sync --project gtm/autopilot --locked
 
-      - name: Compile Autopilot
-        run: python -m py_compile gtm/autopilot/main.py
+      - name: Compile Autopilot and EPUB builder
+        run: python -m py_compile gtm/autopilot/main.py gtm/ebook/build_epub.py
 
       - name: Execute Autopilot
         shell: bash
@@ -123,52 +154,67 @@ jobs:
             --note "$AUTOPILOT_NOTE" \
             --actor "$AUTOPILOT_ACTOR"
 
-      - name: Encrypt and persist runtime state on isolated branch
+      - name: Upload generated creative and ebook artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finders-book-gtm-${{ github.run_id }}
+          path: |
+            ${{ env.GTM_RUNTIME_ROOT }}/creative
+            ${{ env.GTM_RUNTIME_ROOT }}/ebook/*.epub
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Encrypt and persist bounded runtime state
         if: success()
         shell: bash
         run: |
-          mkdir -p gtm/reports
+          mkdir -p "$GTM_RUNTIME_ROOT/reports" "$GTM_RUNTIME_ROOT/foundation" "$GTM_RUNTIME_ROOT/ebook"
+
+          mapfile -t old_reports < <(
+            find "$GTM_RUNTIME_ROOT/reports" -maxdepth 1 -type f -printf '%T@ %p\n' \
+              | sort -nr | tail -n +121 | cut -d' ' -f2-
+          )
+          if (( ${#old_reports[@]} > 0 )); then
+            rm -f -- "${old_reports[@]}"
+          fi
+
           tar -czf /tmp/gtm-runtime.tgz \
-            gtm/state.json \
-            gtm/metrics.json \
-            gtm/experiments.json \
-            gtm/approvals.json \
-            gtm/reports
+            --exclude='ebook/*.epub' \
+            -C "$GTM_RUNTIME_ROOT" \
+            state.json metrics.json experiments.json approvals.json foundation reports ebook
 
           if [[ -n "${GTM_STATE_KEY:-}" ]]; then
             state_passphrase="$GTM_STATE_KEY"
+            key_scheme="state_key"
           else
             state_passphrase="$OPENAI_API_KEY"
+            key_scheme="openai"
           fi
           export state_passphrase
+
           openssl enc -aes-256-cbc -salt -pbkdf2 \
             -in /tmp/gtm-runtime.tgz \
             -out /tmp/gtm-runtime.enc \
             -pass env:state_passphrase
 
-          # Remove plaintext runtime changes before switching branches.
-          git reset --hard HEAD
-          git clean -fd gtm/reports
+          python - "$key_scheme" <<'PY'
+          import json
+          import sys
+          json.dump(
+              {"version": 1, "key_scheme": sys.argv[1]},
+              open("/tmp/gtm-runtime.meta", "w"),
+              indent=2,
+          )
+          PY
 
           git config user.name "finders-book-gtm-bot"
           git config user.email "actions@users.noreply.github.com"
-          git fetch origin "$STATE_BRANCH" || true
-          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
-            git switch -C "$STATE_BRANCH" "origin/$STATE_BRANCH"
-          else
-            git switch -C "$STATE_BRANCH"
-          fi
-
+          git switch --orphan gtm-state-snapshot
+          git rm -rf . >/dev/null 2>&1 || true
           mkdir -p gtm
           cp /tmp/gtm-runtime.enc gtm/runtime-state.enc
-          git add -f gtm/runtime-state.enc
-          if git diff --cached --quiet; then
-            echo "No encrypted runtime state changes."
-            exit 0
-          fi
-          git commit -m "chore(gtm): persist encrypted autopilot runtime state"
-          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
-            git push --force-with-lease origin "$STATE_BRANCH"
-          else
-            git push -u origin "$STATE_BRANCH"
-          fi
+          cp /tmp/gtm-runtime.meta gtm/runtime-state.meta
+          git add -f gtm/runtime-state.enc gtm/runtime-state.meta
+          git commit -m "chore(gtm): persist latest encrypted autopilot snapshot"
+          git push --force origin "HEAD:$STATE_BRANCH"
