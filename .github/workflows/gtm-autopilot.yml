@@ -289,8 +289,8 @@ jobs:
         if: success() && env.AUTOPILOT_MODE == 'run'
         shell: bash
         run: |
-          upload_root="$GITHUB_WORKSPACE/.gtm-artifact-upload/creative"
-          rm -rf "$GITHUB_WORKSPACE/.gtm-artifact-upload"
+          upload_root="$GITHUB_WORKSPACE/gtm-artifact-upload/creative"
+          rm -rf "$GITHUB_WORKSPACE/gtm-artifact-upload"
           mkdir -p "$upload_root"
           if [[ -d "$GTM_RUNTIME_ROOT/creative" ]]; then
             cp -a "$GTM_RUNTIME_ROOT/creative/." "$upload_root/"
@@ -301,6 +301,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: finders-book-gtm-creative-${{ github.run_id }}
-          path: ${{ github.workspace }}/.gtm-artifact-upload/creative
+          path: ${{ github.workspace }}/gtm-artifact-upload/creative
           if-no-files-found: ignore
           retention-days: 30
