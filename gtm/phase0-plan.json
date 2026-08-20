@@ -93,7 +93,7 @@
       "title": "30-Day Operating System Synthesis",
       "specialists": ["ANALYTICS", "GROWTH", "SEO", "COMMERCE", "PARTNERSHIPS", "CONTENT", "CREATIVE_PRODUCTION", "EBOOK_PRODUCTION", "RELEASE_QA"],
       "outputs": ["foundation/05-operating-system.md", "foundation/05-operating-system.json", "foundation/foundation-summary.md"],
-      "pass_condition": "The full 30-day command center is reconciled against Sections 1-4 and 6-12, dependencies are explicit, Day 6 is the first large rendering batch, and Day 1 is safe to begin."
+      "pass_condition": "The full 30-day command center is reconciled against Sections 1-4 and 6-12, dependencies are explicit, Day 6 is the first large rendering batch, and Day 1 is safe to begin. `foundation/05-operating-system.json` must contain `foundation_reconciliation.status` = `PASS` and an explicit empty `foundation_reconciliation.contradictions` array; any unresolved contradiction means this section must not PASS."
     }
   ],
   "foundation_qa": {
@@ -113,6 +113,6 @@
       "foundation/11-kpi-dashboard.json",
       "foundation/12-source-ledger.json"
     ],
-    "pass_condition": "All 12 section units passed, required foundation artifacts exist, contradictions are reconciled, repository QA passes, and no unresolved blocking approval remains."
+    "pass_condition": "All 12 section units passed, required foundation artifacts exist, Section 5 explicitly records `foundation_reconciliation.status` = `PASS` with `contradictions` = [], canonical channel decisions are present, repository QA passes, and no unresolved blocking approval remains."
   }
 }
