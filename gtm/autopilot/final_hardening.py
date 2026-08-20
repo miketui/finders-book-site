@@ -44,6 +44,7 @@ _RAW_EXECUTE_UNIT = engine.execute_unit
 _RAW_WRITE_ARTIFACT_DOCUMENTS = engine.write_artifact_documents
 _ACTIVE_UNIT: dict | None = None
 _REJECTED_ARTIFACT_PATHS: list[str] = []
+_WRITTEN_ARTIFACT_PATHS: set[str] = set()
 
 
 def hardened_active_unit(state: dict) -> dict:
@@ -76,7 +77,7 @@ def _allowed_artifact_paths(unit: dict | None) -> set[str]:
 def hardened_write_artifact_documents(
     documents: list[engine.ArtifactDocument],
 ) -> list[str]:
-    global _REJECTED_ARTIFACT_PATHS
+    global _REJECTED_ARTIFACT_PATHS, _WRITTEN_ARTIFACT_PATHS
     allowed = _allowed_artifact_paths(_ACTIVE_UNIT)
     accepted: list[engine.ArtifactDocument] = []
     for doc in documents:
@@ -85,13 +86,16 @@ def hardened_write_artifact_documents(
             _REJECTED_ARTIFACT_PATHS.append(rel)
             continue
         accepted.append(doc)
-    return _RAW_WRITE_ARTIFACT_DOCUMENTS(accepted)
+    written = _RAW_WRITE_ARTIFACT_DOCUMENTS(accepted)
+    _WRITTEN_ARTIFACT_PATHS.update(written)
+    return written
 
 
 async def hardened_execute_unit(unit: dict) -> dict:
-    global _ACTIVE_UNIT, _REJECTED_ARTIFACT_PATHS
+    global _ACTIVE_UNIT, _REJECTED_ARTIFACT_PATHS, _WRITTEN_ARTIFACT_PATHS
     _ACTIVE_UNIT = copy.deepcopy(unit)
     _REJECTED_ARTIFACT_PATHS = []
+    _WRITTEN_ARTIFACT_PATHS = set()
     try:
         return await _RAW_EXECUTE_UNIT(unit)
     finally:
@@ -268,6 +272,7 @@ def strict_render_creative_jobs(
             continue
 
         one = output.model_copy(deep=True)
+        one.creative_jobs = [job]
         one_job = one.creative_jobs[0]
         one_job.reference_image = reference_path
         try:
@@ -468,6 +473,14 @@ def install_final_guards() -> None:
         required_ok,
         render_result,
     ):
+        if unit.get("kind") in {"section", "day", "continuous"}:
+            required_now = set(unit.get("required_outputs", []))
+            missing_current = sorted(required_now - _WRITTEN_ARTIFACT_PATHS)
+            if missing_current:
+                output.blockers.append("Required outputs not written by current run: " + ", ".join(missing_current))
+                output.pass_condition_met = False
+                output.run_status = "BLOCKED"
+                required_ok = False
         if _REJECTED_ARTIFACT_PATHS:
             rejected = ", ".join(sorted(set(_REJECTED_ARTIFACT_PATHS)))
             output.blockers.append(
