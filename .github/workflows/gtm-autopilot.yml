@@ -1,0 +1,95 @@
+name: Finder's Book GTM Autopilot
+
+on:
+  schedule:
+    # 08:00 PDT during the initial 30-day launch window.
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "run, approve, reject, or status"
+        required: true
+        default: "run"
+        type: choice
+        options: [run, approve, reject, status]
+      approval_id:
+        description: "Required for approve/reject"
+        required: false
+        type: string
+      note:
+        description: "Optional owner note"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finders-book-gtm-autopilot
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      STATE_BRANCH: gtm-autopilot-state
+    steps:
+      - name: Checkout protected source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Overlay persistent GTM state
+        shell: bash
+        run: |
+          git fetch origin "$STATE_BRANCH" || true
+          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
+            git checkout "origin/$STATE_BRANCH" -- \
+              gtm/state.json gtm/metrics.json gtm/experiments.json gtm/approvals.json gtm/reports || true
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install site dependencies
+        run: npm ci
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install Autopilot dependencies
+        run: uv sync --project gtm/autopilot
+
+      - name: Compile Autopilot
+        run: python -m py_compile gtm/autopilot/main.py
+
+      - name: Execute Autopilot
+        run: |
+          uv run --project gtm/autopilot python gtm/autopilot/main.py \
+            --mode "${{ inputs.mode || 'run' }}" \
+            --approval-id "${{ inputs.approval_id || '' }}" \
+            --note "${{ inputs.note || '' }}"
+
+      - name: Persist runtime state on isolated branch
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "finders-book-gtm-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git switch -C "$STATE_BRANCH"
+          git add gtm/state.json gtm/metrics.json gtm/experiments.json gtm/approvals.json gtm/reports
+          if git diff --cached --quiet; then
+            echo "No runtime state changes."
+            exit 0
+          fi
+          git commit -m "chore(gtm): persist autopilot runtime state"
+          git push --force-with-lease origin "$STATE_BRANCH"
