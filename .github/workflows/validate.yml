@@ -82,8 +82,8 @@ jobs:
       - name: Verify locked dependencies
         run: uv sync --project gtm/autopilot --locked
 
-      - name: Compile Autopilot, control plane and EPUB builder
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/ebook/build_epub.py
+      - name: Compile Autopilot, network guard, control plane and EPUB builder
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/ebook/build_epub.py
 
       - name: Validate GTM architecture and control-plane contracts
         shell: bash
@@ -101,6 +101,7 @@ jobs:
           agents_text = (root / 'prompts' / 'agents.md').read_text()
           sections_text = (root / 'prompts' / 'sections.md').read_text()
           control_text = (root / 'autopilot' / 'control_plane.py').read_text()
+          network_text = (root / 'autopilot' / 'network_guard.py').read_text()
           epub_text = (root / 'ebook' / 'build_epub.py').read_text()
           workflow_text = Path('.github/workflows/gtm-autopilot.yml').read_text()
 
@@ -163,8 +164,16 @@ jobs:
           assert 'RUNWAYML_API_SECRET missing for video rendering' in control_text
           assert 'provider is disabled by creative-budget.json' in control_text
 
+          # Provider download trust-boundary invariants.
+          assert 'def guarded_download_url' in network_text
+          assert 'parsed.scheme.lower() != "https"' in network_text
+          assert 'ip.is_private' in network_text
+          assert 'PublicHttpsRedirectHandler' in network_text
+          assert 'MAX_DOWNLOAD_BYTES' in network_text
+          assert 'engine.download_url = guarded_download_url' in network_text
+
           # Trusted workflow + persistence ordering invariants.
-          assert 'gtm/autopilot/control_plane.py' in workflow_text
+          assert 'import network_guard, control_plane' in workflow_text
           assert 'ref: main' in workflow_text
           assert 'Runtime archive path validation passed.' in workflow_text
           assert 'AUTOPILOT_MODE' in workflow_text
@@ -179,7 +188,28 @@ jobs:
           assert 'ET.fromstring' in epub_text
           assert 'malformed XHTML' in epub_text
 
-          print('PASS: Phase 0, nine-agent, Day 6 creative, EPUB, persistence, and hardened control-plane contracts validated.')
+          print('PASS: Phase 0, nine-agent, Day 6 creative, network, EPUB, persistence, and control-plane contracts validated.')
+          PY
+
+      - name: Exercise provider network guardrails
+        shell: bash
+        run: |
+          PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python - <<'PY'
+          import network_guard
+
+          bad = [
+              'http://example.com/file',
+              'https://127.0.0.1/file',
+              'https://169.254.169.254/latest/meta-data/',
+              'https://[::1]/file',
+          ]
+          for url in bad:
+              try:
+                  network_guard._validate_https_public_url(url)
+              except ValueError:
+                  continue
+              raise SystemExit(f'Unsafe provider URL unexpectedly passed: {url}')
+          print('PASS: provider network guard rejects non-HTTPS/private destinations.')
           PY
 
       - name: Exercise EPUB validity and stable-identity guardrails
