@@ -2,17 +2,6 @@
 /**
  * regen-manifests.mjs — rebuild docs/FILE-TREE.md and docs/FILE-INVENTORY.md
  * from the actual tracked contents of the repository.
- *
- * Both manifests were written by hand and both drifted: as of 2026-08-15
- * FILE-TREE.md still listed 3 API routes when there were 5, and omitted
- * about.html, order.html, contact.html and every CSS/JS file added since.
- * A hand-maintained inventory of 50+ files with SHA-256 digests is a
- * manifest that will always be out of date; this makes it a build step.
- *
- *   npm run manifests
- *
- * Run it whenever files are added, removed, or renamed, and commit the
- * regenerated docs alongside the change.
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -24,7 +13,6 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const INVENTORY = join(ROOT, 'docs/FILE-INVENTORY.md');
 const TREE = join(ROOT, 'docs/FILE-TREE.md');
 
-/** Tracked + staged files, so a manifest regenerated pre-commit is accurate. */
 function trackedFiles() {
   const out = execFileSync('git', ['ls-files', '--cached', '--exclude-standard'], {
     cwd: ROOT,
@@ -33,13 +21,21 @@ function trackedFiles() {
   return out.split('\n').map((s) => s.trim()).filter(Boolean).sort();
 }
 
-/** One-line purpose, derived from location and extension. */
 function purpose(path) {
   if (path === 'gtm/autopilot/control_plane.py') {
     return 'Hardened GTM Autopilot control-plane entrypoint; enforces approvals, runtime isolation and media safety';
   }
+  if (path === 'gtm/autopilot/final_hardening.py') {
+    return 'Final GTM Autopilot safety layer; enforces durable outputs, private status, Day 6 contracts and secure ebook ingestion';
+  }
   if (path === 'gtm/autopilot/main.py') {
     return 'Scheduled GTM Autopilot engine; loads, updates and persists GTM runtime state';
+  }
+  if (path === 'gtm/autopilot/network_guard.py') {
+    return 'Pinned-IP HTTPS media download guard; blocks private-address and DNS-rebinding paths';
+  }
+  if (path === 'gtm/autopilot/render_contracts.py') {
+    return 'Creative render filename and output-contract normalization for paid media safety';
   }
   if (path === 'gtm/ebook/build_epub.py') {
     return 'Private-runtime EPUB 3 reading-edition builder and validation entrypoint';
@@ -55,11 +51,10 @@ function purpose(path) {
   if (path.endsWith('.html')) return 'Public website page';
   if (path.endsWith('.css')) return 'Public website stylesheet';
   if (path.endsWith('.js') || path.endsWith('.mjs')) return 'Public website script';
-  if (path.endsWith('.py')) return 'One-shot migration script';
+  if (path.endsWith('.py')) return 'Repository Python automation or validation module';
   return 'Repository configuration or metadata';
 }
 
-/** Build a nested map from flat paths, then render it as a tree. */
 function renderTree(paths) {
   const root = new Map();
   for (const p of paths) {
