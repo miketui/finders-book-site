@@ -32,7 +32,7 @@ jobs:
         run: uv sync --project gtm/autopilot --locked
 
       - name: Compile hardened runtime
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/autopilot/network_guard.py gtm/autopilot/final_hardening.py gtm/ebook/build_epub.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/autopilot/network_guard.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
 
       - name: Validate final architecture contracts
         shell: bash
@@ -49,6 +49,7 @@ jobs:
               assert all(path.startswith('reports/day-') for path in outputs)
 
           hardening = Path('gtm/autopilot/final_hardening.py').read_text()
+          render_contracts = Path('gtm/autopilot/render_contracts.py').read_text()
           network = Path('gtm/autopilot/network_guard.py').read_text()
           workflow = Path('.github/workflows/gtm-autopilot.yml').read_text()
           epub = Path('gtm/ebook/build_epub.py').read_text()
@@ -66,6 +67,11 @@ jobs:
           assert 'GTM_EBOOK_SOURCE_SHA256' in hardening
           assert 'sha256_verified' in hardening
 
+          assert 'normalized_output_name' in render_contracts
+          assert 'distinct normalized output filenames' in render_contracts
+          assert 'must use a .png filename' in render_contracts
+          assert 'must use a .mp4 filename' in render_contracts
+
           assert 'class PinnedHTTPSConnection' in network
           assert 'server_hostname=self.host' in network
           assert 'self._validated_ip' in network
@@ -74,6 +80,7 @@ jobs:
 
           assert 'Resolve browser for Autopilot QA' in workflow
           assert 'final_hardening.main()' in workflow
+          assert 'render_contracts' in workflow
           assert 'ebook-ingest' in workflow
           assert 'GTM_EBOOK_SOURCE_URL' in workflow
           assert '--exclude=\'ebook/*.epub\'' not in workflow
@@ -86,19 +93,19 @@ jobs:
           assert 'metadata.identifier is required and must remain stable across rebuilds' in epub
           assert Path('gtm/ebook/PRIVATE-INGESTION.md').exists()
 
-          print('PASS: final GTM autonomy, privacy, Day 6, network and EPUB contracts validated.')
+          print('PASS: final GTM autonomy, privacy, Day 6, filename, network and EPUB contracts validated.')
           PY
 
-      - name: Exercise hardened active-unit and status schemas
+      - name: Exercise hardened active-unit, status and render filename schemas
         shell: bash
         run: |
           PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python - <<'PY'
           import os
           import tempfile
-          from pathlib import Path
 
           os.environ['GTM_RUNTIME_ROOT'] = tempfile.mkdtemp(prefix='gtm-hardening-')
           import final_hardening as fh
+          import render_contracts as rc
 
           fh.engine.CreativeJob = fh.HardenedCreativeJob
           fh.engine.RunOutput = fh.HardenedRunOutput
@@ -113,6 +120,18 @@ jobs:
           }
           assert set(fh.CreativeCategory.__args__) == categories
 
+          image = fh.HardenedCreativeJob(
+              asset_id='img-1', kind='image', category='pinterest_pin',
+              prompt='test', filename='pin.png', size_or_ratio='1024x1536'
+          )
+          video = fh.HardenedCreativeJob(
+              asset_id='vid-1', kind='video', category='video',
+              prompt='test', filename='video.mp4', size_or_ratio='720:1280',
+              reference_image='img-1'
+          )
+          assert rc.normalized_output_name(image) == 'pin.png'
+          assert rc.normalized_output_name(video) == 'video.mp4'
+
           fh.engine.RUNTIME_ROOT.mkdir(parents=True, exist_ok=True)
           (fh.engine.RUNTIME_ROOT / 'approvals.json').write_text(
               '{"pending":[{"id":"abc","approval_class":"RED","blocking":true,"status":"PENDING","reason":"private","max_spend_usd":999}],"resolved":[]}'
@@ -124,7 +143,7 @@ jobs:
           item = payload['pending_approval_index'][0]
           assert set(item) == {'id', 'approval_class', 'blocking', 'status'}
           assert 'reason' not in item and 'max_spend_usd' not in item
-          print('PASS: active-day durable outputs and public-safe approval index validated.')
+          print('PASS: durable outputs, filename normalization, categories and public-safe approval index validated.')
           PY
 
       - name: Exercise EPUB validity, stable identity and OPF-safe IDs
