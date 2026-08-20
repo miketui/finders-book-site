@@ -1,6 +1,20 @@
 name: Finder's Book GTM Autopilot
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/gtm-autopilot.yml"
+      - "gtm/**"
+      - ".vercelignore"
+      - ".gitignore"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gtm-autopilot.yml"
+      - "gtm/**"
+      - ".vercelignore"
+      - ".gitignore"
   schedule:
     # 08:00 PDT during the initial 30-day launch window.
     - cron: "0 15 * * *"
@@ -30,9 +44,13 @@ concurrency:
 
 jobs:
   run:
+    # The one-time bootstrap push runs only when the merge commit contains the
+    # explicit marker. Normal future pushes do not advance the GTM clock.
+    if: github.event_name != 'push' || contains(github.event.head_commit.message, '[gtm-autopilot-bootstrap]')
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
       STATE_BRANCH: gtm-autopilot-state
     steps:
       - name: Checkout protected source
@@ -40,13 +58,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Overlay persistent GTM state
+      - name: Restore encrypted GTM runtime state
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           git fetch origin "$STATE_BRANCH" || true
-          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
-            git checkout "origin/$STATE_BRANCH" -- \
-              gtm/state.json gtm/metrics.json gtm/experiments.json gtm/approvals.json gtm/reports || true
+          if git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
+            git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
+            if [[ -n "${GTM_STATE_KEY:-}" ]]; then
+              STATE_KEY="$GTM_STATE_KEY"
+            else
+              STATE_KEY="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
+            fi
+            export STATE_KEY
+            openssl enc -d -aes-256-cbc -pbkdf2 \
+              -in /tmp/gtm-runtime.enc \
+              -out /tmp/gtm-runtime.tgz \
+              -pass env:STATE_KEY
+            tar -xzf /tmp/gtm-runtime.tgz -C "$GITHUB_WORKSPACE"
+            echo "Encrypted GTM runtime state restored."
+          else
+            echo "No prior encrypted runtime state; starting from checked-in templates."
           fi
 
       - name: Set up Node
@@ -73,23 +105,75 @@ jobs:
         run: python -m py_compile gtm/autopilot/main.py
 
       - name: Execute Autopilot
-        run: |
-          uv run --project gtm/autopilot python gtm/autopilot/main.py \
-            --mode "${{ inputs.mode || 'run' }}" \
-            --approval-id "${{ inputs.approval_id || '' }}" \
-            --note "${{ inputs.note || '' }}"
-
-      - name: Persist runtime state on isolated branch
-        if: always()
         shell: bash
         run: |
+          MODE="${{ inputs.mode || 'run' }}"
+          APPROVAL_ID="${{ inputs.approval_id || '' }}"
+          NOTE="${{ inputs.note || '' }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            MODE="run"
+            APPROVAL_ID=""
+            NOTE="PR-only dry run; runtime files are discarded after validation."
+          fi
+          uv run --project gtm/autopilot python gtm/autopilot/main.py \
+            --mode "$MODE" \
+            --approval-id "$APPROVAL_ID" \
+            --note "$NOTE"
+
+      - name: Discard PR dry-run runtime output
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git reset --hard HEAD
+          git clean -fd gtm/reports
+          echo "PR dry run complete; no runtime state persisted."
+
+      - name: Encrypt and persist runtime state on isolated branch
+        if: success() && github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          mkdir -p gtm/reports
+          tar -czf /tmp/gtm-runtime.tgz \
+            gtm/state.json \
+            gtm/metrics.json \
+            gtm/experiments.json \
+            gtm/approvals.json \
+            gtm/reports
+
+          if [[ -n "${GTM_STATE_KEY:-}" ]]; then
+            STATE_KEY="$GTM_STATE_KEY"
+          else
+            STATE_KEY="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
+          fi
+          export STATE_KEY
+          openssl enc -aes-256-cbc -salt -pbkdf2 \
+            -in /tmp/gtm-runtime.tgz \
+            -out /tmp/gtm-runtime.enc \
+            -pass env:STATE_KEY
+
+          # Remove plaintext runtime changes before switching branches.
+          git reset --hard HEAD
+          git clean -fd gtm/reports
+
           git config user.name "finders-book-gtm-bot"
           git config user.email "actions@users.noreply.github.com"
-          git switch -C "$STATE_BRANCH"
-          git add gtm/state.json gtm/metrics.json gtm/experiments.json gtm/approvals.json gtm/reports
+          git fetch origin "$STATE_BRANCH" || true
+          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
+            git switch -C "$STATE_BRANCH" "origin/$STATE_BRANCH"
+          else
+            git switch -C "$STATE_BRANCH"
+          fi
+
+          mkdir -p gtm
+          cp /tmp/gtm-runtime.enc gtm/runtime-state.enc
+          git add -f gtm/runtime-state.enc
           if git diff --cached --quiet; then
-            echo "No runtime state changes."
+            echo "No encrypted runtime state changes."
             exit 0
           fi
-          git commit -m "chore(gtm): persist autopilot runtime state"
-          git push --force-with-lease origin "$STATE_BRANCH"
+          git commit -m "chore(gtm): persist encrypted autopilot runtime state"
+          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
+            git push --force-with-lease origin "$STATE_BRANCH"
+          else
+            git push -u origin "$STATE_BRANCH"
+          fi
