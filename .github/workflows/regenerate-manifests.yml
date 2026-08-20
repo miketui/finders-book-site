@@ -1,0 +1,39 @@
+name: Regenerate repository manifests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "gtm/**"
+      - ".github/workflows/gtm-autopilot.yml"
+      - ".github/workflows/regenerate-manifests.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Regenerate tracked-file manifests
+        run: node scripts/regen-manifests.mjs
+
+      - name: Commit generated manifests if changed
+        shell: bash
+        run: |
+          if git diff --quiet -- docs/FILE-TREE.md docs/FILE-INVENTORY.md; then
+            echo "Manifests already current."
+            exit 0
+          fi
+          git config user.name "finders-book-manifest-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/FILE-TREE.md docs/FILE-INVENTORY.md
+          git commit -m "chore: regenerate repository manifests"
+          git push origin "HEAD:${{ github.head_ref }}"
