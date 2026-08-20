@@ -45,6 +45,10 @@ jobs:
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
       GTM_RUNTIME_ROOT: ${{ runner.temp }}/finders-gtm-runtime
+      AUTOPILOT_MODE: ${{ inputs.mode || 'run' }}
+      AUTOPILOT_APPROVAL_ID: ${{ inputs.approval_id || '' }}
+      AUTOPILOT_NOTE: ${{ inputs.note || '' }}
+      AUTOPILOT_ACTOR: ${{ github.actor }}
     steps:
       - name: Checkout trusted main source
         uses: actions/checkout@v5
@@ -55,13 +59,15 @@ jobs:
       - name: Normalize provider secrets
         shell: bash
         run: |
-          clean_openai="$(printf '%s' "$OPENAI_API_KEY" | tr -d '[:space:]')"
-          if [[ -z "$clean_openai" ]]; then
-            echo "OPENAI_API_KEY is empty after normalization."
+          clean_openai="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '[:space:]')"
+          if [[ "$AUTOPILOT_MODE" == "run" && -z "$clean_openai" ]]; then
+            echo "OPENAI_API_KEY is required for autonomous run mode."
             exit 1
           fi
-          echo "::add-mask::$clean_openai"
-          printf 'OPENAI_API_KEY=%s\n' "$clean_openai" >> "$GITHUB_ENV"
+          if [[ -n "$clean_openai" ]]; then
+            echo "::add-mask::$clean_openai"
+            printf 'OPENAI_API_KEY=%s\n' "$clean_openai" >> "$GITHUB_ENV"
+          fi
 
           clean_runway="$(printf '%s' "${RUNWAYML_API_SECRET:-}" | tr -d '[:space:]')"
           if [[ -n "$clean_runway" ]]; then
@@ -107,6 +113,10 @@ jobs:
             fi
             state_passphrase="$GTM_STATE_KEY"
           else
+            if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+              echo "Existing legacy state is encrypted with the OpenAI-key scheme; restore requires the prior OPENAI_API_KEY until the next successful migration snapshot."
+              exit 1
+            fi
             state_passphrase="$OPENAI_API_KEY"
           fi
           export state_passphrase
@@ -131,8 +141,8 @@ jobs:
                       raise SystemExit(f'Unsafe runtime archive path: {member.name}')
                   if not path.parts or path.parts[0] not in allowed_roots:
                       raise SystemExit(f'Unexpected runtime archive path: {member.name}')
-                  if member.issym() or member.islnk():
-                      raise SystemExit(f'Runtime archive links are prohibited: {member.name}')
+                  if member.issym() or member.islnk() or not (member.isfile() or member.isdir()):
+                      raise SystemExit(f'Unsupported runtime archive member: {member.name}')
           print('Runtime archive path validation passed.')
           PY
 
@@ -164,28 +174,12 @@ jobs:
 
       - name: Execute hardened Autopilot control plane
         shell: bash
-        env:
-          AUTOPILOT_MODE: ${{ inputs.mode || 'run' }}
-          AUTOPILOT_APPROVAL_ID: ${{ inputs.approval_id || '' }}
-          AUTOPILOT_NOTE: ${{ inputs.note || '' }}
-          AUTOPILOT_ACTOR: ${{ github.actor }}
         run: |
           uv run --project gtm/autopilot python gtm/autopilot/control_plane.py \
             --mode "$AUTOPILOT_MODE" \
             --approval-id "$AUTOPILOT_APPROVAL_ID" \
             --note "$AUTOPILOT_NOTE" \
             --actor "$AUTOPILOT_ACTOR"
-
-      - name: Upload generated creative and ebook artifacts
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: finders-book-gtm-${{ github.run_id }}
-          path: |
-            ${{ env.GTM_RUNTIME_ROOT }}/creative
-            ${{ env.GTM_RUNTIME_ROOT }}/ebook/*.epub
-          if-no-files-found: ignore
-          retention-days: 30
 
       - name: Encrypt and persist bounded runtime state
         if: success()
@@ -210,6 +204,10 @@ jobs:
             state_passphrase="$GTM_STATE_KEY"
             key_scheme="state_key"
           else
+            if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+              echo "No encryption secret is available. Add GTM_STATE_KEY."
+              exit 1
+            fi
             state_passphrase="$OPENAI_API_KEY"
             key_scheme="openai"
           fi
@@ -240,3 +238,14 @@ jobs:
           git add -f gtm/runtime-state.enc gtm/runtime-state.meta
           git commit -m "chore(gtm): persist latest encrypted autopilot snapshot"
           git push --force origin "HEAD:$STATE_BRANCH"
+
+      - name: Upload generated creative and ebook artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finders-book-gtm-${{ github.run_id }}
+          path: |
+            ${{ env.GTM_RUNTIME_ROOT }}/creative
+            ${{ env.GTM_RUNTIME_ROOT }}/ebook/*.epub
+          if-no-files-found: ignore
+          retention-days: 30
