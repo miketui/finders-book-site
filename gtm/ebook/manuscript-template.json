@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "title": "The Finder's Book — Reading Edition",
+    "creator": "Joanne Godfrey and Michael David",
+    "language": "en-US",
+    "identifier": "",
+    "description": "A deliberately redesigned non-fillable reading edition. Replace this template only from the full authoritative source in private runtime storage."
+  },
+  "chapters": [
+    {
+      "id": "example-only",
+      "title": "Example chapter placeholder",
+      "paragraphs": [
+        "This repository template contains no paid book content. EBOOK_PRODUCTION must create the real manuscript privately from the authoritative source."
+      ]
+    }
+  ]
+}
