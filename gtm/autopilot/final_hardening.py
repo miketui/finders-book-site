@@ -367,15 +367,43 @@ def minimal_pending_approval_index() -> list[dict]:
 
 def public_status_payload() -> dict:
     state = engine.load_runtime_json("state.json")
+    active = engine.active_unit(state)
+    completed_sections = state.get("completed_foundation_sections", [])
+    last_completed_unit = None
+    if state.get("last_completed_day"):
+        last_completed_unit = f"day-{int(state['last_completed_day']):02d}"
+    elif completed_sections:
+        last_completed_unit = f"section-{int(completed_sections[-1]):02d}"
+
+    foundation_root = engine.RUNTIME_ROOT / "foundation"
+    foundation_files = (
+        sorted(
+            path.relative_to(engine.RUNTIME_ROOT).as_posix()
+            for path in foundation_root.rglob("*.md")
+            if path.is_file()
+        )
+        if foundation_root.exists()
+        else []
+    )
     return {
         "mode": state.get("mode"),
         "foundation_cursor": state.get("foundation_cursor"),
-        "completed_foundation_sections": state.get(
-            "completed_foundation_sections", []
-        ),
+        "completed_foundation_sections": completed_sections,
         "foundation_qa_passed": state.get("foundation_qa_passed"),
+        "foundation_output_status": {
+            "present": bool(foundation_files),
+            "markdown_count": len(foundation_files),
+            "files": foundation_files,
+        },
         "current_day": state.get("current_day"),
         "status": state.get("status"),
+        "active_unit": {
+            "id": active.get("id"),
+            "kind": active.get("kind"),
+            "objective": active.get("objective"),
+        },
+        "last_completed_unit": last_completed_unit,
+        "next_executable_unit": active.get("id"),
         "last_run_id": state.get("last_run_id"),
         "last_run_status": state.get("last_run_status"),
         "blocking_approval_count": len(

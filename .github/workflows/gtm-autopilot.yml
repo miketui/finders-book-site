@@ -79,13 +79,11 @@ jobs:
             printf 'RUNWAYML_API_SECRET=%s\n' "$clean_runway" >> "$GITHUB_ENV"
           fi
 
-          clean_state="$(printf '%s' "${GTM_STATE_KEY:-}" | tr -d '[:space:]')"
-          if [[ -z "$clean_state" ]]; then
+          if [[ -z "${GTM_STATE_KEY:-}" ]]; then
             echo "GTM_STATE_KEY is required for GTM runtime state operations. Add it as a GitHub Actions repository secret."
             exit 1
           fi
-          echo "::add-mask::$clean_state"
-          printf 'GTM_STATE_KEY=%s\n' "$clean_state" >> "$GITHUB_ENV"
+          echo "::add-mask::$GTM_STATE_KEY"
           echo "Provider and state secrets normalized without exposing values."
 
       - name: Initialize private runtime directory
@@ -106,7 +104,7 @@ jobs:
             exit 0
           fi
 
-          git fetch origin "$STATE_BRANCH" || true
+          git fetch origin "+refs/heads/$STATE_BRANCH:refs/remotes/origin/$STATE_BRANCH" || true
           if ! git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
             echo "No prior encrypted runtime state; using checked-in templates."
             exit 0
@@ -114,13 +112,20 @@ jobs:
 
           git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
           key_scheme="openai"
+          state_version="1"
+          integrity="none"
           if git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.meta" 2>/dev/null; then
             git show "origin/$STATE_BRANCH:gtm/runtime-state.meta" > /tmp/gtm-runtime.meta
-            key_scheme="$(python - <<'PY'
+            read -r state_version key_scheme integrity < <(python - <<'PY'
           import json
-          print(json.load(open('/tmp/gtm-runtime.meta')).get('key_scheme', 'openai'))
+          metadata = json.load(open('/tmp/gtm-runtime.meta'))
+          print(
+              metadata.get('version', 1),
+              metadata.get('key_scheme', 'openai'),
+              metadata.get('integrity', 'none'),
+          )
           PY
-          )"
+          )
           fi
 
           if [[ "$key_scheme" == "state_key" ]]; then
@@ -133,6 +138,19 @@ jobs:
             state_passphrase="$OPENAI_API_KEY"
           fi
           export state_passphrase
+
+          if git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.hmac" 2>/dev/null; then
+            git show "origin/$STATE_BRANCH:gtm/runtime-state.hmac" > /tmp/gtm-runtime.hmac
+            python gtm/autopilot/state_crypto.py verify \
+              --input /tmp/gtm-runtime.enc \
+              --hmac /tmp/gtm-runtime.hmac \
+              --key-env state_passphrase
+          elif [[ "$state_version" -ge 2 || "$integrity" == "hmac-sha256" ]]; then
+            echo "Authenticated runtime snapshot is missing its required HMAC."
+            exit 1
+          else
+            echo "Legacy v1 CBC snapshot detected; it will be migrated to authenticated v2 after this successful operation."
+          fi
 
           openssl enc -d -aes-256-cbc -pbkdf2 \
             -in /tmp/gtm-runtime.enc \
@@ -195,14 +213,14 @@ jobs:
         run: uv sync --project gtm/autopilot --locked
 
       - name: Compile hardened Autopilot and EPUB builder
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/autopilot/v1_1.py gtm/ebook/build_epub.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/autopilot/v1_1.py gtm/autopilot/state_crypto.py gtm/ebook/build_epub.py
 
       - name: Execute hardened Autopilot control plane
         shell: bash
         run: |
           # v1_1 installs source-prompt/operator patches, then delegates execution to final_hardening.main().
           uv run --project gtm/autopilot python -c \
-            'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane, render_contracts, v1_1; v1_1.main()' \
+            'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane, v1_1, render_contracts; v1_1.main()' \
             --mode "$AUTOPILOT_MODE" \
             --approval-id "$AUTOPILOT_APPROVAL_ID" \
             --note "$AUTOPILOT_NOTE" \
@@ -235,11 +253,21 @@ jobs:
             -out /tmp/gtm-runtime.enc \
             -pass env:state_passphrase
 
+          python gtm/autopilot/state_crypto.py sign \
+            --input /tmp/gtm-runtime.enc \
+            --hmac /tmp/gtm-runtime.hmac \
+            --key-env state_passphrase
+
           python - "$key_scheme" <<'PY'
           import json
           import sys
           json.dump(
-              {"version": 1, "key_scheme": sys.argv[1]},
+              {
+                  "version": 2,
+                  "key_scheme": sys.argv[1],
+                  "cipher": "aes-256-cbc-pbkdf2",
+                  "integrity": "hmac-sha256",
+              },
               open("/tmp/gtm-runtime.meta", "w"),
               indent=2,
           )
@@ -251,8 +279,9 @@ jobs:
           git rm -rf . >/dev/null 2>&1 || true
           mkdir -p gtm
           cp /tmp/gtm-runtime.enc gtm/runtime-state.enc
+          cp /tmp/gtm-runtime.hmac gtm/runtime-state.hmac
           cp /tmp/gtm-runtime.meta gtm/runtime-state.meta
-          git add -f gtm/runtime-state.enc gtm/runtime-state.meta
+          git add -f gtm/runtime-state.enc gtm/runtime-state.hmac gtm/runtime-state.meta
           git commit -m "chore(gtm): persist latest encrypted autopilot snapshot"
           git push --force origin "HEAD:$STATE_BRANCH"
 

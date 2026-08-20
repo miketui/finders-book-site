@@ -7,6 +7,11 @@ import main as engine
 
 
 _DAILY_PROMPT_SOURCE = "gtm/prompts/days.md"
+_CURRENT_RESEARCH = re.compile(
+    r"\b(web research|current official|current partners|current .{0,80}"
+    r"(?:rules|requirements|policies|fees)|re-verify|verify .{0,40}buyable)\b",
+    re.I | re.S,
+)
 _OPERATOR_START = "<!-- GTM_OPERATOR_HANDOFF_V1_1_START -->"
 _OPERATOR_END = "<!-- GTM_OPERATOR_HANDOFF_V1_1_END -->"
 _OPERATOR_HEADINGS = [
@@ -17,6 +22,39 @@ _OPERATOR_HEADINGS = [
     "BLOCKERS",
     "EVIDENCE TO SAVE",
 ]
+_CREDENTIAL_WORDS = re.compile(
+    r"\b(password|api[ _-]?key|secret(?:[ _-]?key)?|access[ _-]?token|"
+    r"bearer[ _-]?token|private[ _-]?key|recovery[ _-]?code|pin|"
+    r"gtm_state_key|openai_api_key|runwayml_api_secret|credential)\b",
+    re.I,
+)
+_REQUEST_VERBS = re.compile(
+    r"\b(paste|provide|share|send|reveal|enter|expose|upload|give\s+me|"
+    r"tell\s+me|supply|return|include)\b",
+    re.I,
+)
+_EXTERNAL_ACTIONS = {
+    "publish": re.compile(r"\bpublish\b", re.I),
+    "send": re.compile(r"\b(send|email|message)\b", re.I),
+    "activate": re.compile(r"\b(activate|launch)\b", re.I),
+    "deploy": re.compile(r"\bdeploy\b", re.I),
+    "merge": re.compile(r"\bmerge\b", re.I),
+    "spend": re.compile(r"\b(spend|charge|purchase|order|buy)\b", re.I),
+    "contact": re.compile(r"\b(contact|outreach)\b", re.I),
+    "pricing": re.compile(
+        r"\b(change|alter|update|set)\s+(?:the\s+)?(?:price|pricing)\b",
+        re.I,
+    ),
+    "campaign": re.compile(
+        r"\b(?:start|enable|turn on|activate|launch)\s+(?:the\s+)?(?:ad|ads|campaign)",
+        re.I,
+    ),
+}
+_REDACTION_PATTERN = re.compile(r"\b(?:sk|rk|pk)-[A-Za-z0-9_-]{12,}\b")
+_LABELED_VALUE = re.compile(
+    r"(?i)\b(?:api[ _-]?key|secret(?:[ _-]?key)?|access[ _-]?token|"
+    r"bearer[ _-]?token|password|pin|recovery[ _-]?code)\b\s*[:=]\s*\S+"
+)
 
 
 def load_daily_prompts() -> dict[str, str]:
@@ -47,6 +85,7 @@ def fidelity_active_unit(state: dict) -> dict:
         source_prompt = load_daily_prompts()[day]
         unit["agm_daily_prompt"] = source_prompt
         unit["agm_daily_prompt_source"] = _DAILY_PROMPT_SOURCE
+        unit["requires_web_search"] = bool(_CURRENT_RESEARCH.search(source_prompt))
         unit["prompt_precedence"] = (
             "Preserve the AGM prompt's task intent. If it conflicts with the current "
             "machine-readable day contract, approval gates, privacy rules, repository QA, "
@@ -59,20 +98,200 @@ def fidelity_active_unit(state: dict) -> dict:
 engine.active_unit = fidelity_active_unit
 
 
+def _redact_sensitive_values(value: object) -> str:
+    text = str(value)
+    text = _REDACTION_PATTERN.sub("[REDACTED]", text)
+    return _LABELED_VALUE.sub("[REDACTED]", text)
+
+
+def _neutralize_heading_lines(value: str) -> str:
+    text = _redact_sensitive_values(value).strip()
+    if not text:
+        return text
+    headings = "|".join(re.escape(item) for item in _OPERATOR_HEADINGS)
+    return re.sub(
+        rf"(?mi)^(\s*)##\s+({headings})\s*$",
+        r"\1> ## \2",
+        text,
+    )
+
+
+def _safe_display(value: object) -> str:
+    return _neutralize_heading_lines(str(value))
+
+
 def _bullets(items: list[str], fallback: str) -> str:
-    clean = [str(item).strip() for item in items if str(item).strip()]
+    clean = [_safe_display(item) for item in items if str(item).strip()]
     if not clean:
         return fallback
     return "\n".join(f"- {item}" for item in clean)
 
 
+def _credential_request(text: object) -> bool:
+    value = str(text)
+    return bool(_CREDENTIAL_WORDS.search(value) and _REQUEST_VERBS.search(value))
+
+
+def _external_action_names(text: object) -> set[str]:
+    value = str(text)
+    return {
+        name for name, pattern in _EXTERNAL_ACTIONS.items() if pattern.search(value)
+    }
+
+
+def _matching_approval_exists(output, action: str) -> bool:
+    pattern = _EXTERNAL_ACTIONS[action]
+    for request in output.approval_requests:
+        combined = " ".join(
+            [str(request.title), str(request.action), str(request.reason)]
+        )
+        if pattern.search(combined):
+            return True
+    return False
+
+
+def _sanitize_owner_text(value: object, fallback: str) -> tuple[str, bool]:
+    text = str(value or "")
+    if _credential_request(text):
+        return fallback, True
+    return _redact_sensitive_values(text), False
+
+
+def normalize_owner_facing_fields(output, qa: dict) -> None:
+    unsafe = False
+
+    if output.run_status == "PASS" and not output.pass_condition_met:
+        output.run_status = "PARTIAL"
+        marker = (
+            "Model returned PASS while pass_condition_met=false; normalized to PARTIAL."
+        )
+        if marker not in output.blockers:
+            output.blockers.append(marker)
+
+    for request in output.approval_requests:
+        combined = " ".join(
+            [str(request.title), str(request.action), str(request.reason)]
+        )
+        if request.approval_class == "RED":
+            request.blocking = True
+        if _credential_request(combined):
+            request.title = "Unsafe model instruction suppressed"
+            request.action = (
+                "Do not provide credentials, passwords, keys, tokens, PINs, "
+                "or recovery codes."
+            )
+            request.reason = (
+                "The model attempted to request sensitive credentials; execution is blocked."
+            )
+            request.approval_class = "RED"
+            request.blocking = True
+            unsafe = True
+        else:
+            request.title = _redact_sensitive_values(request.title)
+            request.action = _redact_sensitive_values(request.action)
+            request.reason = _redact_sensitive_values(request.reason)
+
+    normalized_blockers: list[str] = []
+    for blocker in output.blockers:
+        cleaned, blocked = _sanitize_owner_text(
+            blocker,
+            "Unsafe model-derived credential request was suppressed. Do not provide secrets.",
+        )
+        normalized_blockers.append(cleaned)
+        unsafe = unsafe or blocked
+    output.blockers = normalized_blockers
+
+    output.executive_summary, summary_unsafe = _sanitize_owner_text(
+        output.executive_summary,
+        "Unsafe model-derived credential request was suppressed.",
+    )
+    output.founder_brief, brief_unsafe = _sanitize_owner_text(
+        output.founder_brief,
+        "Unsafe model-derived credential request was suppressed.",
+    )
+    output.work_completed = [
+        _sanitize_owner_text(
+            item, "Unsafe model-derived credential request was suppressed."
+        )[0]
+        for item in output.work_completed
+    ]
+    output.evidence = [
+        _sanitize_owner_text(
+            item, "Unsafe model-derived credential request was suppressed."
+        )[0]
+        for item in output.evidence
+    ]
+    unsafe = unsafe or summary_unsafe or brief_unsafe
+
+    next_action = str(output.next_action or "")
+    cleaned_next, next_unsafe = _sanitize_owner_text(
+        next_action,
+        "Execution is blocked because an unsafe credential request was suppressed.",
+    )
+    output.next_action = cleaned_next
+    unsafe = unsafe or next_unsafe
+
+    unapproved_actions = sorted(
+        action
+        for action in _external_action_names(next_action)
+        if not _matching_approval_exists(output, action)
+    )
+    if unapproved_actions:
+        output.next_action = (
+            "Prepare the proposed external action privately, then request the required "
+            "owner approval before execution."
+        )
+        output.blockers.append(
+            "External action was proposed without a matching recorded approval: "
+            + ", ".join(unapproved_actions)
+            + "."
+        )
+        unsafe = True
+
+    if not qa.get("passed"):
+        qa_blocker = (
+            "Repository QA failed; resolve validation/render failures before advancing "
+            "this GTM unit."
+        )
+        if qa_blocker not in output.blockers:
+            output.blockers.append(qa_blocker)
+        output.pass_condition_met = False
+        output.run_status = "BLOCKED"
+
+    if unsafe:
+        safe_blocker = (
+            "Unsafe model-derived owner instruction was suppressed by the v1.1 control plane."
+        )
+        if safe_blocker not in output.blockers:
+            output.blockers.append(safe_blocker)
+        output.pass_condition_met = False
+        output.run_status = "BLOCKED"
+    elif output.blockers and output.run_status == "PASS":
+        output.pass_condition_met = False
+        output.run_status = "BLOCKED"
+
+    blocking_approval = any(
+        request.approval_class == "RED" or bool(request.blocking)
+        for request in output.approval_requests
+    )
+    if blocking_approval and output.run_status == "PASS":
+        output.run_status = "AWAITING_APPROVAL"
+        output.pass_condition_met = False
+
+
 def _operator_block(output, unit: dict, qa: dict, run_id: str) -> str:
     approvals = list(output.approval_requests)
     blockers = [str(item) for item in output.blockers]
+    blocking_approvals = [
+        request
+        for request in approvals
+        if request.approval_class == "RED" or bool(request.blocking)
+    ]
 
     completed = _bullets(
         [str(item) for item in output.work_completed],
-        output.executive_summary.strip() or "No autonomous work was recorded.",
+        _safe_display(output.executive_summary.strip())
+        or "No autonomous work was recorded.",
     )
 
     owner_actions: list[str] = []
@@ -88,13 +307,14 @@ def _operator_block(output, unit: dict, qa: dict, run_id: str) -> str:
         "None - no owner action required for this unit.",
     )
 
-    if approvals or blockers:
+    if blocking_approvals or blockers:
         system_next = (
-            "Paused pending the owner approval/blocker resolution above. After resolution: "
-            + (output.next_action.strip() or "resume the current GTM unit")
+            "Paused pending the blocking approval/blocker resolution above. "
+            "After resolution: "
+            + (_safe_display(output.next_action) or "resume the current GTM unit")
         )
     else:
-        system_next = output.next_action.strip() or "No next system action recorded."
+        system_next = _safe_display(output.next_action) or "No next system action recorded."
 
     approval_lines = [
         (
@@ -156,6 +376,23 @@ def apply_operator_schema(output, unit: dict, qa: dict, run_id: str) -> None:
         document.content = _strip_existing_operator_handoff(document.content) + block
 
 
+def apply_operator_schema_to_founder_brief(
+    output, unit: dict, qa: dict, run_id: str
+) -> None:
+    reports = engine.RUNTIME_ROOT / "reports"
+    matches = sorted(reports.glob(f"*-{unit['id']}-{run_id}-founder-brief.md"))
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"Expected exactly one founder brief for {unit['id']} run {run_id}; "
+            f"found {len(matches)}."
+        )
+    brief = matches[0]
+    brief.write_text(
+        _strip_existing_operator_handoff(brief.read_text())
+        + _operator_block(output, unit, qa, run_id)
+    )
+
+
 async def usability_execute_unit(unit: dict) -> dict:
     run_id = engine.uuid4().hex[:16]
     if unit["kind"] == "foundation_qa":
@@ -164,15 +401,12 @@ async def usability_execute_unit(unit: dict) -> dict:
     else:
         output, qa = await engine.execute_model_unit(unit, run_id)
 
-    # First write establishes the current-run durable-output evidence used by the
-    # final hardening layer. The owner handoff is intentionally written later,
-    # after missing-output/render/runtime blockers have been normalized.
+    normalize_owner_facing_fields(output, qa)
+
     written = engine.write_artifact_documents(output.artifact_documents)
     required_ok, missing = engine.required_outputs_exist(unit)
     if missing:
-        output.blockers.append(
-            "Missing required runtime outputs: " + ", ".join(missing)
-        )
+        output.blockers.append("Missing required runtime outputs: " + ", ".join(missing))
         output.pass_condition_met = False
         if output.run_status == "PASS":
             output.run_status = "PARTIAL"
@@ -183,15 +417,12 @@ async def usability_execute_unit(unit: dict) -> dict:
         output.pass_condition_met = False
         output.run_status = "BLOCKED"
 
+    normalize_owner_facing_fields(output, qa)
     now = engine.datetime.now(engine.TZ)
     engine.persist_metrics(output, now, run_id)
     engine.persist_experiments(output)
     blocking = engine.persist_approvals(output, unit, now, run_id)
 
-    # final_hardening.update_state_after_unit may add late safety blockers such as
-    # rejected out-of-contract paths or required outputs not written in this run.
-    # Run it before rendering the owner-facing handoff so the Markdown mirrors the
-    # final persisted status instead of an earlier model-only snapshot.
     engine.update_state_after_unit(
         output,
         unit,
@@ -202,11 +433,11 @@ async def usability_execute_unit(unit: dict) -> dict:
         render_result,
     )
 
+    normalize_owner_facing_fields(output, qa)
     apply_operator_schema(output, unit, qa, run_id)
-    # Rewrite the same contract-approved documents with the final deterministic
-    # operator handoff. No new artifact path is introduced by this second write.
     engine.write_artifact_documents(output.artifact_documents)
     engine.write_report(output, unit, qa, run_id)
+    apply_operator_schema_to_founder_brief(output, unit, qa, run_id)
 
     return {
         "run_id": run_id,
@@ -224,8 +455,8 @@ async def usability_execute_unit(unit: dict) -> dict:
 
 engine.execute_unit = usability_execute_unit
 
-# Import only after the v1.1 patches above are installed so final_hardening captures
-# the fidelity-aware active-unit loader and operator-schema execute path as its raw base.
+# Import only after the v1.1 patches above are installed. This makes the hardened
+# layer capture fidelity_active_unit and usability_execute_unit as its raw bases.
 import final_hardening  # noqa: E402
 
 

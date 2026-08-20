@@ -6,9 +6,13 @@ on:
     paths:
       - "gtm/**"
       - ".github/workflows/gtm-autopilot.yml"
+      - ".github/workflows/gtm-foundation-export.yml"
+      - ".github/workflows/gtm-v1-1-usability.yml"
       - ".github/workflows/regenerate-manifests.yml"
       - ".github/workflows/validate.yml"
       - "scripts/regen-manifests.mjs"
+      - "docs/FILE-TREE.md"
+      - "docs/FILE-INVENTORY.md"
 
 permissions:
   contents: read
