@@ -16,21 +16,19 @@ The agent must mark the build BLOCKED if the full authoritative paid source is n
 
 ## Private runtime input
 
-The generated manuscript belongs at:
+The manuscript belongs only at:
 
 `$GTM_RUNTIME_ROOT/ebook/ebook-manuscript.json`
 
-This file and the finished EPUB are private runtime artifacts and must not be committed to the public website repo.
+The authoritative source must enter through the owner-authenticated GitHub Actions `ebook-ingest` mode described in `PRIVATE-INGESTION.md`. Do **not** run `gtm/autopilot/main.py` directly to create or build the paid edition, because the authenticated workflow establishes the private runtime, restores encrypted state, and enforces the owner gate.
 
 ## Build
 
-```bash
-uv run --project gtm/autopilot python gtm/autopilot/main.py --mode ebook-build
-```
-
-The builder writes:
+After a successful private ingest, open the **Finder's Book GTM Autopilot** workflow in GitHub Actions, choose **Run workflow**, and select `ebook-build`. The trusted-main workflow invokes the hardened control plane and writes:
 
 `$GTM_RUNTIME_ROOT/ebook/The_Finders_Book_Reading_Edition.epub`
+
+The finished EPUB is persisted only inside encrypted GTM state. It is not uploaded as a public-repository Actions artifact.
 
 ## Release gate
 
@@ -46,4 +44,4 @@ Before any retailer upload:
 - title/subtitle/description/keywords are approved as a distinct edition;
 - upload/publishing is explicitly approved by the owner.
 
-The public repository contains only this builder/specification—not the paid source, manuscript, or final buyer EPUB.
+The public repository contains only builder/specification code and private-ingestion instructions—not the paid source, manuscript, or final buyer EPUB.
