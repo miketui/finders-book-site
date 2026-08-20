@@ -61,13 +61,13 @@ jobs:
       - name: Normalize OpenAI API key secret
         shell: bash
         run: |
-          CLEAN_OPENAI_API_KEY="$(printf '%s' "$OPENAI_API_KEY" | tr -d '[:space:]')"
-          if [[ -z "$CLEAN_OPENAI_API_KEY" ]]; then
+          clean_openai_api_key="$(printf '%s' "$OPENAI_API_KEY" | tr -d '[:space:]')"
+          if [[ -z "$clean_openai_api_key" ]]; then
             echo "OPENAI_API_KEY is empty after normalization."
             exit 1
           fi
-          echo "::add-mask::$CLEAN_OPENAI_API_KEY"
-          printf 'OPENAI_API_KEY=%s\n' "$CLEAN_OPENAI_API_KEY" >> "$GITHUB_ENV"
+          echo "::add-mask::$clean_openai_api_key"
+          printf 'OPENAI_API_KEY=%s\n' "$clean_openai_api_key" >> "$GITHUB_ENV"
           echo "OpenAI API key secret normalized without exposing its value."
 
       - name: Restore encrypted GTM runtime state
@@ -78,15 +78,15 @@ jobs:
           if git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
             git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
             if [[ -n "${GTM_STATE_KEY:-}" ]]; then
-              STATE_KEY="$GTM_STATE_KEY"
+              state_passphrase="$GTM_STATE_KEY"
             else
-              STATE_KEY="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
+              state_passphrase="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
             fi
-            export STATE_KEY
+            export state_passphrase
             openssl enc -d -aes-256-cbc -pbkdf2 \
               -in /tmp/gtm-runtime.enc \
               -out /tmp/gtm-runtime.tgz \
-              -pass env:STATE_KEY
+              -pass env:state_passphrase
             tar -xzf /tmp/gtm-runtime.tgz -C "$GITHUB_WORKSPACE"
             echo "Encrypted GTM runtime state restored."
           else
@@ -153,15 +153,15 @@ jobs:
             gtm/reports
 
           if [[ -n "${GTM_STATE_KEY:-}" ]]; then
-            STATE_KEY="$GTM_STATE_KEY"
+            state_passphrase="$GTM_STATE_KEY"
           else
-            STATE_KEY="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
+            state_passphrase="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
           fi
-          export STATE_KEY
+          export state_passphrase
           openssl enc -aes-256-cbc -salt -pbkdf2 \
             -in /tmp/gtm-runtime.tgz \
             -out /tmp/gtm-runtime.enc \
-            -pass env:STATE_KEY
+            -pass env:state_passphrase
 
           # Remove plaintext runtime changes before switching branches.
           git reset --hard HEAD
