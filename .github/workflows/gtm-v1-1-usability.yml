@@ -46,3 +46,16 @@ jobs:
           test "$section_count" -eq 12
           test "$day_count" -eq 30
           echo "42 AGM prompt bodies present: 12 Section + 30 Daily."
+
+      - name: Generate exact repository manifest candidates
+        run: node scripts/regen-manifests.mjs
+
+      - name: Upload manifest candidates
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtm-v1-1-manifest-candidates-${{ github.run_id }}
+          path: |
+            docs/FILE-TREE.md
+            docs/FILE-INVENTORY.md
+          if-no-files-found: error
+          retention-days: 1
