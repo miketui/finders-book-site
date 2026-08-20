@@ -98,6 +98,8 @@ finders-book-site/
     │   ├── autopilot/
     │   │   ├── main.py
     │   │   └── pyproject.toml
+    │   ├── ebook/
+    │   │   └── build_epub.py
     │   ├── prompts/
     │   │   ├── agents.md
     │   │   ├── orchestrator.md
