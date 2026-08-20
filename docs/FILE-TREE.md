@@ -105,6 +105,7 @@ finders-book-site/
     │   │   ├── network_guard.py
     │   │   ├── pyproject.toml
     │   │   ├── render_contracts.py
+    │   │   ├── state_crypto.py
     │   │   ├── uv.lock
     │   │   ├── v1_1_selftest.py
     │   │   └── v1_1.py
