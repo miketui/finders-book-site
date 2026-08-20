@@ -378,6 +378,8 @@ def latest_blocker_summaries(last_run_id: object) -> list[str]:
             modified = path.stat().st_mtime
         except (OSError, json.JSONDecodeError):
             continue
+        if not isinstance(payload, dict):
+            continue
         if str(payload.get("run_id")) == str(last_run_id):
             matches.append((modified, payload))
     if not matches:

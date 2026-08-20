@@ -383,6 +383,9 @@ def check_production_import_order() -> None:
                     }
                 )
             )
+            (reports / "2026-08-20-section-12-list.json").write_text(
+                json.dumps(["not a report object"])
+            )
             summaries = final_hardening.latest_blocker_summaries("safe-run")
             assert summaries[0] == "Verify two current source citations."
             assert "examplecredential" not in summaries[1]
