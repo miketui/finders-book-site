@@ -4,8 +4,8 @@ import argparse
 import html
 import json
 import re
-import uuid
 import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -24,9 +24,31 @@ def strip_unsafe_markup(value: str) -> str:
     return value
 
 
-def chapter_xhtml(title: str, body: str, language: str) -> str:
+def validate_body_xhtml(body: str, chapter_title: str) -> str:
+    """Require well-formed XML/XHTML fragments before packaging the EPUB."""
     body = strip_unsafe_markup(body)
-    return f'''<?xml version="1.0" encoding="utf-8"?>
+    wrapped = f'<div xmlns="http://www.w3.org/1999/xhtml">{body}</div>'
+    try:
+        ET.fromstring(wrapped)
+    except ET.ParseError as exc:
+        raise SystemExit(
+            f"Chapter {chapter_title!r} contains malformed XHTML: {exc}. "
+            "Use XML-safe markup (for example &amp; instead of a bare &, close all tags, "
+            "and avoid HTML-only named entities)."
+        ) from exc
+    return body
+
+
+def validate_complete_xhtml(document: str, label: str) -> None:
+    try:
+        ET.fromstring(document)
+    except ET.ParseError as exc:
+        raise SystemExit(f"Generated {label} is not well-formed XHTML/XML: {exc}") from exc
+
+
+def chapter_xhtml(title: str, body: str, language: str) -> str:
+    body = validate_body_xhtml(body, title)
+    document = f'''<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{esc(language)}" lang="{esc(language)}">
 <head>
@@ -42,6 +64,20 @@ def chapter_xhtml(title: str, body: str, language: str) -> str:
 </body>
 </html>
 '''
+    validate_complete_xhtml(document, f"chapter {title!r}")
+    return document
+
+
+def stable_identifier(metadata: dict) -> str:
+    identifier = str(metadata.get("identifier", "")).strip()
+    if not identifier:
+        raise SystemExit(
+            "metadata.identifier is required and must remain stable across rebuilds. "
+            "EBOOK_PRODUCTION must set it once in the private manuscript before the first build."
+        )
+    if identifier.upper().startswith("REQUIRED-") or "<" in identifier or ">" in identifier:
+        raise SystemExit("metadata.identifier is still a placeholder; set a stable publication identifier.")
+    return identifier
 
 
 def build_epub(source: Path, output: Path) -> None:
@@ -50,7 +86,7 @@ def build_epub(source: Path, output: Path) -> None:
     title = metadata.get("title", "The Finder's Book — Reading Edition")
     creator = metadata.get("creator", "Joanne Godfrey and Michael David")
     language = metadata.get("language", "en-US")
-    identifier = metadata.get("identifier") or f"urn:uuid:{uuid.uuid4()}"
+    identifier = stable_identifier(metadata)
     description = metadata.get(
         "description",
         "A non-fillable reading edition of The Finder's Book, redesigned for reflowable ebook reading.",
@@ -71,6 +107,7 @@ def build_epub(source: Path, output: Path) -> None:
         if not body:
             paragraphs = chapter.get("paragraphs", [])
             body = "\n".join(f"<p>{esc(str(p))}</p>" for p in paragraphs)
+        body = validate_body_xhtml(body, chapter_title)
         normalized.append((chapter_id, chapter_title, body))
 
     nav_items = "\n".join(
@@ -78,7 +115,6 @@ def build_epub(source: Path, output: Path) -> None:
         for cid, ctitle, _ in normalized
     )
     nav = f'''<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="{esc(language)}" lang="{esc(language)}">
 <head><meta charset="utf-8" /><title>Contents</title></head>
 <body>
@@ -91,6 +127,7 @@ def build_epub(source: Path, output: Path) -> None:
 </body>
 </html>
 '''
+    validate_complete_xhtml(nav, "navigation document")
 
     manifest_items = [
         '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>',
@@ -121,6 +158,7 @@ def build_epub(source: Path, output: Path) -> None:
   </spine>
 </package>
 '''
+    validate_complete_xhtml(opf, "package document")
 
     container = '''<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -129,6 +167,8 @@ def build_epub(source: Path, output: Path) -> None:
   </rootfiles>
 </container>
 '''
+    validate_complete_xhtml(container, "container document")
+
     css = '''body { font-family: serif; line-height: 1.5; margin: 5%; }
 h1 { font-size: 1.8em; line-height: 1.15; }
 h2 { font-size: 1.35em; }
