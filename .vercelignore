@@ -29,3 +29,4 @@ protect_and_cleanup.sh
 # Local config references (dotfiles are not served, listed for intent)
 .env.example
 .gitattributes
+assets/incoming/

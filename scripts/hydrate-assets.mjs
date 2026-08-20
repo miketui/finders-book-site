@@ -12,7 +12,7 @@ const files = [
   ['assets/bonus-4-trusted-person-handoff-scripts.webp', '15f238c9a36bc068fbf12c9705f52db099680294fb6c0ad3627f6ae2e0fae31f'],
   ['assets/bonus-5-digital-legacy-link-and-qr-guide.webp', 'ded60f8422f87d937969d7b3485e9ea2040287fb7a7abf710fb693b7ad5d4109'],
   ['assets/continuity-snapshot.webp', '00d6a0e639654a70eb91ed8f8ad2ef512d3949ae4bb9cef45df2d18368c8cc31'],
-  ['assets/cover.jpg', 'edfd4db9c457c5109948faf6c58d833df79a020a3f29f4d928a5c80ce69ccf7d'],
+  ['assets/finders-book-cover-800.webp', '9f120cce283474f969dc3706f6e288bed640969e70c38fe4ba3b5e00bced6d61'],
   ['assets/credit-cards.webp', '7a7dff0fe159fc74ce0dfb169479cb035686f59288eb8de895defccd54b7c632'],
   ['assets/documents-locator.webp', '23dbc3007745fcc1ee3adf2138f53416dfbbf8cd4a04227454479e6a8770c668'],
   ['assets/email-accounts.webp', '60bbf108a6afc55df5fe2612942d7e5ae0360026b22d26c51062bf6751f606fb'],
@@ -24,7 +24,7 @@ const files = [
   ['assets/letter-to-finder.webp', '3561c38a6f8c726f472ba8bd6b7781489c01f1fa1dffd5d827873b795962d0ca'],
   ['assets/letter-to-loved-one.webp', '969b93099d2b2199414be0b89cb1b817fd63c85c7b6bf72e79b61a7defb1f4e0'],
   ['assets/levels-of-access.webp', '55230b8ea9a44f32af436bff0cb5412e470dec1020e979264ab854c43572fe56'],
-  ['assets/og-finders-book.jpg', '2ee45c2234cb72cd01bc31da3a8b2c8266db58e77da275b715f63de5f078fc4e'],
+  ['assets/og-finders-book.jpg', '513164119a1146923ae0b1622e71213871387179514a94ccc471ef91f26eb3f1'],
   ['assets/security-doctrine.webp', 'dcf0c94a6781f78737f919ceb0c67d90cdb3fa8005c3479ad31128396f88fe75'],
   ['assets/trusted-people.webp', '755ae75071208180861982019d3b0278a20a8cf1295a8bd778959014631a2d30'],
   ['assets/will-locator.webp', '1db3daed1775798848f4496319570086b043e0a61d6d69a119eba0ae42f53cc3'],
@@ -34,12 +34,12 @@ const files = [
   ['assets/bonus-4-trusted-person-handoff-scripts-400.webp', '11dc2efae9f8a6a97ecc85869e181527bfca08e20beaa8cd8da8ddf3ee338f72'],
   ['assets/bonus-5-digital-legacy-link-and-qr-guide-400.webp', 'ed286313b506dfd1d7fec01e6cd9de65d2dd40b40d931f9d57055ecc378a203d'],
   ['assets/continuity-snapshot-400.webp', '13a62cf0daba1e569a492d5730683f26da6b9a69c51fbafe4a0a03496a051217'],
-  ['assets/cover-400.jpg', '9855970cfbfa77398619f2ce2ab2bc62190feb4ecf84918957f8f39b7ed69e25'],
+  ['assets/finders-book-cover-400.webp', '25bcb771ca8281b56b98534a1d5159f949b9cc215a0b29051fb4668cb5c9792b'],
   ['assets/credit-cards-400.webp', 'd2df6d6c6ba5c438a825842f52e8914e6f5e25da0c49221d8f3f827200cfba68'],
   ['assets/documents-locator-400.webp', 'ffc1e5c81196d0e63a96d35c5cd0d1ee38e88412cd13684301457bbedf658a73'],
   ['assets/email-accounts-400.webp', '2de88da7616ec781ba66dec72257a969e9b5a94d16d25800a48a2aecadec6bad'],
-  ['assets/essentials-storefront-400.jpg', 'e46e93d09da15e93c5542ad02940be217c5c3cf8d1fabed03b59801eee8c8ad3'],
-  ['assets/family-storefront-400.jpg', '836f4d31c5b1bb8451b21235e0e76091c14fd46071ab846c84a5c4f8c9d515c8'],
+  ['assets/essentials-product-400.webp', '641a84d7f21630d309c1f0d872db84668aa0e1dc58838bea459e6304c969bfe3'],
+  ['assets/family-bundle-product-400.webp', '953b4b3d46c2bbe7e298517bbea987e2a5f36d51ecc00cbdbd583c675dddefca'],
   ['assets/how-to-use-400.webp', 'f56f32bf9d7faa0c162192723450d871f65c85a4ee85bd4b1db03ecbf316990d'],
   ['assets/important-people-400.webp', 'ab3256f113c578ef8fc464a7e277b300152d7d0f57f1a6296aee441877b51886'],
   ['assets/letter-to-finder-400.webp', 'd13d52cf6ab8acf341b2b4e94422e8ceb9d28187eecf8a8bc315ea01787c7d74'],
@@ -47,8 +47,11 @@ const files = [
   ['assets/levels-of-access-400.webp', '44f34e36a4adabae9cb7c39381507583cd81ff61eb179744568f9ebb363eddac'],
   ['assets/security-doctrine-400.webp', '0e40dc3efd171602772fccf0c87189956c2edb8f49baa2039c4ed7d228cd68c5'],
   ['assets/trusted-people-400.webp', '68a207a529345044cbcd6e24e6a3986563ff03a9ff235ed212175f7b78d0ab68'],
-  ['assets/ultimate-storefront-400.jpg', '700dc1a410d24bb1d01f86c31019f84e08449d7dd40cfe63984873c1a6d59a48'],
-  ['assets/will-locator-400.webp', 'da71e1f1a43f19ab0941058199125173dfbf6c97dd6c003cdcfec9d5dc8b6f9a']
+  ['assets/ultimate-product-400.webp', '5783a65bda6e64b91ca93f957a06947e895a8695fccdf667ae85e6c964446fd2'],
+  ['assets/will-locator-400.webp', 'da71e1f1a43f19ab0941058199125173dfbf6c97dd6c003cdcfec9d5dc8b6f9a'],
+  ['assets/essentials-product-800.webp', '19473cf966e76a4977fe7ac6837a51da6a04ed5b99c4b23ecbd039baa53a6c4b'],
+  ['assets/ultimate-product-800.webp', '74897c34f07dd9391294822d92842fe0771f53776824da6d8228c103a5ec6c0b'],
+  ['assets/family-bundle-product-800.webp', '35676c43b52c05e4c7eeef787f77087cee2e2a54da873b0cf36fa3ae0750ab47']
 ];
 
 function sha256(buffer) {

@@ -43,21 +43,19 @@ finders-book-site/
     │   ├── bonus-5-digital-legacy-link-and-qr-guide.webp
     │   ├── continuity-snapshot-400.webp
     │   ├── continuity-snapshot.webp
-    │   ├── cover-400.avif
-    │   ├── cover-400.jpg
-    │   ├── cover-800.avif
-    │   ├── cover.jpg
     │   ├── credit-cards-400.webp
     │   ├── credit-cards.webp
     │   ├── documents-locator-400.webp
     │   ├── documents-locator.webp
     │   ├── email-accounts-400.webp
     │   ├── email-accounts.webp
-    │   ├── essentials-storefront-400.jpg
-    │   ├── essentials-storefront.jpg
-    │   ├── family-storefront-400.jpg
-    │   ├── family-storefront.jpg
+    │   ├── essentials-product-400.webp
+    │   ├── essentials-product-800.webp
+    │   ├── family-bundle-product-400.webp
+    │   ├── family-bundle-product-800.webp
     │   ├── favicon.svg
+    │   ├── finders-book-cover-400.webp
+    │   ├── finders-book-cover-800.webp
     │   ├── how-to-use-400.webp
     │   ├── how-to-use.webp
     │   ├── important-people-400.webp
@@ -73,8 +71,8 @@ finders-book-site/
     │   ├── security-doctrine.webp
     │   ├── trusted-people-400.webp
     │   ├── trusted-people.webp
-    │   ├── ultimate-storefront-400.jpg
-    │   ├── ultimate-storefront.jpg
+    │   ├── ultimate-product-400.webp
+    │   ├── ultimate-product-800.webp
     │   ├── will-locator-400.webp
     │   └── will-locator.webp
     ├── docs/

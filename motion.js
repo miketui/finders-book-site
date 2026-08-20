@@ -440,7 +440,7 @@
   function closeLb(){
     lb.classList.remove("on"); lb.hidden = true;
     document.body.style.overflow = "";
-    lbImg.src = "assets/cover.jpg"; lbImg.alt = "Product page preview";
+    lbImg.src = "assets/finders-book-cover-800.webp"; lbImg.alt = "Product page preview";
     if (lastFocus) lastFocus.focus();
   }
   document.querySelectorAll(".pg").forEach(function(btn){
