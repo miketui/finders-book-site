@@ -69,3 +69,78 @@ jobs:
 
       - name: Render smoke test
         run: npm run test:render
+
+  gtm-autopilot:
+    name: GTM Autopilot static validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify locked dependencies
+        run: uv sync --project gtm/autopilot --locked
+
+      - name: Compile Autopilot and EPUB builder
+        run: python -m py_compile gtm/autopilot/main.py gtm/ebook/build_epub.py
+
+      - name: Validate GTM architecture contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          root = Path('gtm')
+          phase0 = json.loads((root / 'phase0-plan.json').read_text())
+          day_plan = json.loads((root / 'day-plan.json').read_text())
+          state = json.loads((root / 'state.json').read_text())
+          budget = json.loads((root / 'creative-budget.json').read_text())
+          agents_text = (root / 'prompts' / 'agents.md').read_text()
+          sections_text = (root / 'prompts' / 'sections.md').read_text()
+
+          expected_order = [12, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 5]
+          actual_order = phase0['execution_order']
+          assert actual_order == expected_order, (actual_order, expected_order)
+          assert sorted(actual_order) == list(range(1, 13))
+          assert len(phase0['sections']) == 12
+
+          section_headers = re.findall(r'^## SECTION: (\d+)\s*$', sections_text, flags=re.M)
+          assert sorted(map(int, section_headers)) == list(range(1, 13)), section_headers
+
+          agent_headers = re.findall(r'^## AGENT: ([A-Z_]+)\s*$', agents_text, flags=re.M)
+          expected_agents = {
+              'SEO', 'CONTENT', 'GROWTH', 'COMMERCE', 'ANALYTICS',
+              'PARTNERSHIPS', 'RELEASE_QA', 'CREATIVE_PRODUCTION', 'EBOOK_PRODUCTION'
+          }
+          assert set(agent_headers) == expected_agents, agent_headers
+          assert len(agent_headers) == 9
+
+          assert state['mode'] == 'PHASE0'
+          assert state['foundation_cursor'] == 0
+          assert state['current_day'] == 1
+
+          day6 = next(day for day in day_plan['days'] if day['day'] == 6)
+          assert day6.get('rendering_enabled') is True
+          assert 'CREATIVE_PRODUCTION' in day6['specialists']
+          assert budget['image']['model'] == 'gpt-image-2'
+          assert budget['video']['model'] == 'gen4.5'
+          assert budget['video']['max_videos_per_run'] <= 5
+          assert budget['video']['max_total_seconds_per_run'] <= 25
+          assert budget['approval_rules']['synthetic_physical_product_proof'] == 'PROHIBITED'
+
+          section1 = next(x for x in phase0['sections'] if x['section'] == 1)
+          assert 'EBOOK_PRODUCTION' in section1['specialists']
+          assert Path('gtm/ebook/build_epub.py').exists()
+          assert Path('gtm/ebook/README.md').exists()
+
+          print('PASS: Phase 0, nine-agent, Day 6 creative, and EPUB contracts validated.')
+          PY
