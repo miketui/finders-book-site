@@ -102,9 +102,11 @@ finders-book-site/
     │   │   ├── agents.md
     │   │   └── orchestrator.md
     │   ├── approvals.json
+    │   ├── creative-budget.json
     │   ├── day-plan.json
     │   ├── experiments.json
     │   ├── metrics.json
+    │   ├── phase0-plan.json
     │   ├── README.md
     │   ├── SETUP.md
     │   └── state.json
