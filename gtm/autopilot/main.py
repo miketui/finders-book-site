@@ -9,6 +9,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from agents import Agent, Runner
@@ -64,6 +65,11 @@ def load_json(name: str) -> dict:
 
 def save_json(name: str, data: dict) -> None:
     (GTM_ROOT / name).write_text(json.dumps(data, indent=2) + "\n")
+
+
+def owner_allowlist() -> set[str]:
+    raw = os.getenv("GTM_OWNER_ALLOWLIST", "miketui")
+    return {item.strip() for item in raw.split(",") if item.strip()}
 
 
 def load_agent_prompts() -> dict[str, str]:
@@ -139,30 +145,47 @@ def build_orchestrator(specialists: dict[str, Agent]) -> Agent:
     )
 
 
-def resolve_approval(approval_id: str, decision: str, note: str) -> None:
+def resolve_approval(approval_id: str, decision: str, note: str, actor: str) -> None:
     approvals = load_json("approvals.json")
     pending = approvals["pending"]
     item = next((x for x in pending if x["id"] == approval_id), None)
     if not item:
         raise SystemExit(f"Approval ID not found: {approval_id}")
+
+    approval_class = item.get("approval_class")
+    if approval_class == "RED":
+        allowed = owner_allowlist()
+        if not actor or actor not in allowed:
+            raise SystemExit(
+                f"RED approval decision denied for actor {actor or '<missing>'}. "
+                f"Authorized owner allow-list: {', '.join(sorted(allowed)) or '<empty>'}."
+            )
+
     pending.remove(item)
     item["decision"] = decision.upper()
     item["resolved_at"] = datetime.now(TZ).isoformat()
     item["note"] = note
+    item["authorized_actor"] = actor or "unattributed"
     approvals["resolved"].append(item)
     save_json("approvals.json", approvals)
 
     state = load_json("state.json")
-    state["blocking_approval_ids"] = [x for x in state["blocking_approval_ids"] if x != approval_id]
-    if decision == "approve" and not state["blocking_approval_ids"] and state.get("last_run_status") == "AWAITING_APPROVAL":
+    remaining_blockers = [x for x in state["blocking_approval_ids"] if x != approval_id]
+    state["blocking_approval_ids"] = remaining_blockers
+    if remaining_blockers:
+        state["status"] = "AWAITING_APPROVAL"
+    elif state.get("last_run_status") == "AWAITING_APPROVAL":
         state["status"] = "READY"
+
     if decision == "reject":
-        state["status"] = "READY"
-        state.setdefault("notes", []).append(f"Approval {approval_id} rejected: {note}")
+        state.setdefault("notes", []).append(f"Approval {approval_id} rejected by {actor or 'unattributed'}: {note}")
+        if not remaining_blockers and state.get("last_run_status") == "AWAITING_APPROVAL":
+            state["status"] = "READY"
+
     save_json("state.json", state)
 
 
-def persist_output(output: DailyRunOutput, day: dict, qa: dict) -> None:
+def persist_output(output: DailyRunOutput, day: dict, qa: dict, run_id: str) -> None:
     now = datetime.now(TZ)
     stamp = now.strftime("%Y-%m-%d")
     label = f"day-{int(day['day']):02d}" if isinstance(day["day"], int) else "continuous"
@@ -170,12 +193,24 @@ def persist_output(output: DailyRunOutput, day: dict, qa: dict) -> None:
     reports.mkdir(exist_ok=True)
 
     payload = output.model_dump()
+    payload["run_id"] = run_id
     payload["generated_at"] = now.isoformat()
     payload["active_day"] = day
     payload["qa"] = qa
-    (reports / f"{stamp}-{label}.json").write_text(json.dumps(payload, indent=2) + "\n")
+    (reports / f"{stamp}-{label}-{run_id}.json").write_text(json.dumps(payload, indent=2) + "\n")
 
-    brief = f"""# Finder's Book Founder Brief — {stamp}\n\n**Mode:** {load_json('state.json')['mode']}  \n**Active:** {label} — {day['objective']}  \n**Run status:** {output.run_status}  \n**Repository QA:** {'PASS' if qa['passed'] else 'FAIL'}\n\n{output.founder_brief}\n\n## Approvals required\n"""
+    brief = f"""# Finder's Book Founder Brief — {stamp}
+
+**Run ID:** {run_id}  
+**Mode:** {load_json('state.json')['mode']}  
+**Active:** {label} — {day['objective']}  
+**Run status:** {output.run_status}  
+**Repository QA:** {'PASS' if qa['passed'] else 'FAIL'}
+
+{output.founder_brief}
+
+## Approvals required
+"""
     if output.approval_requests:
         for req in output.approval_requests:
             brief += f"- **{req.approval_class}: {req.title}** — {req.reason}\n"
@@ -184,7 +219,7 @@ def persist_output(output: DailyRunOutput, day: dict, qa: dict) -> None:
     if output.blockers:
         brief += "\n## Blockers\n" + "\n".join(f"- {b}" for b in output.blockers) + "\n"
     brief += f"\n## Next action\n{output.next_action}\n"
-    (reports / f"{stamp}-{label}-founder-brief.md").write_text(brief)
+    (reports / f"{stamp}-{label}-{run_id}-founder-brief.md").write_text(brief)
 
     metrics = load_json("metrics.json")
     for update in output.metric_updates:
@@ -200,25 +235,51 @@ def persist_output(output: DailyRunOutput, day: dict, qa: dict) -> None:
 
     experiments = load_json("experiments.json")
     for update in output.experiment_updates:
-        target = experiments["active"] if update.status.lower() not in {"completed", "closed"} else experiments["completed"]
-        existing = next((x for x in experiments["active"] + experiments["completed"] if x.get("experiment_id") == update.experiment_id), None)
-        if existing:
-            existing.update(update.model_dump())
+        data = update.model_dump()
+        target_name = "active" if update.status.lower() not in {"completed", "closed"} else "completed"
+        other_name = "completed" if target_name == "active" else "active"
+
+        existing_target = next(
+            (x for x in experiments[target_name] if x.get("experiment_id") == update.experiment_id),
+            None,
+        )
+        if existing_target:
+            existing_target.update(data)
+            continue
+
+        existing_other = next(
+            (x for x in experiments[other_name] if x.get("experiment_id") == update.experiment_id),
+            None,
+        )
+        if existing_other:
+            experiments[other_name].remove(existing_other)
+            existing_other.update(data)
+            experiments[target_name].append(existing_other)
         else:
-            target.append(update.model_dump())
+            experiments[target_name].append(data)
     save_json("experiments.json", experiments)
 
     approvals = load_json("approvals.json")
     state = load_json("state.json")
     new_blocking = []
     for idx, req in enumerate(output.approval_requests, start=1):
-        approval_id = f"{stamp}-{label}-{idx:02d}"
-        record = {"id": approval_id, "created_at": now.isoformat(), "status": "PENDING", **req.model_dump()}
+        approval_id = f"{stamp}-{label}-{run_id}-{idx:02d}"
+        record_data = req.model_dump()
+        # RED actions are never allowed to become non-blocking based on model output.
+        record_data["blocking"] = True if req.approval_class == "RED" else req.blocking
+        record = {
+            "id": approval_id,
+            "run_id": run_id,
+            "created_at": now.isoformat(),
+            "status": "PENDING",
+            **record_data,
+        }
         approvals["pending"].append(record)
-        if req.blocking:
+        if record["blocking"]:
             new_blocking.append(approval_id)
     save_json("approvals.json", approvals)
 
+    state["last_run_id"] = run_id
     state["last_run_at"] = now.isoformat()
     state["last_run_status"] = output.run_status
     state["blocking_approval_ids"] = new_blocking
@@ -246,6 +307,8 @@ def persist_output(output: DailyRunOutput, day: dict, qa: dict) -> None:
 async def run_daily() -> None:
     if not os.getenv("OPENAI_API_KEY"):
         raise SystemExit("OPENAI_API_KEY is required.")
+
+    run_id = uuid4().hex[:16]
     plan = load_json("day-plan.json")
     state = load_json("state.json")
     if state["status"] == "AWAITING_APPROVAL" and state["blocking_approval_ids"]:
@@ -254,6 +317,7 @@ async def run_daily() -> None:
     day = active_day(plan, state)
     qa = run_qa()
     context = {
+        "run_id": run_id,
         "active_day": day,
         "state": state,
         "metrics": load_json("metrics.json"),
@@ -270,15 +334,17 @@ async def run_daily() -> None:
         "Consult the listed specialists when useful. Do not claim external actions occurred unless evidence says so.\n\n"
         + json.dumps(context, indent=2)
     )
-    result = await Runner.run(orchestrator, prompt)
+    result = await Runner.run(orchestrator, prompt, max_turns=10)
     output = result.final_output
     if not isinstance(output, DailyRunOutput):
         output = DailyRunOutput.model_validate(output)
-    persist_output(output, day, qa)
+    persist_output(output, day, qa, run_id)
+
     # Safe CI-visible summary only. Detailed briefs, metrics and approval reasons
     # remain in encrypted runtime state rather than public GitHub Actions logs.
     print(json.dumps({
         "autopilot": "completed",
+        "run_id": run_id,
         "active_day": day["day"],
         "run_status": output.run_status,
         "pass_condition_met": output.pass_condition_met,
@@ -293,12 +359,13 @@ def main() -> None:
     parser.add_argument("--mode", choices=["run", "approve", "reject", "status"], default="run")
     parser.add_argument("--approval-id", default="")
     parser.add_argument("--note", default="")
+    parser.add_argument("--actor", default="")
     args = parser.parse_args()
 
     if args.mode in {"approve", "reject"}:
         if not args.approval_id:
             raise SystemExit("--approval-id is required.")
-        resolve_approval(args.approval_id, args.mode, args.note)
+        resolve_approval(args.approval_id, args.mode, args.note, args.actor)
         print(f"{args.mode.upper()}: {args.approval_id}")
         return
     if args.mode == "status":
@@ -307,6 +374,7 @@ def main() -> None:
             "mode": state.get("mode"),
             "current_day": state.get("current_day"),
             "status": state.get("status"),
+            "last_run_id": state.get("last_run_id"),
             "last_run_status": state.get("last_run_status"),
             "blocking_approval_count": len(state.get("blocking_approval_ids", [])),
         }, indent=2))

@@ -1,13 +1,6 @@
 name: Finder's Book GTM Autopilot
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - ".github/workflows/gtm-autopilot.yml"
-      - "gtm/**"
-      - ".vercelignore"
-      - ".gitignore"
   push:
     branches: [main]
     paths:
@@ -51,6 +44,7 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+      GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
     steps:
       - name: Checkout protected source
@@ -71,7 +65,6 @@ jobs:
           echo "OpenAI API key secret normalized without exposing its value."
 
       - name: Restore encrypted GTM runtime state
-        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           git fetch origin "$STATE_BRANCH" || true
@@ -80,7 +73,7 @@ jobs:
             if [[ -n "${GTM_STATE_KEY:-}" ]]; then
               state_passphrase="$GTM_STATE_KEY"
             else
-              state_passphrase="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
+              state_passphrase="$OPENAI_API_KEY"
             fi
             export state_passphrase
             openssl enc -d -aes-256-cbc -pbkdf2 \
@@ -118,30 +111,20 @@ jobs:
 
       - name: Execute Autopilot
         shell: bash
+        env:
+          AUTOPILOT_MODE: ${{ inputs.mode || 'run' }}
+          AUTOPILOT_APPROVAL_ID: ${{ inputs.approval_id || '' }}
+          AUTOPILOT_NOTE: ${{ inputs.note || '' }}
+          AUTOPILOT_ACTOR: ${{ github.actor }}
         run: |
-          MODE="${{ inputs.mode || 'run' }}"
-          APPROVAL_ID="${{ inputs.approval_id || '' }}"
-          NOTE="${{ inputs.note || '' }}"
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            MODE="run"
-            APPROVAL_ID=""
-            NOTE="PR-only dry run; runtime files are discarded after validation."
-          fi
           uv run --project gtm/autopilot python gtm/autopilot/main.py \
-            --mode "$MODE" \
-            --approval-id "$APPROVAL_ID" \
-            --note "$NOTE"
-
-      - name: Discard PR dry-run runtime output
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git reset --hard HEAD
-          git clean -fd gtm/reports
-          echo "PR dry run complete; no runtime state persisted."
+            --mode "$AUTOPILOT_MODE" \
+            --approval-id "$AUTOPILOT_APPROVAL_ID" \
+            --note "$AUTOPILOT_NOTE" \
+            --actor "$AUTOPILOT_ACTOR"
 
       - name: Encrypt and persist runtime state on isolated branch
-        if: success() && github.event_name != 'pull_request'
+        if: success()
         shell: bash
         run: |
           mkdir -p gtm/reports
@@ -155,7 +138,7 @@ jobs:
           if [[ -n "${GTM_STATE_KEY:-}" ]]; then
             state_passphrase="$GTM_STATE_KEY"
           else
-            state_passphrase="$(printf '%s' "$OPENAI_API_KEY" | sha256sum | cut -d' ' -f1)"
+            state_passphrase="$OPENAI_API_KEY"
           fi
           export state_passphrase
           openssl enc -aes-256-cbc -salt -pbkdf2 \

@@ -4,10 +4,10 @@
 
 | Platform | Role |
 |---|---|
-| GitHub repository | Public source of truth for GTM engine, prompts, state schema and workflow code only |
+| GitHub repository | Public source of truth for the Autopilot engine, state schemas and configuration templates |
 | GitHub Actions | Daily scheduler and autonomous runner |
-| OpenAI API + Agents SDK | Orchestrator reasoning, seven specialist agents, structured daily output and traces |
-| Encrypted `gtm-autopilot-state` branch | Durable runtime memory; Founder Briefs, metrics, experiments and approval details are encrypted before persistence |
+| OpenAI API + Agents SDK | Orchestrator reasoning, seven specialist agents and structured daily output |
+| Encrypted state branch | Stores only `gtm/runtime-state.enc`; plaintext Founder Briefs, metrics, experiments and approvals are never committed to the public repository |
 | Vercel | Existing production website only; `/gtm/` is excluded from deployment |
 | MailerLite | Lead/buyer email execution after API/connector wiring and approval |
 | Payhip | Existing digital commerce; authoritative digital purchase/refund source |
@@ -16,29 +16,26 @@
 | Etsy / Amazon KDP / B&N / IngramSpark | Marketplace/distribution execution surfaces; publishing remains approval-gated |
 | Optional Composio/MCP middleware | Recommended bridge when a platform lacks a clean direct API or when one broker can standardize multiple tools |
 
-## Privacy boundary
+## Security boundary
 
-The website repository is public. The Autopilot engine can safely live in public source control, but live business intelligence must not.
+The repository is public, so the code/configuration may be public but runtime business intelligence must not be.
 
-The workflow therefore:
-1. Keeps checked-in `state.json`, `metrics.json`, `experiments.json` and `approvals.json` as empty/bootstrap templates.
-2. Runs the agent with plaintext runtime data only inside the GitHub Actions runner.
-3. Packages live state plus Founder Briefs/reports into a tar archive.
-4. Encrypts that archive with AES-256-CBC + PBKDF2 before writing it to `gtm-autopilot-state`.
-5. Commits only `gtm/runtime-state.enc` to the state branch.
-6. Decrypts the state inside the next authorized workflow run.
-
-By default the encryption key is deterministically derived inside the runner from `OPENAI_API_KEY` without printing the key. For stronger key separation, add a separate GitHub Actions secret named `GTM_STATE_KEY`; the workflow automatically prefers it when present. If the OpenAI key is rotated before `GTM_STATE_KEY` is configured, archive the current encrypted runtime state or intentionally reset the GTM state before rotation.
+- `gtm/reports/` and `gtm/runtime-state.enc` are ignored by Git.
+- `/gtm/` is excluded from Vercel deployment.
+- The production Autopilot workflow does **not** execute on pull requests and therefore does not expose the OpenAI secret to PR-controlled code.
+- Pull requests continue to use the repository's protected static and rendered-page validation before merge.
+- Runtime state is bundled and encrypted before it is written to the isolated state branch.
 
 ## One-time setup
 
-1. Merge the Autopilot PR only after protected checks and the PR-only OpenAI dry run pass.
-2. In GitHub → Settings → Secrets and variables → Actions, add `OPENAI_API_KEY` using the key created in the OpenAI Platform setup flow. Never commit it to the repo.
-3. Optional but recommended later: add an independent `GTM_STATE_KEY` secret for encryption-key separation.
-4. The merge commit uses a one-time `[gtm-autopilot-bootstrap]` marker, causing Day 1 to run once after merge.
-5. Scheduled runs then execute daily at 15:00 UTC (08:00 PDT during the initial 30-day window).
-6. Use `workflow_dispatch` with `mode=approve` or `mode=reject` plus an approval ID to resolve gates.
-7. Add platform credentials incrementally. Do not add them until the corresponding adapter exists and has least-privilege scopes.
+1. Merge the Autopilot PR only after protected checks pass.
+2. In GitHub → Settings → Secrets and variables → Actions, add `OPENAI_API_KEY` using an active OpenAI project API key. Never commit it to the repository.
+3. Recommended: add a separate high-entropy `GTM_STATE_KEY` secret **before the first state-persisting run**. If it is absent, the normalized OpenAI API key itself is used as the PBKDF2 passphrase. If you later rotate that fallback key, migrate or reset the encrypted state first.
+4. Optional: set repository variable `GTM_OWNER_ALLOWLIST` to a comma-separated list of GitHub logins authorized to resolve RED approval gates. It defaults to `miketui`.
+5. Keep workflow permission at `contents: write`; runtime state is written only to the dedicated `gtm-autopilot-state` branch. The workflow does not push runtime state to protected `main`.
+6. The merge commit carrying `[gtm-autopilot-bootstrap]` performs the one-time Day 1 bootstrap. Ordinary future pushes to `main` do not advance the GTM clock.
+7. Use `workflow_dispatch` with `mode=approve` or `mode=reject` plus an approval ID to resolve gates. GitHub passes the authenticated actor to the runner.
+8. Add platform credentials incrementally. Do not add them until the corresponding adapter exists and has least-privilege scopes.
 
 ## Recommended execution stack
 
@@ -55,33 +52,44 @@ By default the encryption key is deterministically derived inside the runner fro
 - Google Ads, Meta, Pinterest, Etsy Ads, Amazon Ads for campaign read/write APIs
 
 ### Why not make Vercel the scheduler?
-The marketing state belongs with an auditable automation runner and needs approval records, repeatable schedules and source-control context. GitHub Actions is the cleaner first scheduler. Vercel stays focused on serving the customer-facing website.
+The marketing state belongs with the GTM operating system and needs auditable execution, approval records and repository QA context. GitHub Actions is the cleaner first scheduler. Vercel stays focused on serving the customer-facing website.
 
 ## Approval model
 
 - GREEN actions may run autonomously.
-- YELLOW actions are prepared automatically and stop until owner approval.
-- RED actions are never performed by the agent.
+- YELLOW actions are prepared automatically and stop until owner approval when marked blocking.
+- RED actions are always blocking and are never performed automatically. A RED approval decision is accepted only when the authenticated GitHub actor is in `GTM_OWNER_ALLOWLIST`.
 
 No workflow may spend money, publish externally, send customer/partner messages, merge a PR, deploy production, change a price, or accept a legal agreement without the required approval.
 
-## GitHub secrets
+## GitHub settings
 
-Required:
-- `OPENAI_API_KEY`
+Required secret:
 
-Optional/recommended:
-- `GTM_STATE_KEY` — independent encryption key for runtime-state separation
+`OPENAI_API_KEY`
 
-Future adapter secrets should be added only when the adapter exists, for example:
+Recommended independent state-encryption secret:
+
+`GTM_STATE_KEY`
+
+Optional repository variable:
+
+`GTM_OWNER_ALLOWLIST`
+
+Optional future secrets should be added only when adapters are implemented, for example:
 `MAILERLITE_API_KEY`, `GA4_*`, advertising API credentials, marketplace API credentials.
 
-## PR dry run
+## Runtime output
 
-Changes to the GTM engine or workflow trigger a PR-only dry run. It calls the real OpenAI agent path and repository QA but discards all generated runtime files afterward. This proves the engine without advancing the 30-day state machine.
+A successful run creates plaintext working files only inside the ephemeral Actions runner, including filenames such as:
 
-## First live run
+- `/gtm/reports/<date>-day-01-<run_id>.json`
+- `/gtm/reports/<date>-day-01-<run_id>-founder-brief.md`
+- updated `state.json`
+- updated approval queue if any
 
-When the approved PR is merged with `[gtm-autopilot-bootstrap]` in the merge commit title, GitHub Actions runs Day 1 once and stores its live runtime output only inside the encrypted state bundle.
+Each execution generates one collision-resistant `run_id`, reused in the report names and approval IDs. Before persistence, these files are bundled and encrypted into `gtm/runtime-state.enc`; only the encrypted bundle is committed to the isolated state branch.
 
-Public CI logs expose only a safe status summary: active day, PASS/PARTIAL/BLOCKED/AWAITING_APPROVAL state, approval count, blocker count and repository-QA result. Detailed Founder Briefs, metrics and approval reasons are not printed to public logs.
+## Daily schedule
+
+The scheduler runs at `15:00 UTC`, which is 8:00 AM PDT during the initial launch window. GitHub cron is UTC-based, so the local wall-clock time changes when Los Angeles leaves daylight-saving time.
