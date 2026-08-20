@@ -25,12 +25,11 @@ jobs:
       - name: Apply verified safety fixes
         run: python scripts/final-safety-patch.py
 
-      - name: Remove temporary patch helpers and commit
+      - name: Commit code-only safety fixes
         shell: bash
         run: |
-          git rm scripts/final-safety-patch.py .github/workflows/final-safety-patcher.yml .github/workflows/final-safety-pr-runner.yml
           git config user.name "miketui"
           git config user.email "208109316+miketui@users.noreply.github.com"
-          git add gtm/autopilot/final_hardening.py gtm/autopilot/network_guard.py .github/workflows/gtm-final-hardening.yml
+          git add gtm/autopilot/final_hardening.py gtm/autopilot/network_guard.py
           git commit -m "fix(gtm): close final autonomy safety gaps"
           git push origin HEAD:feature/gtm-autopilot-v1
