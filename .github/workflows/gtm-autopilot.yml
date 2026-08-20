@@ -47,7 +47,7 @@ jobs:
       GTM_EBOOK_SOURCE_BEARER: ${{ secrets.GTM_EBOOK_SOURCE_BEARER }}
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
-      GTM_RUNTIME_ROOT: /tmp/finders-gtm-runtime
+      GTM_RUNTIME_ROOT: ${{ github.workspace }}/../finders-gtm-runtime
       AUTOPILOT_MODE: ${{ inputs.mode || 'run' }}
       AUTOPILOT_APPROVAL_ID: ${{ inputs.approval_id || '' }}
       AUTOPILOT_NOTE: ${{ inputs.note || '' }}
