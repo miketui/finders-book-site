@@ -7,6 +7,8 @@ import main as engine
 
 
 _DAILY_PROMPT_SOURCE = "gtm/prompts/days.md"
+_OPERATOR_START = "<!-- GTM_OPERATOR_HANDOFF_V1_1_START -->"
+_OPERATOR_END = "<!-- GTM_OPERATOR_HANDOFF_V1_1_END -->"
 _OPERATOR_HEADINGS = [
     "SYSTEM COMPLETED",
     "YOU DO",
@@ -32,11 +34,14 @@ def load_daily_prompts() -> dict[str, str]:
     return prompts
 
 
-_RAW_ACTIVE_UNIT = engine.active_unit
+_BASE_ACTIVE_UNIT = getattr(engine, "_gtm_v1_1_base_active_unit", None)
+if _BASE_ACTIVE_UNIT is None:
+    _BASE_ACTIVE_UNIT = engine.active_unit
+    engine._gtm_v1_1_base_active_unit = _BASE_ACTIVE_UNIT
 
 
 def fidelity_active_unit(state: dict) -> dict:
-    unit = _RAW_ACTIVE_UNIT(state)
+    unit = _BASE_ACTIVE_UNIT(state)
     if unit.get("kind") == "day":
         day = str(int(unit["day"]))
         source_prompt = load_daily_prompts()[day]
@@ -52,7 +57,6 @@ def fidelity_active_unit(state: dict) -> dict:
 
 
 engine.active_unit = fidelity_active_unit
-_RAW_EXECUTE_UNIT = engine.execute_unit
 
 
 def _bullets(items: list[str], fallback: str) -> str:
@@ -113,7 +117,9 @@ def _operator_block(output, unit: dict, qa: dict, run_id: str) -> str:
     evidence_text = _bullets(evidence, "None recorded.")
 
     return (
-        "\n\n## SYSTEM COMPLETED\n"
+        "\n\n"
+        + _OPERATOR_START
+        + "\n## SYSTEM COMPLETED\n"
         + completed
         + "\n\n## YOU DO\n"
         + you_do
@@ -126,18 +132,17 @@ def _operator_block(output, unit: dict, qa: dict, run_id: str) -> str:
         + "\n\n## EVIDENCE TO SAVE\n"
         + evidence_text
         + "\n"
+        + _OPERATOR_END
+        + "\n"
     )
 
 
 def _strip_existing_operator_handoff(content: str) -> str:
-    positions = []
-    for heading in _OPERATOR_HEADINGS:
-        match = re.search(rf"(?m)^##\s+{re.escape(heading)}\s*$", content)
-        if match:
-            positions.append(match.start())
-    if positions:
-        return content[: min(positions)].rstrip()
-    return content.rstrip()
+    pattern = re.compile(
+        rf"\n?{re.escape(_OPERATOR_START)}.*?{re.escape(_OPERATOR_END)}\n?",
+        flags=re.S,
+    )
+    return pattern.sub("\n", content).rstrip()
 
 
 def apply_operator_schema(output, unit: dict, qa: dict, run_id: str) -> None:
@@ -159,8 +164,9 @@ async def usability_execute_unit(unit: dict) -> dict:
     else:
         output, qa = await engine.execute_model_unit(unit, run_id)
 
-    apply_operator_schema(output, unit, qa, run_id)
-
+    # First write establishes the current-run durable-output evidence used by the
+    # final hardening layer. The owner handoff is intentionally written later,
+    # after missing-output/render/runtime blockers have been normalized.
     written = engine.write_artifact_documents(output.artifact_documents)
     required_ok, missing = engine.required_outputs_exist(unit)
     if missing:
@@ -181,7 +187,11 @@ async def usability_execute_unit(unit: dict) -> dict:
     engine.persist_metrics(output, now, run_id)
     engine.persist_experiments(output)
     blocking = engine.persist_approvals(output, unit, now, run_id)
-    engine.write_report(output, unit, qa, run_id)
+
+    # final_hardening.update_state_after_unit may add late safety blockers such as
+    # rejected out-of-contract paths or required outputs not written in this run.
+    # Run it before rendering the owner-facing handoff so the Markdown mirrors the
+    # final persisted status instead of an earlier model-only snapshot.
     engine.update_state_after_unit(
         output,
         unit,
@@ -191,6 +201,12 @@ async def usability_execute_unit(unit: dict) -> dict:
         required_ok,
         render_result,
     )
+
+    apply_operator_schema(output, unit, qa, run_id)
+    # Rewrite the same contract-approved documents with the final deterministic
+    # operator handoff. No new artifact path is introduced by this second write.
+    engine.write_artifact_documents(output.artifact_documents)
+    engine.write_report(output, unit, qa, run_id)
 
     return {
         "run_id": run_id,
