@@ -233,7 +233,10 @@ async def tracked_hardened_execute_unit(unit: dict) -> dict:
 
 
 def current_run_required_outputs_exist(unit: dict) -> tuple[bool, list[str]]:
-    """A durable output only satisfies this run if this run wrote it."""
+    """Require current-run writes except for Foundation QA's persisted inputs."""
+    if unit.get("kind") == "foundation_qa":
+        return _prior_required_outputs_exist(unit)
+
     _, filesystem_missing = _prior_required_outputs_exist(unit)
     required = [Path(path).as_posix() for path in unit.get("required_outputs", [])]
     current_run_missing = [
