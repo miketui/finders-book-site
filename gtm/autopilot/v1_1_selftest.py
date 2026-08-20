@@ -371,6 +371,7 @@ def check_production_import_order() -> None:
                             "API key: sk-examplecredential123456",
                             "THIRD_PARTY_API_SECRET=supersecretvalue123456",
                             "Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456",
+                            "PASSWORD=correct horse battery staple",
                         ]
                     }
                 )
@@ -391,8 +392,9 @@ def check_production_import_order() -> None:
             assert "examplecredential" not in summaries[1]
             assert all("supersecretvalue" not in item for item in summaries)
             assert all("abcdefghijklmnopqrstuvwxyz" not in item for item in summaries)
+            assert all("horse battery staple" not in item for item in summaries)
             assert all("Wrong report selected" not in item for item in summaries)
-            assert sum("[REDACTED_CREDENTIAL]" in item for item in summaries) == 3
+            assert summaries.count("Credential-bearing blocker suppressed.") == 4
         finally:
             engine.RUNTIME_ROOT = prior_runtime
 

@@ -392,27 +392,21 @@ def latest_blocker_summaries(last_run_id: object) -> list[str]:
         text = re.sub(r"\s+", " ", str(value)).strip()
         if not text:
             continue
-        text = re.sub(
-            r"(?i)\b(?:authorization\s*:\s*)?bearer\s+\S+",
-            "[REDACTED_CREDENTIAL]",
+        credential_marker = re.search(
+            r"(?i)(?:\b(?:authorization\s*:\s*)?bearer\s+\S+|"
+            r"\b[A-Z0-9_]*(?:API[_ -]?KEY|SECRET|ACCESS[_ -]?TOKEN|TOKEN|"
+            r"PASSWORD|PASSPHRASE|RECOVERY[_ -]?CODE|PIN)[A-Z0-9_]*\b\s*[:=]|"
+            r"\b(?:sk|ghp|github_pat|glpat)[-_][A-Za-z0-9_-]{12,}\b)",
             text,
         )
-        text = re.sub(
-            r"(?i)\b[A-Z0-9_]*(?:API_KEY|SECRET|ACCESS_TOKEN|TOKEN|PASSWORD|"
-            r"PASSPHRASE|RECOVERY_CODE|PIN)[A-Z0-9_]*\b\s*[:=]\s*\S+",
-            "[REDACTED_CREDENTIAL]",
-            text,
-        )
-        text = re.sub(
-            r"\b(?:sk|ghp|github_pat|glpat)[-_][A-Za-z0-9_-]{12,}\b",
-            "[REDACTED_CREDENTIAL]",
-            text,
-        )
-        text = re.sub(
-            r"\b[A-Za-z0-9._~+/-]{40,}\b",
-            "[REDACTED_HIGH_ENTROPY_VALUE]",
-            text,
-        )
+        if credential_marker:
+            text = "Credential-bearing blocker suppressed."
+        else:
+            text = re.sub(
+                r"\b[A-Za-z0-9._~+/-]{40,}\b",
+                "[REDACTED_HIGH_ENTROPY_VALUE]",
+                text,
+            )
         summaries.append(text[:300])
     return summaries
 
