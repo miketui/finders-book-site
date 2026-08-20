@@ -23,20 +23,26 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Lock Autopilot dependencies
+        run: uv lock --project gtm/autopilot
+
       - name: Regenerate tracked-file manifests
         run: node scripts/regen-manifests.mjs
 
-      - name: Commit generated manifests if changed
+      - name: Commit generated lock and manifests if changed
         shell: bash
         env:
           PR_HEAD_REF: ${{ github.head_ref }}
         run: |
-          if git diff --quiet -- docs/FILE-TREE.md docs/FILE-INVENTORY.md; then
-            echo "Manifests already current."
+          if git diff --quiet -- gtm/autopilot/uv.lock docs/FILE-TREE.md docs/FILE-INVENTORY.md; then
+            echo "Lockfile and manifests already current."
             exit 0
           fi
           git config user.name "finders-book-manifest-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/FILE-TREE.md docs/FILE-INVENTORY.md
-          git commit -m "chore: regenerate repository manifests"
+          git add gtm/autopilot/uv.lock docs/FILE-TREE.md docs/FILE-INVENTORY.md
+          git commit -m "chore: regenerate GTM lock and repository manifests"
           git push origin "HEAD:$PR_HEAD_REF"
