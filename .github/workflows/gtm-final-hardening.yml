@@ -1,0 +1,169 @@
+name: GTM Autopilot final hardening
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "gtm/**"
+      - ".github/workflows/gtm-autopilot.yml"
+      - ".github/workflows/gtm-final-hardening.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hardening:
+    name: GTM final hardening validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Verify locked Autopilot dependencies
+        run: uv sync --project gtm/autopilot --locked
+
+      - name: Compile hardened runtime
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/autopilot/network_guard.py gtm/autopilot/final_hardening.py gtm/ebook/build_epub.py
+
+      - name: Validate final architecture contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          day_plan = json.loads(Path('gtm/day-plan.json').read_text())
+          assert len(day_plan['days']) == 30
+          for day in day_plan['days']:
+              outputs = day.get('outputs', [])
+              assert outputs, f"Day {day['day']} missing durable outputs"
+              assert all(path.startswith('reports/day-') for path in outputs)
+
+          hardening = Path('gtm/autopilot/final_hardening.py').read_text()
+          network = Path('gtm/autopilot/network_guard.py').read_text()
+          workflow = Path('.github/workflows/gtm-autopilot.yml').read_text()
+          epub = Path('gtm/ebook/build_epub.py').read_text()
+
+          for category in (
+              'video_reference_still', 'carousel_master', 'pinterest_pin', 'video'
+          ):
+              assert category in hardening
+          assert 'Day 6 requires exactly' in hardening
+          assert 'current-run reference image' in hardening
+          assert 'Rejected out-of-contract artifact paths' in hardening
+          assert 'pending_approval_index' in hardening
+          assert 'max_spend_usd' not in hardening[hardening.index('def public_status_payload'):]
+          assert 'GTM_EBOOK_SOURCE_URL' in hardening
+          assert 'GTM_EBOOK_SOURCE_SHA256' in hardening
+          assert 'sha256_verified' in hardening
+
+          assert 'class PinnedHTTPSConnection' in network
+          assert 'server_hostname=self.host' in network
+          assert 'self._validated_ip' in network
+          assert 'urllib.request' not in network
+          assert 'MAX_DOWNLOAD_BYTES' in network
+
+          assert 'Resolve browser for Autopilot QA' in workflow
+          assert 'final_hardening.main()' in workflow
+          assert 'ebook-ingest' in workflow
+          assert 'GTM_EBOOK_SOURCE_URL' in workflow
+          assert '--exclude=\'ebook/*.epub\'' not in workflow
+          assert '${{ env.GTM_RUNTIME_ROOT }}/ebook/*.epub' not in workflow
+          assert 'Upload generated creative artifacts' in workflow
+
+          assert 'def modified_timestamp' in epub
+          assert 'datetime.now(timezone.utc)' in epub
+          assert 'if not re.match(r"^[A-Za-z_]", cleaned)' in epub
+          assert 'metadata.identifier is required and must remain stable across rebuilds' in epub
+          assert Path('gtm/ebook/PRIVATE-INGESTION.md').exists()
+
+          print('PASS: final GTM autonomy, privacy, Day 6, network and EPUB contracts validated.')
+          PY
+
+      - name: Exercise hardened active-unit and status schemas
+        shell: bash
+        run: |
+          PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python - <<'PY'
+          import os
+          import tempfile
+          from pathlib import Path
+
+          os.environ['GTM_RUNTIME_ROOT'] = tempfile.mkdtemp(prefix='gtm-hardening-')
+          import final_hardening as fh
+
+          fh.engine.CreativeJob = fh.HardenedCreativeJob
+          fh.engine.RunOutput = fh.HardenedRunOutput
+
+          unit = fh.hardened_active_unit({
+              'mode': 'THIRTY_DAY', 'current_day': 6, 'status': 'READY'
+          })
+          assert unit['required_outputs'] == ['reports/day-06-deliverable.md']
+
+          categories = {
+              'video_reference_still', 'carousel_master', 'pinterest_pin', 'video'
+          }
+          assert set(fh.CreativeCategory.__args__) == categories
+
+          fh.engine.RUNTIME_ROOT.mkdir(parents=True, exist_ok=True)
+          (fh.engine.RUNTIME_ROOT / 'approvals.json').write_text(
+              '{"pending":[{"id":"abc","approval_class":"RED","blocking":true,"status":"PENDING","reason":"private","max_spend_usd":999}],"resolved":[]}'
+          )
+          (fh.engine.RUNTIME_ROOT / 'state.json').write_text(
+              '{"mode":"PHASE0","foundation_cursor":0,"completed_foundation_sections":[],"foundation_qa_passed":false,"current_day":1,"status":"AWAITING_APPROVAL","blocking_approval_ids":["abc"]}'
+          )
+          payload = fh.public_status_payload()
+          item = payload['pending_approval_index'][0]
+          assert set(item) == {'id', 'approval_class', 'blocking', 'status'}
+          assert 'reason' not in item and 'max_spend_usd' not in item
+          print('PASS: active-day durable outputs and public-safe approval index validated.')
+          PY
+
+      - name: Exercise EPUB validity, stable identity and OPF-safe IDs
+        shell: bash
+        run: |
+          tmpdir="$(mktemp -d)"
+          cat > "$tmpdir/valid.json" <<'JSON'
+          {
+            "metadata": {
+              "title": "Finder Test Reading Edition",
+              "creator": "Test",
+              "language": "en-US",
+              "identifier": "urn:uuid:11111111-2222-3333-4444-555555555555",
+              "modified": "2026-08-20T13:00:00Z"
+            },
+            "chapters": [{"id":"1-introduction","title":"One","body_xhtml":"<p>A &amp; B</p>"}]
+          }
+          JSON
+          python gtm/ebook/build_epub.py --input "$tmpdir/valid.json" --output "$tmpdir/valid.epub"
+          test -s "$tmpdir/valid.epub"
+          python - "$tmpdir/valid.epub" <<'PY'
+          import sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as zf:
+              opf = zf.read('OEBPS/content.opf').decode()
+          assert 'id="id-1-introduction"' in opf
+          assert '2026-08-20T13:00:00Z' in opf
+          print('PASS: EPUB uses stable revision metadata and OPF-safe IDs.')
+          PY
+
+          cat > "$tmpdir/malformed.json" <<'JSON'
+          {
+            "metadata": {"identifier":"urn:uuid:11111111-2222-3333-4444-555555555555"},
+            "chapters": [{"id":"one","title":"One","body_xhtml":"<p>A & B</p>"}]
+          }
+          JSON
+          if python gtm/ebook/build_epub.py --input "$tmpdir/malformed.json" --output "$tmpdir/bad.epub"; then
+            echo "Malformed XHTML unexpectedly passed."
+            exit 1
+          fi
+
+      - name: Verify repository diff formatting
+        run: git diff --check
