@@ -176,7 +176,7 @@ jobs:
           assert 'GTM_EBOOK_SOURCE_SHA256' in hardening_text
           assert 'current-run reference image' in hardening_text
           assert 'Rejected out-of-contract artifact paths' in hardening_text
-          assert 'normalize_job_filename' in render_contracts_text
+          assert 'normalized_output_name' in render_contracts_text
           assert '.png' in render_contracts_text and '.mp4' in render_contracts_text
 
           # Provider download trust-boundary invariants: pinned public IP + TLS hostname verification.
