@@ -1,0 +1,10 @@
+{
+  "active": [],
+  "completed": [],
+  "rules": [
+    "Change one primary variable per test when practical.",
+    "Predeclare success metric and stop/scale criteria.",
+    "Do not scale based on CTR alone.",
+    "Record every material budget recommendation as an approval request."
+  ]
+}
