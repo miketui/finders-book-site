@@ -10,6 +10,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+RESERVED_PACKAGE_IDS = {"book-id", "nav", "css", "toc"}
+RESERVED_OUTPUT_BASENAMES = {"nav", "styles", "content", "container", "mimetype"}
+
+
 def esc(value: str) -> str:
     return html.escape(value, quote=True)
 
@@ -133,13 +137,25 @@ def build_epub(source: Path, output: Path) -> None:
         raise SystemExit("Manuscript must contain at least one chapter.")
 
     normalized = []
-    seen = set()
+    seen = {
+        *(item.lower() for item in RESERVED_PACKAGE_IDS),
+        *(item.lower() for item in RESERVED_OUTPUT_BASENAMES),
+    }
     for index, chapter in enumerate(chapters, start=1):
         chapter_title = str(chapter.get("title", f"Chapter {index}"))
-        chapter_id = safe_id(str(chapter.get("id", "")), f"chapter-{index:02d}")
-        while chapter_id in seen:
-            chapter_id = safe_id(f"{chapter_id}-{index}", f"chapter-{index:02d}")
-        seen.add(chapter_id)
+        base_id = safe_id(
+            str(chapter.get("id", "")),
+            f"chapter-{index:02d}",
+        )
+        chapter_id = base_id
+        suffix = 1
+        while chapter_id.lower() in seen:
+            chapter_id = safe_id(
+                f"{base_id}-chapter-{index:02d}-{suffix}",
+                f"chapter-{index:02d}-{suffix}",
+            )
+            suffix += 1
+        seen.add(chapter_id.lower())
         body = str(chapter.get("body_xhtml", "")).strip()
         if not body:
             paragraphs = chapter.get("paragraphs", [])
