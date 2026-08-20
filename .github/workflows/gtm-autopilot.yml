@@ -200,6 +200,7 @@ jobs:
       - name: Execute hardened Autopilot control plane
         shell: bash
         run: |
+          # v1_1 installs source-prompt/operator patches, then delegates execution to final_hardening.main().
           uv run --project gtm/autopilot python -c \
             'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane, render_contracts, v1_1; v1_1.main()' \
             --mode "$AUTOPILOT_MODE" \
