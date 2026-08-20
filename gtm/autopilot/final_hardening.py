@@ -386,17 +386,24 @@ def latest_blocker_summaries(last_run_id: object) -> list[str]:
         return []
 
     payload = max(matches, key=lambda match: match[0])[1]
+    blockers = payload.get("blockers")
+    if not isinstance(blockers, list):
+        return ["Latest run blocker data is unavailable."]
 
     summaries: list[str] = []
-    for value in payload.get("blockers", [])[:5]:
-        text = re.sub(r"\s+", " ", str(value)).strip()
+    for value in blockers[:5]:
+        if not isinstance(value, str):
+            summaries.append("Non-text blocker suppressed.")
+            continue
+        text = re.sub(r"\s+", " ", value).strip()
         if not text:
             continue
         credential_marker = re.search(
             r"(?i)(?:\b(?:authorization\s*:\s*)?bearer\s+\S+|"
             r"\b[A-Z0-9_]*(?:API[_ -]?KEY|SECRET|ACCESS[_ -]?TOKEN|TOKEN|"
-            r"PASSWORD|PASSPHRASE|RECOVERY[_ -]?CODE|PIN)[A-Z0-9_]*\b\s*[:=]|"
-            r"\b(?:sk|ghp|github_pat|glpat)[-_][A-Za-z0-9_-]{12,}\b)",
+            r"PASSWORD|PASSPHRASE|RECOVERY[_ -]?CODE|PIN)[A-Z0-9_]*\b|"
+            r"\b(?:sk|ghp|github_pat|glpat)[-_][A-Za-z0-9_-]{12,}\b|"
+            r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b)",
             text,
         )
         if credential_marker:

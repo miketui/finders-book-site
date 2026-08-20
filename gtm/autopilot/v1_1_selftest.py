@@ -371,7 +371,7 @@ def check_production_import_order() -> None:
                             "API key: sk-examplecredential123456",
                             "THIRD_PARTY_API_SECRET=supersecretvalue123456",
                             "Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456",
-                            "PASSWORD=correct horse battery staple",
+                            "PASSWORD correct horse battery staple",
                         ]
                     }
                 )
@@ -395,6 +395,29 @@ def check_production_import_order() -> None:
             assert all("horse battery staple" not in item for item in summaries)
             assert all("Wrong report selected" not in item for item in summaries)
             assert summaries.count("Credential-bearing blocker suppressed.") == 4
+
+            (reports / "2026-08-20-section-12-aws.json").write_text(
+                json.dumps(
+                    {
+                        "run_id": "aws-run",
+                        "blockers": ["Investigate AKIAIOSFODNN7EXAMPLE exposure."],
+                    }
+                )
+            )
+            assert final_hardening.latest_blocker_summaries("aws-run") == [
+                "Credential-bearing blocker suppressed."
+            ]
+
+            for run_id, malformed in (
+                ("null-run", None),
+                ("object-run", {"unexpected": "shape"}),
+            ):
+                (reports / f"2026-08-20-section-12-{run_id}.json").write_text(
+                    json.dumps({"run_id": run_id, "blockers": malformed})
+                )
+                assert final_hardening.latest_blocker_summaries(run_id) == [
+                    "Latest run blocker data is unavailable."
+                ]
         finally:
             engine.RUNTIME_ROOT = prior_runtime
 
