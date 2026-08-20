@@ -52,6 +52,7 @@ jobs:
       AUTOPILOT_APPROVAL_ID: ${{ inputs.approval_id || '' }}
       AUTOPILOT_NOTE: ${{ inputs.note || '' }}
       AUTOPILOT_ACTOR: ${{ github.actor }}
+      AUTOPILOT_BOOTSTRAP: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[gtm-autopilot-bootstrap]') && '1' || '0' }}
     steps:
       - name: Checkout trusted main source
         uses: actions/checkout@v5
@@ -100,6 +101,11 @@ jobs:
       - name: Restore encrypted GTM runtime state
         shell: bash
         run: |
+          if [[ "$AUTOPILOT_BOOTSTRAP" == "1" ]]; then
+            echo "Bootstrap marker detected; starting from checked-in PHASE0 templates."
+            exit 0
+          fi
+
           git fetch origin "$STATE_BRANCH" || true
           if ! git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
             echo "No prior encrypted runtime state; using checked-in templates."
@@ -139,7 +145,7 @@ jobs:
 
           allowed_roots = {
               'state.json', 'metrics.json', 'experiments.json', 'approvals.json',
-              'foundation', 'reports', 'ebook'
+              'foundation', 'reports', 'ebook', 'creative'
           }
           with tarfile.open('/tmp/gtm-runtime.tgz', 'r:gz') as archive:
               for member in archive.getmembers():
@@ -205,7 +211,7 @@ jobs:
         if: success()
         shell: bash
         run: |
-          mkdir -p "$GTM_RUNTIME_ROOT/reports" "$GTM_RUNTIME_ROOT/foundation" "$GTM_RUNTIME_ROOT/ebook"
+          mkdir -p "$GTM_RUNTIME_ROOT/reports" "$GTM_RUNTIME_ROOT/foundation" "$GTM_RUNTIME_ROOT/ebook" "$GTM_RUNTIME_ROOT/creative"
 
           mapfile -t old_reports < <(
             find "$GTM_RUNTIME_ROOT/reports" -maxdepth 1 -type f -printf '%T@ %p\n' \
@@ -217,7 +223,7 @@ jobs:
 
           tar -czf /tmp/gtm-runtime.tgz \
             -C "$GTM_RUNTIME_ROOT" \
-            state.json metrics.json experiments.json approvals.json foundation reports ebook
+            state.json metrics.json experiments.json approvals.json foundation reports ebook creative
 
           state_passphrase="$GTM_STATE_KEY"
           key_scheme="state_key"
