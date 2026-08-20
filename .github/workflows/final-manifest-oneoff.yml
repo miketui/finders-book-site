@@ -1,0 +1,40 @@
+name: Final manifest regeneration one-off
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.head_ref == 'agent/final-launch-certification-20260819' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out certification branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/final-launch-certification-20260819
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Regenerate manifests from final tracked tree
+        shell: bash
+        run: |
+          git rm .github/workflows/final-manifest-oneoff.yml
+          npm run manifests
+
+      - name: Commit regenerated manifests
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/FILE-INVENTORY.md docs/FILE-TREE.md
+          git commit -m "Regenerate final certification manifests"
+          git push origin HEAD:agent/final-launch-certification-20260819
