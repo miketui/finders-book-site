@@ -56,7 +56,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Normalize provider secrets
+      - name: Normalize provider and state secrets
         shell: bash
         run: |
           clean_openai="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '[:space:]')"
@@ -74,7 +74,17 @@ jobs:
             echo "::add-mask::$clean_runway"
             printf 'RUNWAYML_API_SECRET=%s\n' "$clean_runway" >> "$GITHUB_ENV"
           fi
-          echo "Provider secrets normalized without exposing values."
+
+          clean_state="$(printf '%s' "${GTM_STATE_KEY:-}" | tr -d '[:space:]')"
+          if [[ "$AUTOPILOT_MODE" == "run" && -z "$clean_state" ]]; then
+            echo "GTM_STATE_KEY is required before autonomous run mode. Add it as a GitHub Actions repository secret."
+            exit 1
+          fi
+          if [[ -n "$clean_state" ]]; then
+            echo "::add-mask::$clean_state"
+            printf 'GTM_STATE_KEY=%s\n' "$clean_state" >> "$GITHUB_ENV"
+          fi
+          echo "Provider and state secrets normalized without exposing values."
 
       - name: Initialize private runtime directory
         shell: bash
@@ -114,7 +124,7 @@ jobs:
             state_passphrase="$GTM_STATE_KEY"
           else
             if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-              echo "Existing legacy state is encrypted with the OpenAI-key scheme; restore requires the prior OPENAI_API_KEY until the next successful migration snapshot."
+              echo "Existing legacy state is encrypted with the OpenAI-key scheme; restore requires the prior OPENAI_API_KEY for this one-time migration."
               exit 1
             fi
             state_passphrase="$OPENAI_API_KEY"
@@ -201,17 +211,12 @@ jobs:
             -C "$GTM_RUNTIME_ROOT" \
             state.json metrics.json experiments.json approvals.json foundation reports ebook
 
-          if [[ -n "${GTM_STATE_KEY:-}" ]]; then
-            state_passphrase="$GTM_STATE_KEY"
-            key_scheme="state_key"
-          else
-            if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-              echo "No encryption secret is available. Add GTM_STATE_KEY."
-              exit 1
-            fi
-            state_passphrase="$OPENAI_API_KEY"
-            key_scheme="openai"
+          if [[ -z "${GTM_STATE_KEY:-}" ]]; then
+            echo "GTM_STATE_KEY is required for all new runtime snapshots."
+            exit 1
           fi
+          state_passphrase="$GTM_STATE_KEY"
+          key_scheme="state_key"
           export state_passphrase
 
           openssl enc -aes-256-cbc -salt -pbkdf2 \
