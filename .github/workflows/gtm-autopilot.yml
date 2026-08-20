@@ -169,13 +169,14 @@ jobs:
       - name: Install locked Autopilot dependencies
         run: uv sync --project gtm/autopilot --locked
 
-      - name: Compile Autopilot, control plane and EPUB builder
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/ebook/build_epub.py
+      - name: Compile Autopilot, network guard, control plane and EPUB builder
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/ebook/build_epub.py
 
       - name: Execute hardened Autopilot control plane
         shell: bash
         run: |
-          uv run --project gtm/autopilot python gtm/autopilot/control_plane.py \
+          uv run --project gtm/autopilot python -c \
+            'import sys; sys.path.insert(0, "gtm/autopilot"); import network_guard, control_plane; control_plane.main()' \
             --mode "$AUTOPILOT_MODE" \
             --approval-id "$AUTOPILOT_APPROVAL_ID" \
             --note "$AUTOPILOT_NOTE" \
