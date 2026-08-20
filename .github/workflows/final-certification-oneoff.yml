@@ -19,6 +19,11 @@ jobs:
           ref: agent/final-launch-certification-20260819
           fetch-depth: 0
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
       - name: Apply final certification record and stale-copy correction
         shell: bash
         run: |
@@ -100,7 +105,7 @@ jobs:
           This certification becomes the canonical launch record only after the certification PR passes both required protected checks and is merged to `main`. If either protected check fails, the verdict automatically reverts to **NOT CERTIFIED** until the failure is corrected and rerun green.
           EOF
 
-          rm .github/workflows/final-certification-oneoff.yml
+          git rm .github/workflows/final-certification-oneoff.yml
           npm run manifests
 
       - name: Commit generated certification changes
@@ -108,6 +113,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add refund-policy.html docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md docs/FILE-INVENTORY.md docs/FILE-TREE.md .github/workflows/final-certification-oneoff.yml
+          git add refund-policy.html docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md docs/FILE-INVENTORY.md docs/FILE-TREE.md
           git commit -m "Certify final Finder's Book launch readiness"
           git push origin HEAD:agent/final-launch-certification-20260819
