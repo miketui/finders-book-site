@@ -69,7 +69,7 @@ jobs:
         run: |
           rm -rf "$GTM_RUNTIME_ROOT"
           mkdir -p "$GTM_RUNTIME_ROOT"
-          git fetch origin "$STATE_BRANCH"
+          git fetch origin "refs/heads/$STATE_BRANCH:refs/remotes/origin/$STATE_BRANCH"
 
           if ! git cat-file -e "origin/$STATE_BRANCH:gtm/runtime-state.enc" 2>/dev/null; then
             echo "No encrypted GTM runtime snapshot exists yet."
