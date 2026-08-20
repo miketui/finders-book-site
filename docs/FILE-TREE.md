@@ -85,6 +85,7 @@ finders-book-site/
     │   ├── FILE-INVENTORY.md
     │   ├── FILE-TREE.md
     │   ├── FINAL-LAUNCH-CERTIFICATION-2026-08-19.md
+    │   ├── GTM-PHASE0-RESUME.md
     │   ├── implementation-brief.md
     │   ├── LAUNCH-READINESS.md
     │   ├── OPERATIONS.md
