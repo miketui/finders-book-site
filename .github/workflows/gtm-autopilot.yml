@@ -26,6 +26,12 @@ on:
         description: "Optional owner note"
         required: false
         type: string
+      model_provider:
+        description: "default, openai, or gemini text-orchestration provider"
+        required: false
+        default: "default"
+        type: choice
+        options: [default, openai, gemini]
 
 permissions:
   contents: write
@@ -40,6 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
       GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
       GTM_EBOOK_SOURCE_URL: ${{ secrets.GTM_EBOOK_SOURCE_URL }}
@@ -52,6 +59,7 @@ jobs:
       AUTOPILOT_APPROVAL_ID: ${{ inputs.approval_id || '' }}
       AUTOPILOT_NOTE: ${{ inputs.note || '' }}
       AUTOPILOT_ACTOR: ${{ github.actor }}
+      GTM_MODEL_PROVIDER: ${{ inputs.model_provider == 'gemini' && 'gemini' || inputs.model_provider == 'openai' && 'openai' || vars.GTM_MODEL_PROVIDER || 'openai' }}
       AUTOPILOT_BOOTSTRAP: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[gtm-autopilot-bootstrap]') && '1' || '0' }}
     steps:
       - name: Checkout trusted main source
@@ -63,14 +71,34 @@ jobs:
       - name: Normalize provider and state secrets
         shell: bash
         run: |
-          clean_openai="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '[:space:]')"
-          if [[ "$AUTOPILOT_MODE" == "run" && -z "$clean_openai" ]]; then
-            echo "OPENAI_API_KEY is required for autonomous run mode."
+          provider="$(printf '%s' "${GTM_MODEL_PROVIDER:-openai}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+          if [[ "$provider" != "openai" && "$provider" != "gemini" ]]; then
+            echo "GTM_MODEL_PROVIDER must be openai or gemini."
             exit 1
           fi
+          printf 'GTM_MODEL_PROVIDER=%s\n' "$provider" >> "$GITHUB_ENV"
+
+          clean_openai="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '[:space:]')"
           if [[ -n "$clean_openai" ]]; then
             echo "::add-mask::$clean_openai"
             printf 'OPENAI_API_KEY=%s\n' "$clean_openai" >> "$GITHUB_ENV"
+          fi
+
+          clean_gemini="$(printf '%s' "${GEMINI_API_KEY:-}" | tr -d '[:space:]')"
+          if [[ -n "$clean_gemini" ]]; then
+            echo "::add-mask::$clean_gemini"
+            printf 'GEMINI_API_KEY=%s\n' "$clean_gemini" >> "$GITHUB_ENV"
+          fi
+
+          if [[ "$AUTOPILOT_MODE" == "run" ]]; then
+            if [[ "$provider" == "openai" && -z "$clean_openai" ]]; then
+              echo "OPENAI_API_KEY is required when GTM_MODEL_PROVIDER=openai."
+              exit 1
+            fi
+            if [[ "$provider" == "gemini" && -z "$clean_gemini" ]]; then
+              echo "GEMINI_API_KEY is required when GTM_MODEL_PROVIDER=gemini."
+              exit 1
+            fi
           fi
 
           clean_runway="$(printf '%s' "${RUNWAYML_API_SECRET:-}" | tr -d '[:space:]')"
@@ -84,7 +112,7 @@ jobs:
             exit 1
           fi
           echo "::add-mask::$GTM_STATE_KEY"
-          echo "Provider and state secrets normalized without exposing values."
+          echo "Selected model provider and state secrets normalized without exposing values."
 
       - name: Initialize private runtime directory
         shell: bash
@@ -213,7 +241,7 @@ jobs:
         run: uv sync --project gtm/autopilot --locked
 
       - name: Compile hardened Autopilot and EPUB builder
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/autopilot/v1_1.py gtm/autopilot/state_crypto.py gtm/ebook/build_epub.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/model_provider.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/autopilot/v1_1.py gtm/autopilot/state_crypto.py gtm/ebook/build_epub.py
 
       - name: Execute hardened Autopilot control plane
         shell: bash

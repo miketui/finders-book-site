@@ -83,7 +83,10 @@ jobs:
         run: uv sync --project gtm/autopilot --locked
 
       - name: Compile hardened GTM runtime
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/model_provider.py gtm/autopilot/gemini_fallback_selftest.py gtm/autopilot/network_guard.py gtm/autopilot/control_plane.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
+
+      - name: Exercise opt-in Gemini fallback guardrails
+        run: PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python gtm/autopilot/gemini_fallback_selftest.py
 
       - name: Validate GTM architecture and control-plane contracts
         shell: bash
@@ -194,7 +197,10 @@ jobs:
           assert 'ref: main' in workflow_text
           assert 'Runtime archive path validation passed.' in workflow_text
           assert 'AUTOPILOT_MODE' in workflow_text
-          assert 'OPENAI_API_KEY is required for autonomous run mode.' in workflow_text
+          assert 'model_provider:' in workflow_text
+          assert 'GTM_MODEL_PROVIDER' in workflow_text
+          assert 'OPENAI_API_KEY is required when GTM_MODEL_PROVIDER=openai.' in workflow_text
+          assert 'GEMINI_API_KEY is required when GTM_MODEL_PROVIDER=gemini.' in workflow_text
           assert 'GTM_STATE_KEY is required' in workflow_text
           assert 'final_hardening.main()' in workflow_text
           assert 'Resolve browser for Autopilot QA' in workflow_text
