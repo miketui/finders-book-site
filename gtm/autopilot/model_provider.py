@@ -19,8 +19,8 @@ from openai import AsyncOpenAI
 ModelProviderName = Literal["openai", "gemini"]
 
 OPENAI_MODEL = "gpt-5.6"
-GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_SEARCH_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.7-flash"
+GEMINI_SEARCH_MODEL = "gemini-3.7-flash"
 GEMINI_OPENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 MAX_SEARCH_QUERY_CHARS = 1200
 MAX_SEARCH_RESPONSE_BYTES = 2_000_000

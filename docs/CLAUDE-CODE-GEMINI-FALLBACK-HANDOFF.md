@@ -21,7 +21,7 @@ Treat the encrypted `gtm-autopilot-state` remote snapshot as authoritative. Neve
 
 - Default provider remains `openai`.
 - Gemini is selected explicitly with `GTM_MODEL_PROVIDER=gemini` or the `model_provider=gemini` workflow input.
-- Gemini text model defaults to `gemini-2.5-flash` through Google's OpenAI-compatible endpoint.
+- Gemini text model defaults to the stable `gemini-3.7-flash` through Google's OpenAI-compatible endpoint.
 - Current-web research uses Gemini's native Google Search grounding endpoint and returns cited HTTPS sources.
 - `GEMINI_API_KEY` is read only from GitHub Actions secrets. Never print, download, echo, or paste its value.
 - `GTM_STATE_KEY` encryption/authentication and legacy migration behavior remain unchanged.

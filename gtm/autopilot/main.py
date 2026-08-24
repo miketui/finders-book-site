@@ -283,6 +283,7 @@ def build_orchestrator(
     specialists: dict[str, Agent],
     allowed: list[str],
     model,
+    provider: model_provider.ModelProviderName,
     enable_web_search: bool = False,
 ) -> Agent:
     instructions = (CONFIG_ROOT / "prompts" / "orchestrator.md").read_text()
@@ -296,7 +297,7 @@ def build_orchestrator(
             tool_description=agent.handoff_description or f"Consult {name}",
         ))
     if enable_web_search:
-        tools.append(model_provider.web_search_tool())
+        tools.append(model_provider.web_search_tool(provider))
     return Agent(
         name="Finder's Book GTM Orchestrator",
         instructions=instructions,
@@ -780,7 +781,8 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
     }
 
     prompt_map = load_agent_prompts()
-    model = model_provider.runtime_model()
+    provider = model_provider.selected_provider()
+    model = model_provider.runtime_model(provider)
     specialists = build_agents(prompt_map, model)
     enable_web = (
         (
@@ -793,6 +795,7 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         specialists,
         unit.get("specialists", []),
         model,
+        provider,
         enable_web_search=enable_web,
     )
     prompt = (

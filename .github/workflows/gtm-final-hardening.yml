@@ -103,6 +103,11 @@ jobs:
           assert 'starting from checked-in PHASE0 templates' in workflow
           assert 'GTM_MODEL_PROVIDER' in workflow
           assert 'GEMINI_API_KEY is required when GTM_MODEL_PROVIDER=gemini.' in workflow
+          job_env = workflow[workflow.index('    env:'):workflow.index('    steps:')]
+          assert 'OPENAI_API_KEY:' not in job_env
+          assert 'GEMINI_API_KEY:' not in job_env
+          assert workflow.index('Restore encrypted GTM runtime state') < workflow.index('Validate selected text-provider credential')
+          assert 'GTM_REQUIRES_OPENAI_IMAGE' in workflow
           assert 'class _NoRedirectHandler' in provider
           assert 'x-goog-api-key' in provider
           assert 'google_search' in provider

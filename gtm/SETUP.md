@@ -7,7 +7,7 @@
 | GitHub repository | Public source of truth for Autopilot code, prompts, state templates, Phase 0 plan and daily plan |
 | GitHub Actions | Scheduler, Phase 0 bootstrap runner, daily runner, approval interface and artifact host |
 | OpenAI API + Agents SDK | Default GPT-5.6 Orchestrator, nine specialist agents, hosted web search, structured outputs and GPT Image 2 rendering |
-| Gemini API | Explicitly selected text-orchestration fallback using Gemini 2.5 Flash and Google Search grounding; never replaces the creative providers |
+| Gemini API | Explicitly selected text-orchestration fallback using Gemini 3.7 Flash and Google Search grounding; never replaces the creative providers |
 | Runway API | Gen-4.5 video rendering for explicitly enabled creative-production units |
 | Encrypted state branch | Stores only the newest encrypted runtime snapshot + non-secret key-scheme metadata |
 | GitHub Actions artifacts | Stores generated image/video/EPUB binaries temporarily; these are not committed to the public repo |

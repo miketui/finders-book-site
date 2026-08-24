@@ -86,10 +86,11 @@ def main() -> None:
         assert model_provider.web_search_tool("gemini") is model_provider.gemini_grounded_web_search
         specialists = autopilot_main.build_agents(autopilot_main.load_agent_prompts(), model)
         orchestrator = autopilot_main.build_orchestrator(
-            specialists, ["SEO"], model, enable_web_search=True
+            specialists, ["SEO"], model, "gemini", enable_web_search=True
         )
         assert orchestrator.model is model
         assert len(orchestrator.tools) == 2
+        assert orchestrator.tools[-1] is model_provider.gemini_grounded_web_search
 
         response = _Response(
             {
@@ -118,7 +119,7 @@ def main() -> None:
         with patch.object(model_provider._NO_REDIRECT_OPENER, "open", fake_open):
             result = json.loads(model_provider._gemini_grounded_search("current rule"))
         assert captured == {
-            "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+            "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent",
             "key": sentinel_key,
             "timeout": 45,
         }

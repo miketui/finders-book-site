@@ -45,8 +45,6 @@ jobs:
     if: github.event_name != 'push' || contains(github.event.head_commit.message, '[gtm-autopilot-bootstrap]')
     runs-on: ubuntu-latest
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
       GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
       GTM_EBOOK_SOURCE_URL: ${{ secrets.GTM_EBOOK_SOURCE_URL }}
@@ -68,7 +66,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Normalize provider and state secrets
+      - name: Normalize provider and state configuration
         shell: bash
         run: |
           provider="$(printf '%s' "${GTM_MODEL_PROVIDER:-openai}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
@@ -77,29 +75,6 @@ jobs:
             exit 1
           fi
           printf 'GTM_MODEL_PROVIDER=%s\n' "$provider" >> "$GITHUB_ENV"
-
-          clean_openai="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '[:space:]')"
-          if [[ -n "$clean_openai" ]]; then
-            echo "::add-mask::$clean_openai"
-            printf 'OPENAI_API_KEY=%s\n' "$clean_openai" >> "$GITHUB_ENV"
-          fi
-
-          clean_gemini="$(printf '%s' "${GEMINI_API_KEY:-}" | tr -d '[:space:]')"
-          if [[ -n "$clean_gemini" ]]; then
-            echo "::add-mask::$clean_gemini"
-            printf 'GEMINI_API_KEY=%s\n' "$clean_gemini" >> "$GITHUB_ENV"
-          fi
-
-          if [[ "$AUTOPILOT_MODE" == "run" ]]; then
-            if [[ "$provider" == "openai" && -z "$clean_openai" ]]; then
-              echo "OPENAI_API_KEY is required when GTM_MODEL_PROVIDER=openai."
-              exit 1
-            fi
-            if [[ "$provider" == "gemini" && -z "$clean_gemini" ]]; then
-              echo "GEMINI_API_KEY is required when GTM_MODEL_PROVIDER=gemini."
-              exit 1
-            fi
-          fi
 
           clean_runway="$(printf '%s' "${RUNWAYML_API_SECRET:-}" | tr -d '[:space:]')"
           if [[ -n "$clean_runway" ]]; then
@@ -126,6 +101,8 @@ jobs:
 
       - name: Restore encrypted GTM runtime state
         shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [[ "$AUTOPILOT_BOOTSTRAP" == "1" ]]; then
             echo "Bootstrap marker detected; starting from checked-in PHASE0 templates."
@@ -208,6 +185,55 @@ jobs:
           tar -xzf /tmp/gtm-runtime.tgz -C "$GTM_RUNTIME_ROOT"
           echo "Encrypted GTM runtime state restored outside the public source tree."
 
+      - name: Validate selected text-provider credential
+        if: env.AUTOPILOT_MODE == 'run'
+        shell: bash
+        env:
+          SELECTED_PROVIDER_API_KEY: ${{ env.GTM_MODEL_PROVIDER == 'gemini' && secrets.GEMINI_API_KEY || secrets.OPENAI_API_KEY }}
+        run: |
+          clean_key="$(printf '%s' "${SELECTED_PROVIDER_API_KEY:-}" | tr -d '[:space:]')"
+          if [[ -z "$clean_key" ]]; then
+            if [[ "$GTM_MODEL_PROVIDER" == "gemini" ]]; then
+              echo "GEMINI_API_KEY is required when GTM_MODEL_PROVIDER=gemini."
+            else
+              echo "OPENAI_API_KEY is required when GTM_MODEL_PROVIDER=openai."
+            fi
+            exit 1
+          fi
+          echo "::add-mask::$clean_key"
+          echo "Selected text-provider credential is present."
+
+      - name: Determine whether the active unit requires GPT Image
+        if: env.AUTOPILOT_MODE == 'run'
+        shell: bash
+        run: |
+          requires_image="$(python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          state = json.loads((Path(os.environ['GTM_RUNTIME_ROOT']) / 'state.json').read_text())
+          required = state.get('mode') == 'THIRTY_DAY' and int(state.get('current_day', 0)) == 6
+          print('1' if required else '0')
+          PY
+          )"
+          printf 'GTM_REQUIRES_OPENAI_IMAGE=%s\n' "$requires_image" >> "$GITHUB_ENV"
+          echo "Active-unit GPT Image requirement determined without exposing credentials."
+
+      - name: Validate GPT Image credential for rendering unit
+        if: env.AUTOPILOT_MODE == 'run' && env.GTM_REQUIRES_OPENAI_IMAGE == '1'
+        shell: bash
+        env:
+          IMAGE_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          clean_key="$(printf '%s' "${IMAGE_OPENAI_API_KEY:-}" | tr -d '[:space:]')"
+          if [[ -z "$clean_key" ]]; then
+            echo "OPENAI_API_KEY is required for an active unit that enables GPT Image rendering."
+            exit 1
+          fi
+          echo "::add-mask::$clean_key"
+          echo "GPT Image credential is present for the rendering-enabled unit."
+
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
@@ -245,6 +271,9 @@ jobs:
 
       - name: Execute hardened Autopilot control plane
         shell: bash
+        env:
+          OPENAI_API_KEY: ${{ env.AUTOPILOT_MODE == 'run' && (env.GTM_MODEL_PROVIDER == 'openai' || env.GTM_REQUIRES_OPENAI_IMAGE == '1') && secrets.OPENAI_API_KEY || '' }}
+          GEMINI_API_KEY: ${{ env.AUTOPILOT_MODE == 'run' && env.GTM_MODEL_PROVIDER == 'gemini' && secrets.GEMINI_API_KEY || '' }}
         run: |
           # v1_1 installs source-prompt/operator patches, then delegates execution to final_hardening.main().
           uv run --project gtm/autopilot python -c \

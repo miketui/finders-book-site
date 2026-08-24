@@ -201,6 +201,12 @@ jobs:
           assert 'GTM_MODEL_PROVIDER' in workflow_text
           assert 'OPENAI_API_KEY is required when GTM_MODEL_PROVIDER=openai.' in workflow_text
           assert 'GEMINI_API_KEY is required when GTM_MODEL_PROVIDER=gemini.' in workflow_text
+          job_env = workflow_text[workflow_text.index('    env:'):workflow_text.index('    steps:')]
+          assert 'OPENAI_API_KEY:' not in job_env
+          assert 'GEMINI_API_KEY:' not in job_env
+          assert 'Validate selected text-provider credential' in workflow_text
+          assert 'Determine whether the active unit requires GPT Image' in workflow_text
+          assert 'OPENAI_API_KEY is required for an active unit that enables GPT Image rendering.' in workflow_text
           assert 'GTM_STATE_KEY is required' in workflow_text
           assert 'final_hardening.main()' in workflow_text
           assert 'Resolve browser for Autopilot QA' in workflow_text
