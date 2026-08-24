@@ -35,7 +35,10 @@ jobs:
         run: node scripts/check-secrets.mjs
 
       - name: Compile hardened runtime
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/control_plane.py gtm/autopilot/network_guard.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/model_provider.py gtm/autopilot/gemini_fallback_selftest.py gtm/autopilot/control_plane.py gtm/autopilot/network_guard.py gtm/autopilot/final_hardening.py gtm/autopilot/render_contracts.py gtm/ebook/build_epub.py
+
+      - name: Exercise opt-in Gemini fallback guardrails
+        run: PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python gtm/autopilot/gemini_fallback_selftest.py
 
       - name: Validate final architecture contracts
         shell: bash
@@ -54,6 +57,7 @@ jobs:
           hardening = Path('gtm/autopilot/final_hardening.py').read_text()
           render_contracts = Path('gtm/autopilot/render_contracts.py').read_text()
           network = Path('gtm/autopilot/network_guard.py').read_text()
+          provider = Path('gtm/autopilot/model_provider.py').read_text()
           workflow = Path('.github/workflows/gtm-autopilot.yml').read_text()
           epub = Path('gtm/ebook/build_epub.py').read_text()
 
@@ -97,6 +101,18 @@ jobs:
           assert 'foundation reports ebook creative' in workflow
           assert 'AUTOPILOT_BOOTSTRAP' in workflow
           assert 'starting from checked-in PHASE0 templates' in workflow
+          assert 'GTM_MODEL_PROVIDER' in workflow
+          assert 'GEMINI_API_KEY is required when GTM_MODEL_PROVIDER=gemini.' in workflow
+          job_env = workflow[workflow.index('    env:'):workflow.index('    steps:')]
+          assert 'OPENAI_API_KEY:' not in job_env
+          assert 'GEMINI_API_KEY:' not in job_env
+          assert workflow.index('Restore encrypted GTM runtime state') < workflow.index('Validate selected text-provider credential')
+          assert 'GTM_REQUIRES_OPENAI_IMAGE' in workflow
+          assert 'class _NoRedirectHandler' in provider
+          assert 'x-goog-api-key' in provider
+          assert 'google_search' in provider
+          assert 'trace_provider.set_disabled(True)' in provider
+          assert 'set_trace_provider(trace_provider)' in provider
 
           assert 'def modified_timestamp' in epub
           assert 'datetime.now(timezone.utc)' in epub

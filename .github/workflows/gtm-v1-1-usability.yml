@@ -35,12 +35,15 @@ jobs:
         run: uv sync --project gtm/autopilot --locked
 
       - name: Compile v1.1 runtime
-        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/v1_1.py gtm/autopilot/v1_1_selftest.py gtm/autopilot/state_crypto.py
+        run: python -m py_compile gtm/autopilot/main.py gtm/autopilot/model_provider.py gtm/autopilot/gemini_fallback_selftest.py gtm/autopilot/v1_1.py gtm/autopilot/v1_1_selftest.py gtm/autopilot/state_crypto.py
 
       - name: Run v1.1 usability self-test
         run: |
           uv run --project gtm/autopilot python -c \
             'import sys; sys.path.insert(0, "gtm/autopilot"); import v1_1_selftest; v1_1_selftest.main()'
+
+      - name: Run Gemini fallback self-test
+        run: PYTHONPATH=gtm/autopilot uv run --project gtm/autopilot python gtm/autopilot/gemini_fallback_selftest.py
 
       - name: Verify 42-prompt inventory
         shell: bash

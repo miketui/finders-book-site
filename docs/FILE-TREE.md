@@ -81,6 +81,7 @@ finders-book-site/
     │   ├── will-locator-400.webp
     │   └── will-locator.webp
     ├── docs/
+    │   ├── CLAUDE-CODE-GEMINI-FALLBACK-HANDOFF.md
     │   ├── DEPLOYMENT.md
     │   ├── FILE-INVENTORY.md
     │   ├── FILE-TREE.md
@@ -101,7 +102,9 @@ finders-book-site/
     │   ├── autopilot/
     │   │   ├── control_plane.py
     │   │   ├── final_hardening.py
+    │   │   ├── gemini_fallback_selftest.py
     │   │   ├── main.py
+    │   │   ├── model_provider.py
     │   │   ├── network_guard.py
     │   │   ├── pyproject.toml
     │   │   ├── render_contracts.py

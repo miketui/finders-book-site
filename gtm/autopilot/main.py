@@ -14,9 +14,11 @@ from typing import Literal
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from agents import Agent, Runner, WebSearchTool
+from agents import Agent, Runner
 from openai import OpenAI
 from pydantic import BaseModel, Field
+
+import model_provider
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_ROOT = REPO_ROOT / "gtm"
@@ -254,7 +256,7 @@ def active_unit(state: dict) -> dict:
     }
 
 
-def build_agents(prompt_map: dict[str, str]) -> dict[str, Agent]:
+def build_agents(prompt_map: dict[str, str], model) -> dict[str, Agent]:
     descriptions = {
         "SEO": "Search intent, on-page SEO, schema, internal linking and evergreen organic growth.",
         "CONTENT": "Platform-native scripts, copy, carousels, Pins, email and repurposing.",
@@ -272,13 +274,17 @@ def build_agents(prompt_map: dict[str, str]) -> dict[str, Agent]:
             name=f"Finder's Book {name}",
             handoff_description=descriptions.get(name, f"Consult {name}"),
             instructions=instructions,
-            model="gpt-5.6",
+            model=model,
         )
     return agents
 
 
 def build_orchestrator(
-    specialists: dict[str, Agent], allowed: list[str], enable_web_search: bool = False
+    specialists: dict[str, Agent],
+    allowed: list[str],
+    model,
+    provider: model_provider.ModelProviderName,
+    enable_web_search: bool = False,
 ) -> Agent:
     instructions = (CONFIG_ROOT / "prompts" / "orchestrator.md").read_text()
     tools = []
@@ -291,11 +297,11 @@ def build_orchestrator(
             tool_description=agent.handoff_description or f"Consult {name}",
         ))
     if enable_web_search:
-        tools.append(WebSearchTool(search_context_size="medium"))
+        tools.append(model_provider.web_search_tool(provider))
     return Agent(
         name="Finder's Book GTM Orchestrator",
         instructions=instructions,
-        model="gpt-5.6",
+        model=model,
         tools=tools,
         output_type=RunOutput,
     )
@@ -775,7 +781,9 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
     }
 
     prompt_map = load_agent_prompts()
-    specialists = build_agents(prompt_map)
+    provider = model_provider.selected_provider()
+    model = model_provider.runtime_model(provider)
+    specialists = build_agents(prompt_map, model)
     enable_web = (
         (
             unit["kind"] == "section"
@@ -784,7 +792,11 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         or (unit["kind"] == "day" and bool(unit.get("requires_web_search")))
     )
     orchestrator = build_orchestrator(
-        specialists, unit.get("specialists", []), enable_web_search=enable_web
+        specialists,
+        unit.get("specialists", []),
+        model,
+        provider,
+        enable_web_search=enable_web,
     )
     prompt = (
         specific
@@ -849,8 +861,7 @@ def daily_cadence_already_satisfied(state: dict) -> bool:
 
 
 async def run_autopilot() -> None:
-    if not os.getenv("OPENAI_API_KEY"):
-        raise SystemExit("OPENAI_API_KEY is required.")
+    model_provider.validate_provider_credentials()
 
     summaries = []
     state = load_runtime_json("state.json")
