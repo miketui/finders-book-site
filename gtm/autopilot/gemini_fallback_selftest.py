@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import urllib.error
 from contextlib import contextmanager
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from agents import OpenAIChatCompletionsModel, WebSearchTool
+from agents.exceptions import ModelBehaviorError
 from pydantic import ValidationError
 
 import main as autopilot_main
@@ -96,6 +99,8 @@ def main() -> None:
         runtime_source = (autopilot_main.CONFIG_ROOT / "autopilot" / "main.py").read_text()
         assert "at or below 40,000 characters" in runtime_source
         assert "below 75,000 characters" in runtime_source
+        assert "NEVER create" in runtime_source
+        assert "Unicode box-drawing diagrams" in runtime_source
         assert "at or below 10,000 characters" not in runtime_source
         artifact_schema = autopilot_main.ArtifactDocument.model_json_schema()
         assert "maxLength" not in artifact_schema["properties"]["content"]
@@ -163,6 +168,42 @@ def main() -> None:
             pass
         else:
             raise AssertionError("aggregate artifact content must fail validation")
+
+        recovered = SimpleNamespace(final_output="recovered")
+        with patch.object(
+            autopilot_main.Runner,
+            "run",
+            side_effect=[ModelBehaviorError("private malformed body"), recovered],
+        ) as mocked_run:
+            result = asyncio.run(
+                autopilot_main.run_orchestrator_with_recovery(
+                    object(), "bounded prompt", "gemini"
+                )
+            )
+        assert result is recovered
+        assert mocked_run.await_count == 2
+        retry_prompt = mocked_run.await_args_list[1].args[1]
+        assert "STRUCTURED-OUTPUT RECOVERY" in retry_prompt
+        assert "private malformed body" not in retry_prompt
+
+        with patch.object(
+            autopilot_main.Runner,
+            "run",
+            side_effect=ModelBehaviorError("private malformed body"),
+        ) as mocked_run:
+            try:
+                asyncio.run(
+                    autopilot_main.run_orchestrator_with_recovery(
+                        object(), "bounded prompt", "gemini"
+                    )
+                )
+            except RuntimeError as exc:
+                message = str(exc)
+                assert "invalid structured output" in message
+                assert "private malformed body" not in message
+            else:
+                raise AssertionError("persistent malformed output must fail safely")
+        assert mocked_run.await_count == 2
 
         response = _Response(
             {

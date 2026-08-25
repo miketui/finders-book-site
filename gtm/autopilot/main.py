@@ -15,6 +15,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from agents import Agent, ModelSettings, Runner
+from agents.exceptions import ModelBehaviorError
 from openai import OpenAI
 from pydantic import AfterValidator, BaseModel, Field
 
@@ -356,6 +357,35 @@ def build_orchestrator(
         tools=tools,
         output_type=RunOutput,
     )
+
+
+async def run_orchestrator_with_recovery(
+    orchestrator: Agent,
+    prompt: str,
+    provider: model_provider.ModelProviderName,
+):
+    """Retry one malformed Gemini structured response without leaking its body."""
+    attempts = 2 if provider == "gemini" else 1
+    for attempt in range(attempts):
+        current_prompt = prompt
+        if attempt:
+            current_prompt += (
+                "\n\nSTRUCTURED-OUTPUT RECOVERY: The prior response was incomplete or "
+                "invalid. Start over and return one complete JSON object. Be concise. "
+                "Do not use ASCII art, Unicode box-drawing characters, repeated glyphs, "
+                "or whitespace padding. Use compact Markdown tables and bullets."
+            )
+        try:
+            return await Runner.run(orchestrator, current_prompt, max_turns=14)
+        except ModelBehaviorError:
+            if attempt + 1 < attempts:
+                continue
+            raise RuntimeError(
+                "The selected text provider returned invalid structured output; "
+                "no generated artifacts were trusted or persisted."
+            ) from None
+
+    raise AssertionError("unreachable structured-output recovery state")
 
 
 def safe_runtime_artifact_path(relative_path: str) -> Path:
@@ -857,10 +887,12 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         "at or below 40,000 characters and all artifact documents together at or "
         "below 75,000 characters. Avoid decorative repeated characters and keep "
         "the full response below 80,000 characters. Prefer concise "
-        "tables and bullets while preserving all required evidence.\n\n"
+        "tables and bullets while preserving all required evidence. NEVER create "
+        "ASCII art, Unicode box-drawing diagrams, repeated-glyph connector lines, "
+        "or whitespace padding; express architectures as compact tables or lists.\n\n"
         + json.dumps(context, indent=2)
     )
-    result = await Runner.run(orchestrator, prompt, max_turns=14)
+    result = await run_orchestrator_with_recovery(orchestrator, prompt, provider)
     output = result.final_output
     if not isinstance(output, RunOutput):
         output = RunOutput.model_validate(output)
