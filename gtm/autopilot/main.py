@@ -854,8 +854,9 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         + "\n\nUse only supplied evidence for repo/current-state claims. "
         "Do not claim external side effects occurred unless evidence says so.\n\n"
         "OUTPUT BUDGET: Return valid complete JSON. Keep every artifact document "
-        "at or below 10,000 characters, avoid decorative repeated characters, "
-        "and keep the full response below 60,000 characters. Prefer concise "
+        "at or below 40,000 characters and all artifact documents together at or "
+        "below 55,000 characters. Avoid decorative repeated characters and keep "
+        "the full response below 60,000 characters. Prefer concise "
         "tables and bullets while preserving all required evidence.\n\n"
         + json.dumps(context, indent=2)
     )

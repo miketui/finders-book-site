@@ -93,6 +93,10 @@ def main() -> None:
         assert len(orchestrator.tools) == 2
         assert orchestrator.tools[-1] is model_provider.gemini_grounded_web_search
         assert orchestrator.model_settings.max_tokens == 24_000
+        runtime_source = (autopilot_main.CONFIG_ROOT / "autopilot" / "main.py").read_text()
+        assert "at or below 40,000 characters" in runtime_source
+        assert "below 55,000 characters" in runtime_source
+        assert "at or below 10,000 characters" not in runtime_source
         artifact_schema = autopilot_main.ArtifactDocument.model_json_schema()
         assert "maxLength" not in artifact_schema["properties"]["content"]
         run_schema = autopilot_main.RunOutput.model_json_schema()
