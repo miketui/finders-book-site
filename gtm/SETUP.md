@@ -6,7 +6,8 @@
 |---|---|
 | GitHub repository | Public source of truth for Autopilot code, prompts, state templates, Phase 0 plan and daily plan |
 | GitHub Actions | Scheduler, Phase 0 bootstrap runner, daily runner, approval interface and artifact host |
-| OpenAI API + Agents SDK | GPT-5.6 Orchestrator, nine specialist agents, hosted web search, structured outputs and GPT Image 2 rendering |
+| OpenAI API + Agents SDK | Default GPT-5.6 Orchestrator, nine specialist agents, hosted web search, structured outputs and GPT Image 2 rendering |
+| Gemini API | Explicitly selected text-orchestration fallback using Gemini 3.7 Flash and Google Search grounding; never replaces the creative providers |
 | Runway API | Gen-4.5 video rendering for explicitly enabled creative-production units |
 | Encrypted state branch | Stores only the newest encrypted runtime snapshot + non-secret key-scheme metadata |
 | GitHub Actions artifacts | Stores generated image/video/EPUB binaries temporarily; these are not committed to the public repo |
@@ -51,10 +52,12 @@ The repository is public, so runtime business intelligence and paid source mater
 
 ## GitHub secrets / variables
 
-Required before autonomous `run` mode:
+Required before autonomous `run` mode with the default provider:
 
 - `OPENAI_API_KEY`
 - `GTM_STATE_KEY` — independent high-entropy passphrase used only for encrypted Autopilot runtime state.
+
+For an explicitly selected Gemini text-orchestration run, `GEMINI_API_KEY` replaces the OpenAI requirement for Phase 0/ordinary text units. `GTM_STATE_KEY` remains mandatory. A legacy state snapshot whose metadata says `openai` still needs its prior `OPENAI_API_KEY` for the one-time migration. Review the data-handling terms for the Google AI plan attached to the key before sending private business context.
 
 Required when Day 6 or another video-rendering unit executes:
 
@@ -63,6 +66,7 @@ Required when Day 6 or another video-rendering unit executes:
 Optional repository variable:
 
 - `GTM_OWNER_ALLOWLIST` — comma-separated GitHub logins authorized to resolve both YELLOW and RED gates; defaults to `miketui`.
+- `GTM_MODEL_PROVIDER` — `openai` (default) or `gemini`; an explicit workflow-dispatch selection overrides it for that run.
 
 Future integration credentials should be added only when their least-privilege adapters exist.
 

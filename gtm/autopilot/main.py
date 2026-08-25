@@ -10,13 +10,15 @@ import subprocess
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from agents import Agent, Runner, WebSearchTool
+from agents import Agent, ModelSettings, Runner
 from openai import OpenAI
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
+
+import model_provider
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_ROOT = REPO_ROOT / "gtm"
@@ -24,61 +26,110 @@ RUNTIME_ROOT = Path(os.getenv("GTM_RUNTIME_ROOT", str(CONFIG_ROOT))).resolve()
 TZ = ZoneInfo("America/Los_Angeles")
 
 
+def _bounded_text(limit: int):
+    def validate(value: str) -> str:
+        if len(value) > limit:
+            raise ValueError(f"text exceeds {limit} characters")
+        return value
+
+    return validate
+
+
+def _bounded_items(limit: int):
+    def validate(value: list):
+        if len(value) > limit:
+            raise ValueError(f"list exceeds {limit} items")
+        return value
+
+    return validate
+
+
+def _bounded_artifacts(value: list["ArtifactDocument"]):
+    if len(value) > 8:
+        raise ValueError("list exceeds 8 items")
+    if sum(len(item.content) for item in value) > 55_000:
+        raise ValueError("artifact content exceeds 55000 aggregate characters")
+    return value
+
+
+# AfterValidator keeps durable safety bounds out of the provider-facing JSON schema.
+# Gemini's OpenAI-compatible structured-output endpoint rejects maxLength/maxItems,
+# while Pydantic still enforces these limits before any output is trusted or persisted.
+ShortText = Annotated[str, AfterValidator(_bounded_text(2_000))]
+PathText = Annotated[str, AfterValidator(_bounded_text(500))]
+ArtifactText = Annotated[str, AfterValidator(_bounded_text(40_000))]
+
+
 class ApprovalRequest(BaseModel):
-    title: str
-    action: str
+    title: ShortText
+    action: ShortText
     approval_class: Literal["YELLOW", "RED"]
-    reason: str
+    reason: ShortText
     max_spend_usd: float | None = None
     blocking: bool = True
 
 
 class MetricUpdate(BaseModel):
-    metric: str
-    channel: str
-    value: float | int | str | None
-    source: str
+    metric: ShortText
+    channel: ShortText
+    value: float | int | ShortText | None
+    source: ShortText
     verified: bool
 
 
 class ExperimentUpdate(BaseModel):
-    experiment_id: str
-    status: str
-    finding: str
-    next_step: str
+    experiment_id: ShortText
+    status: ShortText
+    finding: ShortText
+    next_step: ShortText
 
 
 class ArtifactDocument(BaseModel):
-    relative_path: str
-    content: str
+    relative_path: PathText
+    content: ArtifactText = Field(
+        description=(
+            "Complete but concise artifact body. Stay within 40,000 characters; "
+            "use dense tables/lists instead of decorative repetition."
+        ),
+    )
 
 
 class CreativeJob(BaseModel):
-    asset_id: str
+    asset_id: ShortText
     kind: Literal["image", "video"]
-    prompt: str
-    filename: str
-    size_or_ratio: str
+    prompt: Annotated[str, AfterValidator(_bounded_text(5_000))]
+    filename: PathText
+    size_or_ratio: ShortText
     duration_seconds: int | None = None
-    reference_image: str | None = None
+    reference_image: PathText | None = None
     proof_classification: Literal["GENERATIVE", "REAL_PROOF_REQUIRED"] = "GENERATIVE"
+
+
+WorkList = Annotated[list[ShortText], AfterValidator(_bounded_items(50))]
+PathList = Annotated[list[PathText], AfterValidator(_bounded_items(50))]
+ArtifactList = Annotated[list[ArtifactDocument], AfterValidator(_bounded_artifacts)]
+MetricList = Annotated[list[MetricUpdate], AfterValidator(_bounded_items(50))]
+ExperimentList = Annotated[list[ExperimentUpdate], AfterValidator(_bounded_items(50))]
+ApprovalList = Annotated[list[ApprovalRequest], AfterValidator(_bounded_items(20))]
+BlockerList = Annotated[list[ShortText], AfterValidator(_bounded_items(20))]
+CreativeList = Annotated[list[CreativeJob], AfterValidator(_bounded_items(30))]
 
 
 class RunOutput(BaseModel):
     run_status: Literal["PASS", "AWAITING_APPROVAL", "BLOCKED", "PARTIAL"]
-    executive_summary: str
-    work_completed: list[str] = Field(default_factory=list)
-    artifacts: list[str] = Field(default_factory=list)
-    artifact_documents: list[ArtifactDocument] = Field(default_factory=list)
-    evidence: list[str] = Field(default_factory=list)
-    metric_updates: list[MetricUpdate] = Field(default_factory=list)
-    experiment_updates: list[ExperimentUpdate] = Field(default_factory=list)
-    approval_requests: list[ApprovalRequest] = Field(default_factory=list)
-    blockers: list[str] = Field(default_factory=list)
-    creative_jobs: list[CreativeJob] = Field(default_factory=list)
+    executive_summary: ShortText
+    work_completed: WorkList = Field(default_factory=list)
+    artifacts: PathList = Field(default_factory=list)
+    artifact_documents: ArtifactList = Field(default_factory=list)
+    evidence: WorkList = Field(default_factory=list)
+    metric_updates: MetricList = Field(default_factory=list)
+    experiment_updates: ExperimentList = Field(default_factory=list)
+    approval_requests: ApprovalList = Field(default_factory=list)
+    blockers: BlockerList = Field(default_factory=list)
+    creative_jobs: CreativeList = Field(default_factory=list)
     pass_condition_met: bool
-    next_action: str
-    founder_brief: str
+    next_action: ShortText
+    founder_brief: Annotated[str, AfterValidator(_bounded_text(4_000))]
 
 
 def config_json(name: str) -> dict:
@@ -254,7 +305,7 @@ def active_unit(state: dict) -> dict:
     }
 
 
-def build_agents(prompt_map: dict[str, str]) -> dict[str, Agent]:
+def build_agents(prompt_map: dict[str, str], model) -> dict[str, Agent]:
     descriptions = {
         "SEO": "Search intent, on-page SEO, schema, internal linking and evergreen organic growth.",
         "CONTENT": "Platform-native scripts, copy, carousels, Pins, email and repurposing.",
@@ -272,13 +323,18 @@ def build_agents(prompt_map: dict[str, str]) -> dict[str, Agent]:
             name=f"Finder's Book {name}",
             handoff_description=descriptions.get(name, f"Consult {name}"),
             instructions=instructions,
-            model="gpt-5.6",
+            model=model,
+            model_settings=ModelSettings(max_tokens=6_000),
         )
     return agents
 
 
 def build_orchestrator(
-    specialists: dict[str, Agent], allowed: list[str], enable_web_search: bool = False
+    specialists: dict[str, Agent],
+    allowed: list[str],
+    model,
+    provider: model_provider.ModelProviderName,
+    enable_web_search: bool = False,
 ) -> Agent:
     instructions = (CONFIG_ROOT / "prompts" / "orchestrator.md").read_text()
     tools = []
@@ -291,11 +347,12 @@ def build_orchestrator(
             tool_description=agent.handoff_description or f"Consult {name}",
         ))
     if enable_web_search:
-        tools.append(WebSearchTool(search_context_size="medium"))
+        tools.append(model_provider.web_search_tool(provider))
     return Agent(
         name="Finder's Book GTM Orchestrator",
         instructions=instructions,
-        model="gpt-5.6",
+        model=model,
+        model_settings=ModelSettings(max_tokens=24_000),
         tools=tools,
         output_type=RunOutput,
     )
@@ -775,7 +832,9 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
     }
 
     prompt_map = load_agent_prompts()
-    specialists = build_agents(prompt_map)
+    provider = model_provider.selected_provider()
+    model = model_provider.runtime_model(provider)
+    specialists = build_agents(prompt_map, model)
     enable_web = (
         (
             unit["kind"] == "section"
@@ -784,12 +843,21 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         or (unit["kind"] == "day" and bool(unit.get("requires_web_search")))
     )
     orchestrator = build_orchestrator(
-        specialists, unit.get("specialists", []), enable_web_search=enable_web
+        specialists,
+        unit.get("specialists", []),
+        model,
+        provider,
+        enable_web_search=enable_web,
     )
     prompt = (
         specific
         + "\n\nUse only supplied evidence for repo/current-state claims. "
         "Do not claim external side effects occurred unless evidence says so.\n\n"
+        "OUTPUT BUDGET: Return valid complete JSON. Keep every artifact document "
+        "at or below 40,000 characters and all artifact documents together at or "
+        "below 55,000 characters. Avoid decorative repeated characters and keep "
+        "the full response below 60,000 characters. Prefer concise "
+        "tables and bullets while preserving all required evidence.\n\n"
         + json.dumps(context, indent=2)
     )
     result = await Runner.run(orchestrator, prompt, max_turns=14)
@@ -849,8 +917,7 @@ def daily_cadence_already_satisfied(state: dict) -> bool:
 
 
 async def run_autopilot() -> None:
-    if not os.getenv("OPENAI_API_KEY"):
-        raise SystemExit("OPENAI_API_KEY is required.")
+    model_provider.validate_provider_credentials()
 
     summaries = []
     state = load_runtime_json("state.json")
