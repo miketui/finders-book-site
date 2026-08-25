@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "key_scheme": "state_key",
+  "cipher": "aes-256-cbc-pbkdf2",
+  "integrity": "hmac-sha256"
+}
