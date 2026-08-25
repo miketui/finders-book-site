@@ -125,6 +125,7 @@ finders-book-site/
     │   │   ├── orchestrator.md
     │   │   └── sections.md
     │   ├── approvals.json
+    │   ├── AUTOPILOT-ROADMAP.md
     │   ├── creative-budget.json
     │   ├── day-plan.json
     │   ├── experiments.json
