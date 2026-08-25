@@ -90,6 +90,13 @@ After the certified fallback is merged, dispatch **Finder's Book GTM Autopilot**
 
 Observe every run. If a blocking approval or deterministic failure occurs, fix or obtain the specific approval, recertify code changes, and resume from the encrypted state. Do not reset the state.
 
+Production activation run `32792695463` confirmed Gemini credential preflight but
+failed before generation because the compatibility endpoint rejected JSON-schema
+`maxLength`/`maxItems` keywords. Persistence was skipped and the Phase 0 cursor
+remained unchanged. The follow-up keeps identical Pydantic safety bounds as
+runtime `AfterValidator` checks while omitting unsupported provider-facing schema
+keywords.
+
 ## Completion boundary
 
 Continue until the status output proves all 12 Foundation sections and Foundation QA are complete. Then run `mode=status` only and verify:
