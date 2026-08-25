@@ -488,6 +488,13 @@ def check_foundation_qa_reads_complete_section1_package() -> None:
         assert "Never upload the current interactive PDF unchanged" in normalized
         assert "owner-approval gated" in normalized
 
+    source = (engine.REPO_ROOT / "gtm" / "autopilot" / "v1_1.py").read_text()
+    qa_once = source.index("qa = engine.run_qa(render=True)")
+    consume_qa = source.index("output = engine.deterministic_foundation_qa(unit, qa)")
+    assert qa_once < consume_qa
+    foundation_branch = source[qa_once:consume_qa + 64]
+    assert foundation_branch.count("engine.run_qa(render=True)") == 1
+
 
 def main() -> None:
     check_daily_prompt_fidelity()

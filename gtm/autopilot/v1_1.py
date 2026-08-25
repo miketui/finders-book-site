@@ -410,8 +410,8 @@ def apply_operator_schema_to_founder_brief(
 async def usability_execute_unit(unit: dict) -> dict:
     run_id = engine.uuid4().hex[:16]
     if unit["kind"] == "foundation_qa":
-        output = engine.deterministic_foundation_qa(unit)
         qa = engine.run_qa(render=True)
+        output = engine.deterministic_foundation_qa(unit, qa)
     else:
         output, qa = await engine.execute_model_unit(unit, run_id)
 

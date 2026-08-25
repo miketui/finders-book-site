@@ -242,9 +242,9 @@ def _ensure_canonical_ebook_safety(channel_path: Path) -> None:
     channel_path.write_text(text.rstrip() + "\n\n" + block)
 
 
-def guarded_foundation_qa(unit: dict) -> engine.RunOutput:
+def guarded_foundation_qa(unit: dict, qa: dict | None = None) -> engine.RunOutput:
     """Require explicit Section 5 reconciliation, not file-presence alone."""
-    output = _original_deterministic_foundation_qa(unit)
+    output = _original_deterministic_foundation_qa(unit, qa)
     if output.run_status != "PASS" or not output.pass_condition_met:
         return normalize_output(output)
 
