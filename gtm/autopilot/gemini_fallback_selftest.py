@@ -94,7 +94,9 @@ def main() -> None:
         assert orchestrator.tools[-1] is model_provider.gemini_grounded_web_search
         assert orchestrator.model_settings.max_tokens == 24_000
         artifact_schema = autopilot_main.ArtifactDocument.model_json_schema()
-        assert artifact_schema["properties"]["content"]["maxLength"] == 10_000
+        assert "maxLength" not in artifact_schema["properties"]["content"]
+        run_schema = autopilot_main.RunOutput.model_json_schema()
+        assert "maxItems" not in run_schema["properties"]["artifact_documents"]
         try:
             autopilot_main.ArtifactDocument(
                 relative_path="foundation/test.md", content="x" * 10_001
@@ -103,6 +105,24 @@ def main() -> None:
             pass
         else:
             raise AssertionError("oversized artifact content must fail validation")
+        try:
+            autopilot_main.RunOutput(
+                run_status="PASS",
+                executive_summary="bounded",
+                artifact_documents=[
+                    autopilot_main.ArtifactDocument(
+                        relative_path=f"foundation/test-{index}.md", content="bounded"
+                    )
+                    for index in range(9)
+                ],
+                pass_condition_met=True,
+                next_action="continue",
+                founder_brief="bounded",
+            )
+        except ValidationError:
+            pass
+        else:
+            raise AssertionError("oversized artifact list must fail validation")
 
         response = _Response(
             {

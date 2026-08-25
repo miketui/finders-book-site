@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 
 from agents import Agent, ModelSettings, Runner
 from openai import OpenAI
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
 
 import model_provider
 
@@ -24,8 +24,32 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_ROOT = REPO_ROOT / "gtm"
 RUNTIME_ROOT = Path(os.getenv("GTM_RUNTIME_ROOT", str(CONFIG_ROOT))).resolve()
 TZ = ZoneInfo("America/Los_Angeles")
-ShortText = Annotated[str, Field(max_length=2_000)]
-PathText = Annotated[str, Field(max_length=500)]
+
+
+def _bounded_text(limit: int):
+    def validate(value: str) -> str:
+        if len(value) > limit:
+            raise ValueError(f"text exceeds {limit} characters")
+        return value
+
+    return validate
+
+
+def _bounded_items(limit: int):
+    def validate(value: list):
+        if len(value) > limit:
+            raise ValueError(f"list exceeds {limit} items")
+        return value
+
+    return validate
+
+
+# AfterValidator keeps durable safety bounds out of the provider-facing JSON schema.
+# Gemini's OpenAI-compatible structured-output endpoint rejects maxLength/maxItems,
+# while Pydantic still enforces these limits before any output is trusted or persisted.
+ShortText = Annotated[str, AfterValidator(_bounded_text(2_000))]
+PathText = Annotated[str, AfterValidator(_bounded_text(500))]
+ArtifactText = Annotated[str, AfterValidator(_bounded_text(10_000))]
 
 
 class ApprovalRequest(BaseModel):
@@ -54,8 +78,7 @@ class ExperimentUpdate(BaseModel):
 
 class ArtifactDocument(BaseModel):
     relative_path: PathText
-    content: str = Field(
-        max_length=10_000,
+    content: ArtifactText = Field(
         description=(
             "Complete but concise artifact body. Stay within 10,000 characters; "
             "use dense tables/lists instead of decorative repetition."
@@ -66,7 +89,7 @@ class ArtifactDocument(BaseModel):
 class CreativeJob(BaseModel):
     asset_id: ShortText
     kind: Literal["image", "video"]
-    prompt: str = Field(max_length=5_000)
+    prompt: Annotated[str, AfterValidator(_bounded_text(5_000))]
     filename: PathText
     size_or_ratio: ShortText
     duration_seconds: int | None = None
@@ -74,21 +97,31 @@ class CreativeJob(BaseModel):
     proof_classification: Literal["GENERATIVE", "REAL_PROOF_REQUIRED"] = "GENERATIVE"
 
 
+WorkList = Annotated[list[ShortText], AfterValidator(_bounded_items(50))]
+PathList = Annotated[list[PathText], AfterValidator(_bounded_items(50))]
+ArtifactList = Annotated[list[ArtifactDocument], AfterValidator(_bounded_items(8))]
+MetricList = Annotated[list[MetricUpdate], AfterValidator(_bounded_items(50))]
+ExperimentList = Annotated[list[ExperimentUpdate], AfterValidator(_bounded_items(50))]
+ApprovalList = Annotated[list[ApprovalRequest], AfterValidator(_bounded_items(20))]
+BlockerList = Annotated[list[ShortText], AfterValidator(_bounded_items(20))]
+CreativeList = Annotated[list[CreativeJob], AfterValidator(_bounded_items(30))]
+
+
 class RunOutput(BaseModel):
     run_status: Literal["PASS", "AWAITING_APPROVAL", "BLOCKED", "PARTIAL"]
     executive_summary: ShortText
-    work_completed: list[ShortText] = Field(default_factory=list, max_length=50)
-    artifacts: list[PathText] = Field(default_factory=list, max_length=50)
-    artifact_documents: list[ArtifactDocument] = Field(default_factory=list, max_length=8)
-    evidence: list[ShortText] = Field(default_factory=list, max_length=50)
-    metric_updates: list[MetricUpdate] = Field(default_factory=list, max_length=50)
-    experiment_updates: list[ExperimentUpdate] = Field(default_factory=list, max_length=50)
-    approval_requests: list[ApprovalRequest] = Field(default_factory=list, max_length=20)
-    blockers: list[ShortText] = Field(default_factory=list, max_length=20)
-    creative_jobs: list[CreativeJob] = Field(default_factory=list, max_length=30)
+    work_completed: WorkList = Field(default_factory=list)
+    artifacts: PathList = Field(default_factory=list)
+    artifact_documents: ArtifactList = Field(default_factory=list)
+    evidence: WorkList = Field(default_factory=list)
+    metric_updates: MetricList = Field(default_factory=list)
+    experiment_updates: ExperimentList = Field(default_factory=list)
+    approval_requests: ApprovalList = Field(default_factory=list)
+    blockers: BlockerList = Field(default_factory=list)
+    creative_jobs: CreativeList = Field(default_factory=list)
     pass_condition_met: bool
     next_action: ShortText
-    founder_brief: str = Field(max_length=4_000)
+    founder_brief: Annotated[str, AfterValidator(_bounded_text(4_000))]
 
 
 def config_json(name: str) -> dict:

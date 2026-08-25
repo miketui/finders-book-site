@@ -210,7 +210,8 @@ jobs:
           assert 'OPENAI_API_KEY is required for an active unit that enables GPT Image rendering.' in workflow_text
           assert 'GTM_STATE_KEY is required' in workflow_text
           assert 'ModelSettings(max_tokens=24_000)' in main_text
-          assert 'max_length=10_000' in main_text
+          assert 'AfterValidator(_bounded_text(10_000))' in main_text
+          assert 'AfterValidator(_bounded_items(8))' in main_text
           assert 'OUTPUT BUDGET: Return valid complete JSON.' in main_text
           assert 'final_hardening.main()' in workflow_text
           assert 'Resolve browser for Autopilot QA' in workflow_text
