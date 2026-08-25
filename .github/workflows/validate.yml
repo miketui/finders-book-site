@@ -103,6 +103,7 @@ jobs:
           budget = json.loads((root / 'creative-budget.json').read_text())
           agents_text = (root / 'prompts' / 'agents.md').read_text()
           sections_text = (root / 'prompts' / 'sections.md').read_text()
+          main_text = (root / 'autopilot' / 'main.py').read_text()
           control_text = (root / 'autopilot' / 'control_plane.py').read_text()
           hardening_text = (root / 'autopilot' / 'final_hardening.py').read_text()
           render_contracts_text = (root / 'autopilot' / 'render_contracts.py').read_text()
@@ -208,6 +209,9 @@ jobs:
           assert 'Determine whether the active unit requires GPT Image' in workflow_text
           assert 'OPENAI_API_KEY is required for an active unit that enables GPT Image rendering.' in workflow_text
           assert 'GTM_STATE_KEY is required' in workflow_text
+          assert 'ModelSettings(max_tokens=24_000)' in main_text
+          assert 'max_length=10_000' in main_text
+          assert 'OUTPUT BUDGET: Return valid complete JSON.' in main_text
           assert 'final_hardening.main()' in workflow_text
           assert 'Resolve browser for Autopilot QA' in workflow_text
           assert 'ebook-ingest' in workflow_text
