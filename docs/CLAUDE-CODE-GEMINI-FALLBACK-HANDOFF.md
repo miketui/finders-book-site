@@ -101,7 +101,15 @@ Production retry `32793509935` then reached Gemini and returned a complete
 Section 12 result, but the legitimate JSON source ledger exceeded the initial
 10,000-character per-artifact limit. Persistence again skipped safely. The
 follow-up permits up to 40,000 characters for one evidence ledger while enforcing
-an eight-document and 55,000-character aggregate ceiling before persistence.
+an eight-document ceiling and a bounded aggregate ceiling before persistence.
+
+The aggregate ceiling is sized per unit rather than flat. A flat 55,000-character
+ceiling held the two-output sections but could not hold Section 10, whose output
+contract requires four documents; run `32794175194` produced a complete, passing
+Section 10 result that was then rejected at validation and discarded. The
+aggregate budget is now `18,000 x required_outputs`, floored at the previously
+certified 55,000 and hard-capped at 144,000, and the orchestrator's `max_tokens`
+rises with it so the model is never asked for more than it can emit.
 
 ## Completion boundary
 

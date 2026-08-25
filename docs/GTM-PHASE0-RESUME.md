@@ -1,15 +1,22 @@
 # GTM Autopilot — Phase 0 resume runbook
 
-Phase 0 of the Finder's Book GTM Autopilot is **halted at Section 12** by an
-owner-only billing condition. This file records the verified state, the root
-cause with evidence, and the exact steps to resume. It is written so the next
-operator starts from evidence rather than from an assumption.
+Phase 0 of the Finder's Book GTM Autopilot has **0 of 12 sections persisted**.
+This file records the verified state, the root cause with evidence, and the
+exact steps to resume. It is written so the next operator starts from evidence
+rather than from an assumption.
 
-## Verified state — 2026-08-20
+The original blocker (OpenAI credit exhaustion) has been routed around by the
+opt-in Gemini fallback merged in PRs #68–#71. Phase 0 now reaches the model and
+executes, but **no section has been persisted yet** — see *Current blocker*
+below.
+
+## Verified state — 2026-08-25
 
 Captured from `AUTOPILOT_MODE=status` (Actions run
-[#123](https://github.com/miketui/finders-book-site/actions/runs/32420360466)),
-which reads persisted state and never advances the cursor.
+[#141](https://github.com/miketui/finders-book-site/actions/runs/32795047124)),
+which reads persisted state and never advances the cursor. These values are
+unchanged from the 2026-08-20 capture (run
+[#123](https://github.com/miketui/finders-book-site/actions/runs/32420360466)).
 
 | Field | Value |
 |---|---|
@@ -33,7 +40,40 @@ Note: `foundation_output_status` globs `*.md` only
 (`gtm/autopilot/final_hardening.py:432`). It is not evidence about the presence
 or absence of `foundation/12-source-ledger.json`.
 
-## Root cause — OpenAI credit exhaustion (owner-only / RED)
+## Current blocker — Section 10 exceeds the aggregate artifact ceiling
+
+Run [#140](https://github.com/miketui/finders-book-site/actions/runs/32794175194)
+(`mode=run` against `7074dfb`, via the Gemini fallback) executed the canonical
+order and reached **Section 10**, which returned a complete result —
+`"pass_condition_met": true`, no blockers, all four required documents present.
+The run then failed at output validation:
+
+```
+1 validation error for HardenedRunOutput
+artifact_documents
+  Value error, artifact content exceeds 55000 aggregate characters
+```
+
+Because the failure happened before the *Encrypt and persist bounded runtime
+state* step, **every section that run had completed was discarded.** The cursor
+is still `0` and `next_executable_unit` is still `section-12`. This is why real
+model progress and a persisted count of zero are both true at once.
+
+The ceiling was internally inconsistent with the output contract: a single
+artifact may be 40,000 characters, but Section 10 is the one section required to
+emit **four** documents (`gtm/phase0-plan.json`) — content bank with 30 hooks and
+12 content packages, creative master spec in Markdown and JSON, and 30 promotion
+plays. A flat 55,000-character aggregate allows those four documents an average
+of 13,750 characters each.
+
+**Proposed fix (branch `claude/finders-book-phase0-execution-3ktw2t`, not
+merged):** size the aggregate budget per unit as `18,000 × required_outputs`,
+floored at the previously certified 55,000 so no unit loses room, and hard-capped
+at 144,000. The orchestrator's `max_tokens` rises with the budget so the model is
+never asked for more than it can emit. The bound stays fail-closed and the
+eight-document ceiling is untouched. Merging it to `main` is an owner decision.
+
+## Original blocker (resolved) — OpenAI credit exhaustion (owner-only / RED)
 
 Run [#122](https://github.com/miketui/finders-book-site/actions/runs/32415953223)
 dispatched `mode=run` against `a9b6bf1` and failed in 50 seconds:
@@ -51,9 +91,10 @@ from the repository.
 
 ### Why this halts all of Phase 0
 
-Every Phase 0 section is model-executed through the OpenAI Responses API
-(`gtm/autopilot/main.py:795`), and `run_autopilot()` refuses to start without
-`OPENAI_API_KEY`. Foundation QA is deterministic, but it passes only when
+Every Phase 0 section is model-executed, and `run_autopilot()` refuses to start
+without a credential for the selected provider
+(`GTM_MODEL_PROVIDER=openai|gemini`). Foundation QA is deterministic, but it
+passes only when
 `completed_foundation_sections` contains all twelve sections, and that list
 advances solely through a successful model-executed unit
 (`update_state_after_unit`). **Phase 0 therefore cannot be completed by hand:**
@@ -72,22 +113,22 @@ execution state and no-double-spend guarantees are intact.
 
 | Gate | State |
 |---|---|
-| `main` HEAD | `a9b6bf1e5f19b7415fe0902e33da356b039cdf05` |
-| `validate.yml` on that SHA | ✅ success (run [#361](https://github.com/miketui/finders-book-site/actions/runs/32415939785)) |
+| `main` HEAD | `7074dfba3e740d0e072e02caf67da5a79c2bdeed` |
 | `npm run validate` locally | ✅ passes |
 | Encrypted state branch | `gtm-autopilot-state`, HMAC-signed, restores cleanly |
 | Blocking approvals | none |
-| Section 12 classification contract | merged (PR #65), **not yet exercised against a live model run** |
+| Section 12 classification contract | merged (PR #65), exercised — run #140 cleared Section 12 and reached Section 10 |
+| Text orchestration | OpenAI (default) or Gemini 3.7 Flash fallback, PRs #68–#71 |
 
 ## Resume procedure
 
-1. **Owner:** add credits at
-   <https://platform.openai.com/settings/organization/billing/>. Confirm the
-   funded organization/project is the one issuing the key stored in the
-   `OPENAI_API_KEY` repository secret — a funded org with the key issued from a
-   different project fails identically.
+1. **Owner:** land an aggregate-budget fix so Section 10 can persist. Either
+   merge the branch fix described in *Current blocker*, or apply an equivalent
+   bound. Without it, a `mode: run` dispatch will reach Section 10 and discard
+   the run again.
 2. Actions → **Finder's Book GTM Autopilot** → *Run workflow* → branch `main`,
-   `mode: run`.
+   `mode: run`, with `GTM_MODEL_PROVIDER` set to a provider that has a funded
+   credential.
    A single dispatch executes every remaining Phase 0 unit in canonical order
    (`12 → 1 → 2 → 3 → 4 → 6 → 7 → 8 → 9 → 10 → 11 → 5 → Foundation QA`) and
    stops at the first `PARTIAL`, `BLOCKED`, or `AWAITING_APPROVAL`.
@@ -96,6 +137,14 @@ execution state and no-double-spend guarantees are intact.
    `foundation_qa_passed: true` with `mode` transitioning to `THIRTY_DAY`.
 4. Do **not** start Day 1 in the same session. Day 1 is gated behind Foundation
    QA by design; let the state machine make that transition.
+
+### A failed run discards everything it completed
+
+State is persisted once, after the execute step, in *Encrypt and persist bounded
+runtime state*. Any non-zero exit from the execute step — a validation error on
+the very last unit included — skips persistence, so the whole run is lost and the
+cursor does not move. When diagnosing, read the persisted cursor with
+`mode: status`; do not infer progress from content visible in a failed run's log.
 
 ### If Section 12 blocks again
 
