@@ -9,6 +9,7 @@ finders-book-site/
     │       ├── gtm-autopilot.yml
     │       ├── gtm-final-hardening.yml
     │       ├── gtm-foundation-export.yml
+    │       ├── gtm-state-key-rotation.yml
     │       ├── gtm-v1-1-usability.yml
     │       ├── regenerate-manifests.yml
     │       └── validate.yml
