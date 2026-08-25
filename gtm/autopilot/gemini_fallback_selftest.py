@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 from agents import OpenAIChatCompletionsModel, WebSearchTool
+from pydantic import ValidationError
 
 import main as autopilot_main
 import model_provider
@@ -91,6 +92,17 @@ def main() -> None:
         assert orchestrator.model is model
         assert len(orchestrator.tools) == 2
         assert orchestrator.tools[-1] is model_provider.gemini_grounded_web_search
+        assert orchestrator.model_settings.max_tokens == 24_000
+        artifact_schema = autopilot_main.ArtifactDocument.model_json_schema()
+        assert artifact_schema["properties"]["content"]["maxLength"] == 10_000
+        try:
+            autopilot_main.ArtifactDocument(
+                relative_path="foundation/test.md", content="x" * 10_001
+            )
+        except ValidationError:
+            pass
+        else:
+            raise AssertionError("oversized artifact content must fail validation")
 
         response = _Response(
             {

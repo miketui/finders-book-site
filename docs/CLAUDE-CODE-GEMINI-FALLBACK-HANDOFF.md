@@ -2,7 +2,7 @@
 
 ## Authorization and objective
 
-The owner has approved building the Gemini fallback. Implement and release an opt-in Gemini text-orchestration path for `miketui/finders-book-site`, then use it to complete Phase 0 through Foundation QA and stop before Day 1.
+The owner approved the Gemini fallback and PR #68 merged at `a59770c0b354ca3236eb763ea750d43c4be43002`. Continue hardening and operating the opt-in Gemini text-orchestration path for `miketui/finders-book-site`, complete Phase 0 through Foundation QA, and stop before Day 1.
 
 This authorization does not permit exposing credentials, weakening approvals, resetting state, bypassing branch protection, or changing the Day 6 image/video providers.
 
@@ -14,6 +14,7 @@ This authorization does not permit exposing credentials, weakening approvals, re
 - Completed Foundation sections: none
 - Existing Foundation output: `foundation/12-source-ledger.md`
 - Failed OpenAI executions did not advance or reset state.
+- Gemini activation run `32791569423` reached the model but returned truncated JSON before persistence; it also did not advance or reset state. The response-budget follow-up must be certified and merged before retrying.
 
 Treat the encrypted `gtm-autopilot-state` remote snapshot as authoritative. Never bootstrap or replace it with checked-in templates.
 

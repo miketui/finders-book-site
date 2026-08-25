@@ -58,6 +58,7 @@ jobs:
           render_contracts = Path('gtm/autopilot/render_contracts.py').read_text()
           network = Path('gtm/autopilot/network_guard.py').read_text()
           provider = Path('gtm/autopilot/model_provider.py').read_text()
+          main_runtime = Path('gtm/autopilot/main.py').read_text()
           workflow = Path('.github/workflows/gtm-autopilot.yml').read_text()
           epub = Path('gtm/ebook/build_epub.py').read_text()
 
@@ -113,6 +114,8 @@ jobs:
           assert 'google_search' in provider
           assert 'trace_provider.set_disabled(True)' in provider
           assert 'set_trace_provider(trace_provider)' in provider
+          assert 'ModelSettings(max_tokens=24_000)' in main_runtime
+          assert 'max_length=10_000' in main_runtime
 
           assert 'def modified_timestamp' in epub
           assert 'datetime.now(timezone.utc)' in epub

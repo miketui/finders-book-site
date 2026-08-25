@@ -10,11 +10,11 @@ import subprocess
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from agents import Agent, Runner
+from agents import Agent, ModelSettings, Runner
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
@@ -24,63 +24,71 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_ROOT = REPO_ROOT / "gtm"
 RUNTIME_ROOT = Path(os.getenv("GTM_RUNTIME_ROOT", str(CONFIG_ROOT))).resolve()
 TZ = ZoneInfo("America/Los_Angeles")
+ShortText = Annotated[str, Field(max_length=2_000)]
+PathText = Annotated[str, Field(max_length=500)]
 
 
 class ApprovalRequest(BaseModel):
-    title: str
-    action: str
+    title: ShortText
+    action: ShortText
     approval_class: Literal["YELLOW", "RED"]
-    reason: str
+    reason: ShortText
     max_spend_usd: float | None = None
     blocking: bool = True
 
 
 class MetricUpdate(BaseModel):
-    metric: str
-    channel: str
-    value: float | int | str | None
-    source: str
+    metric: ShortText
+    channel: ShortText
+    value: float | int | ShortText | None
+    source: ShortText
     verified: bool
 
 
 class ExperimentUpdate(BaseModel):
-    experiment_id: str
-    status: str
-    finding: str
-    next_step: str
+    experiment_id: ShortText
+    status: ShortText
+    finding: ShortText
+    next_step: ShortText
 
 
 class ArtifactDocument(BaseModel):
-    relative_path: str
-    content: str
+    relative_path: PathText
+    content: str = Field(
+        max_length=10_000,
+        description=(
+            "Complete but concise artifact body. Stay within 10,000 characters; "
+            "use dense tables/lists instead of decorative repetition."
+        ),
+    )
 
 
 class CreativeJob(BaseModel):
-    asset_id: str
+    asset_id: ShortText
     kind: Literal["image", "video"]
-    prompt: str
-    filename: str
-    size_or_ratio: str
+    prompt: str = Field(max_length=5_000)
+    filename: PathText
+    size_or_ratio: ShortText
     duration_seconds: int | None = None
-    reference_image: str | None = None
+    reference_image: PathText | None = None
     proof_classification: Literal["GENERATIVE", "REAL_PROOF_REQUIRED"] = "GENERATIVE"
 
 
 class RunOutput(BaseModel):
     run_status: Literal["PASS", "AWAITING_APPROVAL", "BLOCKED", "PARTIAL"]
-    executive_summary: str
-    work_completed: list[str] = Field(default_factory=list)
-    artifacts: list[str] = Field(default_factory=list)
-    artifact_documents: list[ArtifactDocument] = Field(default_factory=list)
-    evidence: list[str] = Field(default_factory=list)
-    metric_updates: list[MetricUpdate] = Field(default_factory=list)
-    experiment_updates: list[ExperimentUpdate] = Field(default_factory=list)
-    approval_requests: list[ApprovalRequest] = Field(default_factory=list)
-    blockers: list[str] = Field(default_factory=list)
-    creative_jobs: list[CreativeJob] = Field(default_factory=list)
+    executive_summary: ShortText
+    work_completed: list[ShortText] = Field(default_factory=list, max_length=50)
+    artifacts: list[PathText] = Field(default_factory=list, max_length=50)
+    artifact_documents: list[ArtifactDocument] = Field(default_factory=list, max_length=8)
+    evidence: list[ShortText] = Field(default_factory=list, max_length=50)
+    metric_updates: list[MetricUpdate] = Field(default_factory=list, max_length=50)
+    experiment_updates: list[ExperimentUpdate] = Field(default_factory=list, max_length=50)
+    approval_requests: list[ApprovalRequest] = Field(default_factory=list, max_length=20)
+    blockers: list[ShortText] = Field(default_factory=list, max_length=20)
+    creative_jobs: list[CreativeJob] = Field(default_factory=list, max_length=30)
     pass_condition_met: bool
-    next_action: str
-    founder_brief: str
+    next_action: ShortText
+    founder_brief: str = Field(max_length=4_000)
 
 
 def config_json(name: str) -> dict:
@@ -275,6 +283,7 @@ def build_agents(prompt_map: dict[str, str], model) -> dict[str, Agent]:
             handoff_description=descriptions.get(name, f"Consult {name}"),
             instructions=instructions,
             model=model,
+            model_settings=ModelSettings(max_tokens=6_000),
         )
     return agents
 
@@ -302,6 +311,7 @@ def build_orchestrator(
         name="Finder's Book GTM Orchestrator",
         instructions=instructions,
         model=model,
+        model_settings=ModelSettings(max_tokens=24_000),
         tools=tools,
         output_type=RunOutput,
     )
@@ -802,6 +812,10 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         specific
         + "\n\nUse only supplied evidence for repo/current-state claims. "
         "Do not claim external side effects occurred unless evidence says so.\n\n"
+        "OUTPUT BUDGET: Return valid complete JSON. Keep every artifact document "
+        "at or below 10,000 characters, avoid decorative repeated characters, "
+        "and keep the full response below 60,000 characters. Prefer concise "
+        "tables and bullets while preserving all required evidence.\n\n"
         + json.dumps(context, indent=2)
     )
     result = await Runner.run(orchestrator, prompt, max_turns=14)
