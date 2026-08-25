@@ -44,12 +44,20 @@ def _bounded_items(limit: int):
     return validate
 
 
+def _bounded_artifacts(value: list["ArtifactDocument"]):
+    if len(value) > 8:
+        raise ValueError("list exceeds 8 items")
+    if sum(len(item.content) for item in value) > 55_000:
+        raise ValueError("artifact content exceeds 55000 aggregate characters")
+    return value
+
+
 # AfterValidator keeps durable safety bounds out of the provider-facing JSON schema.
 # Gemini's OpenAI-compatible structured-output endpoint rejects maxLength/maxItems,
 # while Pydantic still enforces these limits before any output is trusted or persisted.
 ShortText = Annotated[str, AfterValidator(_bounded_text(2_000))]
 PathText = Annotated[str, AfterValidator(_bounded_text(500))]
-ArtifactText = Annotated[str, AfterValidator(_bounded_text(10_000))]
+ArtifactText = Annotated[str, AfterValidator(_bounded_text(40_000))]
 
 
 class ApprovalRequest(BaseModel):
@@ -80,7 +88,7 @@ class ArtifactDocument(BaseModel):
     relative_path: PathText
     content: ArtifactText = Field(
         description=(
-            "Complete but concise artifact body. Stay within 10,000 characters; "
+            "Complete but concise artifact body. Stay within 40,000 characters; "
             "use dense tables/lists instead of decorative repetition."
         ),
     )
@@ -99,7 +107,7 @@ class CreativeJob(BaseModel):
 
 WorkList = Annotated[list[ShortText], AfterValidator(_bounded_items(50))]
 PathList = Annotated[list[PathText], AfterValidator(_bounded_items(50))]
-ArtifactList = Annotated[list[ArtifactDocument], AfterValidator(_bounded_items(8))]
+ArtifactList = Annotated[list[ArtifactDocument], AfterValidator(_bounded_artifacts)]
 MetricList = Annotated[list[MetricUpdate], AfterValidator(_bounded_items(50))]
 ExperimentList = Annotated[list[ExperimentUpdate], AfterValidator(_bounded_items(50))]
 ApprovalList = Annotated[list[ApprovalRequest], AfterValidator(_bounded_items(20))]
