@@ -14,9 +14,6 @@ jobs:
   export:
     runs-on: ubuntu-latest
     env:
-      GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
-      GTM_EXPORT_KEY: ${{ secrets.GTM_EXPORT_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
       GTM_RUNTIME_ROOT: ${{ github.workspace }}/../finders-gtm-export-runtime
@@ -50,6 +47,10 @@ jobs:
 
       - name: Normalize state and export keys
         shell: bash
+        env:
+          GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+          GTM_EXPORT_KEY: ${{ secrets.GTM_EXPORT_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [[ -z "${GTM_STATE_KEY:-}" ]]; then
             echo "GTM_STATE_KEY is required for Foundation export."
@@ -75,6 +76,9 @@ jobs:
 
       - name: Restore encrypted GTM state outside repository
         shell: bash
+        env:
+          GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           rm -rf "$GTM_RUNTIME_ROOT"
           mkdir -p "$GTM_RUNTIME_ROOT"
@@ -155,6 +159,8 @@ jobs:
 
       - name: Build encrypted Phase 0 Binder
         shell: bash
+        env:
+          GTM_EXPORT_KEY: ${{ secrets.GTM_EXPORT_KEY }}
         run: |
           export_dir="${RUNNER_TEMP}/phase0-binder"
           rm -rf "$export_dir"

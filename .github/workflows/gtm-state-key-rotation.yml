@@ -12,15 +12,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: finders-book-gtm-state-key-rotation
+  group: finders-book-gtm-autopilot
   cancel-in-progress: false
 
 jobs:
   rotate:
     runs-on: ubuntu-latest
     env:
-      GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
-      GTM_STATE_KEY_NEXT: ${{ secrets.GTM_STATE_KEY_NEXT }}
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
     steps:
@@ -35,6 +33,8 @@ jobs:
         env:
           AUTOPILOT_ACTOR: ${{ github.actor }}
           ROTATION_CONFIRMATION: ${{ inputs.confirmation }}
+          GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+          GTM_STATE_KEY_NEXT: ${{ secrets.GTM_STATE_KEY_NEXT }}
         run: |
           python - <<'PY'
           import os
@@ -56,19 +56,20 @@ jobs:
           echo "::add-mask::$GTM_STATE_KEY"
           echo "::add-mask::$GTM_STATE_KEY_NEXT"
 
-      - name: Fetch and back up current encrypted snapshot
+      - name: Fetch current encrypted snapshot
         shell: bash
         run: |
           git fetch origin "+refs/heads/$STATE_BRANCH:refs/remotes/origin/$STATE_BRANCH"
           for path in gtm/runtime-state.enc gtm/runtime-state.hmac gtm/runtime-state.meta; do
             git cat-file -e "origin/$STATE_BRANCH:$path" || { echo "Missing required snapshot file: $path"; exit 1; }
           done
-          backup_branch="gtm-autopilot-state-backup-${GITHUB_RUN_ID}"
-          git push origin "refs/remotes/origin/$STATE_BRANCH:refs/heads/$backup_branch"
-          printf 'BACKUP_BRANCH=%s\n' "$backup_branch" >> "$GITHUB_ENV"
+          current_state_sha="$(git rev-parse "origin/$STATE_BRANCH")"
+          printf 'CURRENT_STATE_SHA=%s\n' "$current_state_sha" >> "$GITHUB_ENV"
 
       - name: Verify and decrypt with current key
         shell: bash
+        env:
+          GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
         run: |
           git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
           git show "origin/$STATE_BRANCH:gtm/runtime-state.hmac" > /tmp/gtm-runtime.hmac
@@ -98,6 +99,8 @@ jobs:
 
       - name: Re-encrypt unchanged snapshot with next key
         shell: bash
+        env:
+          GTM_STATE_KEY_NEXT: ${{ secrets.GTM_STATE_KEY_NEXT }}
         run: |
           next_passphrase="$GTM_STATE_KEY_NEXT"
           export next_passphrase
@@ -125,6 +128,11 @@ jobs:
       - name: Publish rewrapped snapshot
         shell: bash
         run: |
+          remote_state_sha="$(git ls-remote origin "refs/heads/$STATE_BRANCH" | cut -f1)"
+          if [[ "$remote_state_sha" != "$CURRENT_STATE_SHA" ]]; then
+            echo "State branch changed during rotation; refusing to overwrite it."
+            exit 1
+          fi
           git config user.name "finders-book-gtm-bot"
           git config user.email "actions@users.noreply.github.com"
           git switch --orphan gtm-state-key-rotation
@@ -135,7 +143,8 @@ jobs:
           cp /tmp/gtm-runtime-next.meta gtm/runtime-state.meta
           git add -f gtm/runtime-state.enc gtm/runtime-state.hmac gtm/runtime-state.meta
           git commit -m "chore(gtm): rewrap authenticated runtime snapshot"
+          backup_branch="gtm-autopilot-state-backup-${GITHUB_RUN_ID}"
+          git push origin "HEAD:refs/heads/$backup_branch"
           git push --force origin "HEAD:$STATE_BRANCH"
           echo "State snapshot rewrapped without executing or advancing an Autopilot unit."
-          echo "Backup preserved on $BACKUP_BRANCH. Promote GTM_STATE_KEY_NEXT to GTM_STATE_KEY before any Autopilot run."
-
+          echo "New-key backup preserved on $backup_branch. Promote GTM_STATE_KEY_NEXT to GTM_STATE_KEY before any Autopilot run."
