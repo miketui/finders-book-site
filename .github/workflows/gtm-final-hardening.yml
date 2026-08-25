@@ -117,7 +117,7 @@ jobs:
           assert 'ModelSettings(max_tokens=24_000)' in main_runtime
           assert 'AfterValidator(_bounded_text(40_000))' in main_runtime
           assert 'AfterValidator(_bounded_artifacts)' in main_runtime
-          assert '> 55_000' in main_runtime
+          assert '> 75_000' in main_runtime
 
           assert 'def modified_timestamp' in epub
           assert 'datetime.now(timezone.utc)' in epub

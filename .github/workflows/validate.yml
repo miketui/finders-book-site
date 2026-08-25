@@ -212,7 +212,7 @@ jobs:
           assert 'ModelSettings(max_tokens=24_000)' in main_text
           assert 'AfterValidator(_bounded_text(40_000))' in main_text
           assert 'AfterValidator(_bounded_artifacts)' in main_text
-          assert '> 55_000' in main_text
+          assert '> 75_000' in main_text
           assert 'OUTPUT BUDGET: Return valid complete JSON.' in main_text
           assert 'final_hardening.main()' in workflow_text
           assert 'Resolve browser for Autopilot QA' in workflow_text
