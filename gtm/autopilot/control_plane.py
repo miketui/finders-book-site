@@ -218,6 +218,30 @@ def _read_markdown_bundle(paths: tuple[Path, ...]) -> str:
     )
 
 
+_EBOOK_SAFETY_START = "<!-- GTM_CANONICAL_EBOOK_SAFETY_START -->"
+_EBOOK_SAFETY_END = "<!-- GTM_CANONICAL_EBOOK_SAFETY_END -->"
+
+
+def _ensure_canonical_ebook_safety(channel_path: Path) -> None:
+    """Deterministically preserve the ebook-vs-fillable-PDF safety decision."""
+    if not channel_path.exists():
+        return
+    text = channel_path.read_text(errors="replace")
+    if "non-fillable" in text.lower():
+        return
+    block = (
+        f"{_EBOOK_SAFETY_START}\n"
+        "## Canonical Ebook Safety Decision\n\n"
+        "Amazon Kindle, Apple Books, and Kobo are not channels for the current "
+        "fillable or printable PDF. Any ebook is a separate, deliberately "
+        "redesigned, non-fillable reading edition with its own validated source "
+        "and reader use case. Never upload the current interactive PDF unchanged "
+        "as an ebook. Publishing remains owner-approval gated.\n"
+        f"{_EBOOK_SAFETY_END}\n"
+    )
+    channel_path.write_text(text.rstrip() + "\n\n" + block)
+
+
 def guarded_foundation_qa(unit: dict) -> engine.RunOutput:
     """Require explicit Section 5 reconciliation, not file-presence alone."""
     output = _original_deterministic_foundation_qa(unit)
@@ -253,6 +277,7 @@ def guarded_foundation_qa(unit: dict) -> engine.RunOutput:
     if not summary_path.exists() or "reconcil" not in summary_path.read_text(errors="replace").lower():
         blockers.append("foundation-summary.md must explicitly document reconciliation.")
 
+    _ensure_canonical_ebook_safety(channel_paths[0])
     # Section 1 deliberately emits a general channel decision package and a
     # separate ebook reading-edition architecture.  Treat both required
     # Section 1 Markdown artifacts as the canonical decision package so an
