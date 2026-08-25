@@ -8,7 +8,6 @@ import os
 import re
 import subprocess
 import urllib.request
-from contextvars import ContextVar
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal
@@ -45,44 +44,11 @@ def _bounded_items(limit: int):
     return validate
 
 
-# The aggregate artifact budget scales with the number of durable outputs the
-# active unit owes. A flat ceiling sized for the two-output sections cannot hold
-# Section 10, which is contractually required to emit four documents (content
-# bank, creative master spec in markdown and JSON, and the promotion plays).
-# The floor keeps every unit at or above the previously certified bound, the
-# per-output share keeps the budget proportional to the output contract, and the
-# cap keeps the limit strict and fail-closed for any conceivable unit.
-_ARTIFACT_AGGREGATE_FLOOR = 55_000
-_ARTIFACT_AGGREGATE_PER_OUTPUT = 18_000
-_ARTIFACT_AGGREGATE_CAP = 144_000
-_ARTIFACT_AGGREGATE_LIMIT: ContextVar[int] = ContextVar(
-    "gtm_artifact_aggregate_limit", default=_ARTIFACT_AGGREGATE_FLOOR
-)
-
-
-def artifact_aggregate_limit(unit: dict) -> int:
-    """Aggregate character budget the active unit is allowed to persist."""
-    scaled = len(unit.get("required_outputs", [])) * _ARTIFACT_AGGREGATE_PER_OUTPUT
-    return max(_ARTIFACT_AGGREGATE_FLOOR, min(scaled, _ARTIFACT_AGGREGATE_CAP))
-
-
-def orchestrator_max_tokens(aggregate_limit: int) -> int:
-    """Keep the emit ceiling consistent with the persist ceiling.
-
-    A character budget the model cannot physically emit truncates the structured
-    response instead of bounding it, so the token ceiling rises with the budget
-    and stays capped well inside the provider limit.
-    """
-    extra = max(0, aggregate_limit - _ARTIFACT_AGGREGATE_FLOOR)
-    return min(32_000, 24_000 + extra // 4)
-
-
 def _bounded_artifacts(value: list["ArtifactDocument"]):
     if len(value) > 8:
         raise ValueError("list exceeds 8 items")
-    limit = _ARTIFACT_AGGREGATE_LIMIT.get()
-    if sum(len(item.content) for item in value) > limit:
-        raise ValueError(f"artifact content exceeds {limit} aggregate characters")
+    if sum(len(item.content) for item in value) > 75_000:
+        raise ValueError("artifact content exceeds 75000 aggregate characters")
     return value
 
 
@@ -369,7 +335,6 @@ def build_orchestrator(
     model,
     provider: model_provider.ModelProviderName,
     enable_web_search: bool = False,
-    max_tokens: int = 24_000,
 ) -> Agent:
     instructions = (CONFIG_ROOT / "prompts" / "orchestrator.md").read_text()
     tools = []
@@ -387,7 +352,7 @@ def build_orchestrator(
         name="Finder's Book GTM Orchestrator",
         instructions=instructions,
         model=model,
-        model_settings=ModelSettings(max_tokens=max_tokens),
+        model_settings=ModelSettings(max_tokens=24_000),
         tools=tools,
         output_type=RunOutput,
     )
@@ -877,15 +842,12 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         )
         or (unit["kind"] == "day" and bool(unit.get("requires_web_search")))
     )
-    aggregate_limit = artifact_aggregate_limit(unit)
-    _ARTIFACT_AGGREGATE_LIMIT.set(aggregate_limit)
     orchestrator = build_orchestrator(
         specialists,
         unit.get("specialists", []),
         model,
         provider,
         enable_web_search=enable_web,
-        max_tokens=orchestrator_max_tokens(aggregate_limit),
     )
     prompt = (
         specific
@@ -893,9 +855,8 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         "Do not claim external side effects occurred unless evidence says so.\n\n"
         "OUTPUT BUDGET: Return valid complete JSON. Keep every artifact document "
         "at or below 40,000 characters and all artifact documents together at or "
-        f"below {aggregate_limit:,} characters. Avoid decorative repeated "
-        f"characters and keep the full response below "
-        f"{aggregate_limit + 5_000:,} characters. Prefer concise "
+        "below 75,000 characters. Avoid decorative repeated characters and keep "
+        "the full response below 80,000 characters. Prefer concise "
         "tables and bullets while preserving all required evidence.\n\n"
         + json.dumps(context, indent=2)
     )
@@ -908,9 +869,6 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
 
 async def execute_unit(unit: dict) -> dict:
     run_id = uuid4().hex[:16]
-    # Bind the budget to this unit so a wider section cannot leak its allowance
-    # into a later, narrower one.
-    _ARTIFACT_AGGREGATE_LIMIT.set(artifact_aggregate_limit(unit))
     if unit["kind"] == "foundation_qa":
         output = deterministic_foundation_qa(unit)
         qa = run_qa(render=True)

@@ -209,18 +209,10 @@ jobs:
           assert 'Determine whether the active unit requires GPT Image' in workflow_text
           assert 'OPENAI_API_KEY is required for an active unit that enables GPT Image rendering.' in workflow_text
           assert 'GTM_STATE_KEY is required' in workflow_text
-          assert 'ModelSettings(max_tokens=max_tokens)' in main_text
-          assert 'max_tokens: int = 24_000' in main_text
-          assert 'return min(32_000, 24_000 + extra // 4)' in main_text
+          assert 'ModelSettings(max_tokens=24_000)' in main_text
           assert 'AfterValidator(_bounded_text(40_000))' in main_text
           assert 'AfterValidator(_bounded_artifacts)' in main_text
-          # The aggregate artifact budget stays bounded and fail-closed: it is
-          # floored at the previously certified value, scales only with the
-          # unit's own output contract, and is hard-capped.
-          assert '_ARTIFACT_AGGREGATE_FLOOR = 55_000' in main_text
-          assert '_ARTIFACT_AGGREGATE_CAP = 144_000' in main_text
-          assert 'limit = _ARTIFACT_AGGREGATE_LIMIT.get()' in main_text
-          assert '> limit' in main_text
+          assert '> 75_000' in main_text
           assert 'OUTPUT BUDGET: Return valid complete JSON.' in main_text
           assert 'final_hardening.main()' in workflow_text
           assert 'Resolve browser for Autopilot QA' in workflow_text

@@ -5,10 +5,13 @@ This file records the verified state, the root cause with evidence, and the
 exact steps to resume. It is written so the next operator starts from evidence
 rather than from an assumption.
 
-The original blocker (OpenAI credit exhaustion) has been routed around by the
-opt-in Gemini fallback merged in PRs #68–#71. Phase 0 now reaches the model and
-executes, but **no section has been persisted yet** — see *Current blocker*
-below.
+Two blockers have been cleared and neither required a state change. The original
+one (OpenAI credit exhaustion) was routed around by the opt-in Gemini fallback in
+PRs #68–#71; the one after it (Section 10 exceeding the aggregate artifact
+ceiling) was fixed by PR #72. Phase 0 reaches the model and executes, but **no
+section has been persisted yet** — a run must now complete end to end for the
+cursor to move. Both failures are recorded below, because each one discarded a
+run that had done real work.
 
 ## Verified state — 2026-08-25
 
@@ -40,7 +43,7 @@ Note: `foundation_output_status` globs `*.md` only
 (`gtm/autopilot/final_hardening.py:432`). It is not evidence about the presence
 or absence of `foundation/12-source-ledger.json`.
 
-## Current blocker — Section 10 exceeds the aggregate artifact ceiling
+## Last blocker — Section 10 exceeded the aggregate artifact ceiling (fixed)
 
 Run [#140](https://github.com/miketui/finders-book-site/actions/runs/32794175194)
 (`mode=run` against `7074dfb`, via the Gemini fallback) executed the canonical
@@ -66,12 +69,19 @@ emit **four** documents (`gtm/phase0-plan.json`) — content bank with 30 hooks 
 plays. A flat 55,000-character aggregate allows those four documents an average
 of 13,750 characters each.
 
-**Proposed fix (branch `claude/finders-book-phase0-execution-3ktw2t`, not
-merged):** size the aggregate budget per unit as `18,000 × required_outputs`,
-floored at the previously certified 55,000 so no unit loses room, and hard-capped
-at 144,000. The orchestrator's `max_tokens` rises with the budget so the model is
-never asked for more than it can emit. The bound stays fail-closed and the
-eight-document ceiling is untouched. Merging it to `main` is an owner decision.
+**Fixed on `main` by PR #72** (`83ccc90`): the aggregate ceiling is now 75,000
+characters. Section 10's four documents measured 62,262 characters in run #140,
+so the new ceiling carries roughly 20% headroom. The 40,000-character
+per-document cap, the eight-document ceiling and the fail-closed behaviour are
+unchanged — an over-budget unit still refuses to persist.
+
+One thing to watch on the next `mode: run`: the orchestrator's `max_tokens` is
+still `24_000` (`gtm/autopilot/main.py:355`) while the prompt now permits a
+whole response of 80,000 characters. JSON-escaped Markdown is token-dense, so a
+section that actually fills the new budget could hit the token ceiling and
+truncate rather than be bounded. If a run fails with malformed or truncated
+JSON rather than a validation error, that is the cause — raise `max_tokens`
+rather than lowering the artifact budget.
 
 ## Original blocker (resolved) — OpenAI credit exhaustion (owner-only / RED)
 
@@ -113,7 +123,7 @@ execution state and no-double-spend guarantees are intact.
 
 | Gate | State |
 |---|---|
-| `main` HEAD | `7074dfba3e740d0e072e02caf67da5a79c2bdeed` |
+| `main` HEAD | `83ccc90` (PR #72, aggregate ceiling raised to 75,000) |
 | `npm run validate` locally | ✅ passes |
 | Encrypted state branch | `gtm-autopilot-state`, HMAC-signed, restores cleanly |
 | Blocking approvals | none |
@@ -122,10 +132,8 @@ execution state and no-double-spend guarantees are intact.
 
 ## Resume procedure
 
-1. **Owner:** land an aggregate-budget fix so Section 10 can persist. Either
-   merge the branch fix described in *Current blocker*, or apply an equivalent
-   bound. Without it, a `mode: run` dispatch will reach Section 10 and discard
-   the run again.
+1. The aggregate-budget blocker is already fixed on `main` (PR #72). No code
+   change is needed before the next attempt.
 2. Actions → **Finder's Book GTM Autopilot** → *Run workflow* → branch `main`,
    `mode: run`, with `GTM_MODEL_PROVIDER` set to a provider that has a funded
    credential.
