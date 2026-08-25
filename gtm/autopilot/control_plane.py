@@ -211,6 +211,13 @@ def guarded_update_state_after_unit(
     )
 
 
+def _read_markdown_bundle(paths: tuple[Path, ...]) -> str:
+    """Return normalized text from the existing files in a document bundle."""
+    return "\n".join(
+        path.read_text(errors="replace").lower() for path in paths if path.exists()
+    )
+
+
 def guarded_foundation_qa(unit: dict) -> engine.RunOutput:
     """Require explicit Section 5 reconciliation, not file-presence alone."""
     output = _original_deterministic_foundation_qa(unit)
@@ -220,7 +227,12 @@ def guarded_foundation_qa(unit: dict) -> engine.RunOutput:
     blockers: list[str] = []
     operating_path = engine.RUNTIME_ROOT / "foundation" / "05-operating-system.json"
     summary_path = engine.RUNTIME_ROOT / "foundation" / "foundation-summary.md"
-    channel_path = engine.RUNTIME_ROOT / "foundation" / "01-channel-architecture.md"
+    channel_paths = (
+        engine.RUNTIME_ROOT / "foundation" / "01-channel-architecture.md",
+        engine.RUNTIME_ROOT
+        / "foundation"
+        / "01-ebook-reading-edition-architecture.md",
+    )
 
     try:
         operating = json.loads(operating_path.read_text())
@@ -241,7 +253,11 @@ def guarded_foundation_qa(unit: dict) -> engine.RunOutput:
     if not summary_path.exists() or "reconcil" not in summary_path.read_text(errors="replace").lower():
         blockers.append("foundation-summary.md must explicitly document reconciliation.")
 
-    channel_text = channel_path.read_text(errors="replace").lower() if channel_path.exists() else ""
+    # Section 1 deliberately emits a general channel decision package and a
+    # separate ebook reading-edition architecture.  Treat both required
+    # Section 1 Markdown artifacts as the canonical decision package so an
+    # ebook-safety marker in its dedicated document is not reported missing.
+    channel_text = _read_markdown_bundle(channel_paths)
     for required in ("kindle", "apple", "kobo", "non-fillable", "lulu", "direct checkout"):
         if required not in channel_text:
             blockers.append(f"Channel architecture is missing required decision marker: {required}.")

@@ -164,6 +164,8 @@ jobs:
             cp "$source" "$target"
           done
 
+          cp gtm/AUTOPILOT-ROADMAP.md "$export_dir/AUTOPILOT-ROADMAP.md"
+
           python - "$export_dir" <<'PY'
           import json
           import pathlib

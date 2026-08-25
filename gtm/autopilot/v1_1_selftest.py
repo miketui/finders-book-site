@@ -205,6 +205,7 @@ def check_export_workflow_privacy() -> None:
     assert '+refs/heads/$STATE_BRANCH:refs/remotes/origin/$STATE_BRANCH' in workflow
     assert 'key_scheme="openai"' in workflow
     assert "finders-book-phase0-binder.tgz.enc.hmac" in workflow
+    assert 'cp gtm/AUTOPILOT-ROADMAP.md "$export_dir/AUTOPILOT-ROADMAP.md"' in workflow
 
     allowed = {
         "/tmp/finders-book-phase0-binder.tgz.enc",
@@ -458,6 +459,26 @@ def check_section12_classification_contract() -> None:
     assert "Do not mark the unit BLOCKED solely" in source
 
 
+def check_foundation_qa_reads_complete_section1_package() -> None:
+    import control_plane
+
+    with tempfile.TemporaryDirectory() as directory:
+        channel_path = Path(directory) / "01-channel-architecture.md"
+        ebook_path = Path(directory) / "01-ebook-reading-edition-architecture.md"
+        channel_path.write_text("Kindle Apple Kobo Lulu direct checkout")
+        ebook_path.write_text("A separate non-fillable reading edition")
+        package = control_plane._read_markdown_bundle((channel_path, ebook_path))
+        for required in (
+            "kindle",
+            "apple",
+            "kobo",
+            "non-fillable",
+            "lulu",
+            "direct checkout",
+        ):
+            assert required in package
+
+
 def main() -> None:
     check_daily_prompt_fidelity()
     check_operator_schema()
@@ -469,6 +490,7 @@ def main() -> None:
     check_production_import_order()
     check_day_plan_contract_still_authoritative()
     check_section12_classification_contract()
+    check_foundation_qa_reads_complete_section1_package()
     check_reload_safe_active_unit_patch()
     print("GTM Autopilot v1.1 usability self-test PASS")
 
