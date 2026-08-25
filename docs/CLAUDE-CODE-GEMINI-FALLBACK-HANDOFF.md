@@ -97,6 +97,12 @@ remained unchanged. The follow-up keeps identical Pydantic safety bounds as
 runtime `AfterValidator` checks while omitting unsupported provider-facing schema
 keywords.
 
+Production retry `32793509935` then reached Gemini and returned a complete
+Section 12 result, but the legitimate JSON source ledger exceeded the initial
+10,000-character per-artifact limit. Persistence again skipped safely. The
+follow-up permits up to 40,000 characters for one evidence ledger while enforcing
+an eight-document and 55,000-character aggregate ceiling before persistence.
+
 ## Completion boundary
 
 Continue until the status output proves all 12 Foundation sections and Foundation QA are complete. Then run `mode=status` only and verify:

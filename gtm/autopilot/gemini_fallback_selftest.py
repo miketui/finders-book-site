@@ -93,13 +93,17 @@ def main() -> None:
         assert len(orchestrator.tools) == 2
         assert orchestrator.tools[-1] is model_provider.gemini_grounded_web_search
         assert orchestrator.model_settings.max_tokens == 24_000
+        runtime_source = (autopilot_main.CONFIG_ROOT / "autopilot" / "main.py").read_text()
+        assert "at or below 40,000 characters" in runtime_source
+        assert "below 55,000 characters" in runtime_source
+        assert "at or below 10,000 characters" not in runtime_source
         artifact_schema = autopilot_main.ArtifactDocument.model_json_schema()
         assert "maxLength" not in artifact_schema["properties"]["content"]
         run_schema = autopilot_main.RunOutput.model_json_schema()
         assert "maxItems" not in run_schema["properties"]["artifact_documents"]
         try:
             autopilot_main.ArtifactDocument(
-                relative_path="foundation/test.md", content="x" * 10_001
+                relative_path="foundation/test.md", content="x" * 40_001
             )
         except ValidationError:
             pass
@@ -123,6 +127,26 @@ def main() -> None:
             pass
         else:
             raise AssertionError("oversized artifact list must fail validation")
+        try:
+            autopilot_main.RunOutput(
+                run_status="PASS",
+                executive_summary="bounded",
+                artifact_documents=[
+                    autopilot_main.ArtifactDocument(
+                        relative_path="foundation/test-a.md", content="a" * 30_000
+                    ),
+                    autopilot_main.ArtifactDocument(
+                        relative_path="foundation/test-b.md", content="b" * 30_000
+                    ),
+                ],
+                pass_condition_met=True,
+                next_action="continue",
+                founder_brief="bounded",
+            )
+        except ValidationError:
+            pass
+        else:
+            raise AssertionError("aggregate artifact content must fail validation")
 
         response = _Response(
             {

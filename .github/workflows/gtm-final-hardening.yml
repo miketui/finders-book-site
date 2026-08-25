@@ -115,8 +115,9 @@ jobs:
           assert 'trace_provider.set_disabled(True)' in provider
           assert 'set_trace_provider(trace_provider)' in provider
           assert 'ModelSettings(max_tokens=24_000)' in main_runtime
-          assert 'AfterValidator(_bounded_text(10_000))' in main_runtime
-          assert 'AfterValidator(_bounded_items(8))' in main_runtime
+          assert 'AfterValidator(_bounded_text(40_000))' in main_runtime
+          assert 'AfterValidator(_bounded_artifacts)' in main_runtime
+          assert '> 55_000' in main_runtime
 
           assert 'def modified_timestamp' in epub
           assert 'datetime.now(timezone.utc)' in epub
