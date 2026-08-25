@@ -13,6 +13,18 @@
   window.fbGaMeasurementId = GA_ID;
   var loaded = false;
 
+  /* Establish the consent queue before any provider can load. Google recommends
+     setting the denied default before tag configuration, then issuing an
+     explicit update after the visitor makes a choice. */
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  window.gtag("consent", "default", {
+    ad_storage: "denied",
+    analytics_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied"
+  });
+
   function readChoice() {
     try {
       var value = localStorage.getItem(STORAGE_KEY);
@@ -40,9 +52,6 @@
     if (loaded) return;
     loaded = true;
 
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-    window.gtag("consent", "default", { analytics_storage: "granted" });
     window.gtag("js", new Date());
     window.gtag("config", GA_ID, { anonymize_ip: true });
     addScript("https://www.googletagmanager.com/gtag/js?id=" + GA_ID, "fb-ga4", true);
@@ -77,17 +86,22 @@
     window.fbAnalyticsConsent = value;
     if (value === "granted") {
       window["ga-disable-" + GA_ID] = false;
-      if (loaded && typeof window.gtag === "function") {
-        window.gtag("consent", "update", { analytics_storage: "granted" });
-      } else {
-        loadAnalytics();
-      }
+      window.gtag("consent", "update", {
+        ad_storage: "denied",
+        analytics_storage: "granted",
+        ad_user_data: "denied",
+        ad_personalization: "denied"
+      });
+      loadAnalytics();
     }
     if (value === "denied") {
       window["ga-disable-" + GA_ID] = true;
-      if (typeof window.gtag === "function") {
-        window.gtag("consent", "update", { analytics_storage: "denied" });
-      }
+      window.gtag("consent", "update", {
+        ad_storage: "denied",
+        analytics_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied"
+      });
       clearGaCookies();
     }
   }

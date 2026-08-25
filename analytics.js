@@ -24,7 +24,11 @@
     var p = Object.assign({page_variant:"v3.2", page_id:PAGE_ID}, params || {});
     try{
       if (typeof window.va === "function") window.va("event", {name:name, data:p});
-      if (typeof window.gtag === "function") window.gtag("event", name, p);
+      if (typeof window.gtag === "function") {
+        var gaParams = Object.assign({}, p);
+        if (window.fbGaMeasurementId) gaParams.send_to = window.fbGaMeasurementId;
+        window.gtag("event", name, gaParams);
+      }
       else if (Array.isArray(window.dataLayer)) window.dataLayer.push(Object.assign({event:name}, p));
       if (typeof window.plausible === "function") window.plausible(name, {props:p});
       if (typeof window.fbq === "function" && name === "checkout_click") window.fbq("track","InitiateCheckout",p);

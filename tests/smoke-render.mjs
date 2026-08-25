@@ -316,12 +316,24 @@ console.log('\n  analytics consent');
 
   await page.locator('.consent-allow').click();
   await page.waitForTimeout(200);
-  const allowed = await page.evaluate(() => localStorage.getItem('fb_analytics_consent_v1'));
-  if (allowed !== 'granted' || providerRequests.length !== 2) {
-    console.log(`    FAIL  allow choice (stored=${allowed}, provider requests=${providerRequests.length})`);
+  const allowed = await page.evaluate(() => {
+    const queue = (window.dataLayer || []).map((entry) => Array.from(entry));
+    const consentDefault = queue.find((entry) => entry[0] === 'consent' && entry[1] === 'default');
+    const consentUpdate = queue.find((entry) => entry[0] === 'consent' && entry[1] === 'update');
+    const config = queue.find((entry) => entry[0] === 'config' && entry[1] === 'G-ZXX0M4VYT5');
+    return {
+      stored: localStorage.getItem('fb_analytics_consent_v1'),
+      defaultDenied: consentDefault?.[2]?.analytics_storage === 'denied',
+      updateGranted: consentUpdate?.[2]?.analytics_storage === 'granted',
+      configQueued: Boolean(config),
+    };
+  });
+  if (allowed.stored !== 'granted' || !allowed.defaultDenied || !allowed.updateGranted ||
+      !allowed.configQueued || providerRequests.length !== 2) {
+    console.log(`    FAIL  allow choice (state=${JSON.stringify(allowed)}, provider requests=${providerRequests.length})`);
     failures++;
   } else {
-    console.log('    ok    explicit allow loads GA4 and Vercel Analytics once');
+    console.log('    ok    denied default updates to granted before GA4 configuration');
   }
 
   await page.locator('.consent-reopen').click();
