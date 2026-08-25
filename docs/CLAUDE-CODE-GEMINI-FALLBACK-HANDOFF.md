@@ -101,7 +101,14 @@ Production retry `32793509935` then reached Gemini and returned a complete
 Section 12 result, but the legitimate JSON source ledger exceeded the initial
 10,000-character per-artifact limit. Persistence again skipped safely. The
 follow-up permits up to 40,000 characters for one evidence ledger while enforcing
-an eight-document and 55,000-character aggregate ceiling before persistence.
+an eight-document and 75,000-character aggregate ceiling before persistence.
+
+Production run `32794175194` reached the live Phase 0 Section 10 cursor and
+returned four complete artifacts totaling 62,262 characters. The initial
+55,000-character aggregate ceiling rejected the otherwise valid result before
+persistence. The ceiling is therefore set to 75,000 characters, while the
+40,000-character per-document cap and 80,000-character whole-response prompt
+remain in force.
 
 ## Completion boundary
 

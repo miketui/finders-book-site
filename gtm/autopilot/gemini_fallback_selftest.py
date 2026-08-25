@@ -95,7 +95,7 @@ def main() -> None:
         assert orchestrator.model_settings.max_tokens == 24_000
         runtime_source = (autopilot_main.CONFIG_ROOT / "autopilot" / "main.py").read_text()
         assert "at or below 40,000 characters" in runtime_source
-        assert "below 55,000 characters" in runtime_source
+        assert "below 75,000 characters" in runtime_source
         assert "at or below 10,000 characters" not in runtime_source
         artifact_schema = autopilot_main.ArtifactDocument.model_json_schema()
         assert "maxLength" not in artifact_schema["properties"]["content"]
@@ -127,16 +127,32 @@ def main() -> None:
             pass
         else:
             raise AssertionError("oversized artifact list must fail validation")
+        accepted = autopilot_main.RunOutput(
+            run_status="PASS",
+            executive_summary="bounded",
+            artifact_documents=[
+                autopilot_main.ArtifactDocument(
+                    relative_path="foundation/boundary-a.md", content="a" * 37_500
+                ),
+                autopilot_main.ArtifactDocument(
+                    relative_path="foundation/boundary-b.md", content="b" * 37_500
+                ),
+            ],
+            pass_condition_met=True,
+            next_action="continue",
+            founder_brief="bounded",
+        )
+        assert sum(len(item.content) for item in accepted.artifact_documents) == 75_000
         try:
             autopilot_main.RunOutput(
                 run_status="PASS",
                 executive_summary="bounded",
                 artifact_documents=[
                     autopilot_main.ArtifactDocument(
-                        relative_path="foundation/test-a.md", content="a" * 30_000
+                        relative_path="foundation/test-a.md", content="a" * 38_000
                     ),
                     autopilot_main.ArtifactDocument(
-                        relative_path="foundation/test-b.md", content="b" * 30_000
+                        relative_path="foundation/test-b.md", content="b" * 38_000
                     ),
                 ],
                 pass_condition_met=True,

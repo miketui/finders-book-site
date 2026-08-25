@@ -47,8 +47,8 @@ def _bounded_items(limit: int):
 def _bounded_artifacts(value: list["ArtifactDocument"]):
     if len(value) > 8:
         raise ValueError("list exceeds 8 items")
-    if sum(len(item.content) for item in value) > 55_000:
-        raise ValueError("artifact content exceeds 55000 aggregate characters")
+    if sum(len(item.content) for item in value) > 75_000:
+        raise ValueError("artifact content exceeds 75000 aggregate characters")
     return value
 
 
@@ -855,8 +855,8 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
         "Do not claim external side effects occurred unless evidence says so.\n\n"
         "OUTPUT BUDGET: Return valid complete JSON. Keep every artifact document "
         "at or below 40,000 characters and all artifact documents together at or "
-        "below 55,000 characters. Avoid decorative repeated characters and keep "
-        "the full response below 60,000 characters. Prefer concise "
+        "below 75,000 characters. Avoid decorative repeated characters and keep "
+        "the full response below 80,000 characters. Prefer concise "
         "tables and bullets while preserving all required evidence.\n\n"
         + json.dumps(context, indent=2)
     )
