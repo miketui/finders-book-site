@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+      GTM_EXPORT_KEY: ${{ secrets.GTM_EXPORT_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
       STATE_BRANCH: gtm-autopilot-state
@@ -47,7 +48,7 @@ jobs:
           print(f'Foundation export authorized for {actor}.')
           PY
 
-      - name: Normalize state key
+      - name: Normalize state and export keys
         shell: bash
         run: |
           if [[ -z "${GTM_STATE_KEY:-}" ]]; then
@@ -55,6 +56,16 @@ jobs:
             exit 1
           fi
           echo "::add-mask::$GTM_STATE_KEY"
+
+          if [[ -z "${GTM_EXPORT_KEY:-}" ]]; then
+            echo "GTM_EXPORT_KEY is required for Foundation export."
+            exit 1
+          fi
+          if [[ "$GTM_EXPORT_KEY" == "$GTM_STATE_KEY" ]]; then
+            echo "GTM_EXPORT_KEY must be different from GTM_STATE_KEY."
+            exit 1
+          fi
+          echo "::add-mask::$GTM_EXPORT_KEY"
 
           clean_openai="$(printf '%s' "${OPENAI_API_KEY:-}" | tr -d '[:space:]')"
           if [[ -n "$clean_openai" ]]; then
@@ -190,7 +201,7 @@ jobs:
           PY
 
           tar -czf /tmp/finders-book-phase0-binder.tgz -C "$export_dir" .
-          export state_passphrase="$GTM_STATE_KEY"
+          export state_passphrase="$GTM_EXPORT_KEY"
           openssl enc -aes-256-cbc -salt -pbkdf2 \
             -in /tmp/finders-book-phase0-binder.tgz \
             -out /tmp/finders-book-phase0-binder.tgz.enc \
@@ -211,19 +222,19 @@ jobs:
           Finder's Book Phase 0 Binder export
 
           This artifact is encrypted because the website repository is public.
-          Use the same private GTM_STATE_KEY stored in your password manager/GitHub Actions secret.
+          Use the private GTM_EXPORT_KEY stored in your password manager. The runtime GTM_STATE_KEY is never exported.
 
           1. Save both the .enc and .enc.hmac files in the same directory.
           2. Export the key without changing its whitespace:
 
-            export GTM_STATE_KEY='YOUR_PRIVATE_VALUE'
+            export GTM_EXPORT_KEY='YOUR_PRIVATE_VALUE'
 
           3. Verify the HMAC before decrypting. Run this Python block exactly:
 
             python3 - <<'PY'
             import hashlib, hmac, os, pathlib
             domain = b"finders-book-gtm-encrypt-then-mac-v2\x00"
-            key_material = os.environ["GTM_STATE_KEY"].encode("utf-8")
+            key_material = os.environ["GTM_EXPORT_KEY"].encode("utf-8")
             mac_key = hashlib.sha256(domain + key_material).digest()
             ciphertext = pathlib.Path("finders-book-phase0-binder.tgz.enc").read_bytes()
             expected = pathlib.Path("finders-book-phase0-binder.tgz.enc.hmac").read_text().strip()
@@ -234,10 +245,10 @@ jobs:
             PY
 
           macOS/Linux with OpenSSL:
-            openssl enc -d -aes-256-cbc -pbkdf2 -in finders-book-phase0-binder.tgz.enc -out finders-book-phase0-binder.tgz -pass env:GTM_STATE_KEY
+            openssl enc -d -aes-256-cbc -pbkdf2 -in finders-book-phase0-binder.tgz.enc -out finders-book-phase0-binder.tgz -pass env:GTM_EXPORT_KEY
             mkdir phase0-binder && tar -xzf finders-book-phase0-binder.tgz -C phase0-binder
 
-          Never paste GTM_STATE_KEY into ChatGPT, GitHub issues, logs, or the public repository.
+          Never paste GTM_EXPORT_KEY or GTM_STATE_KEY into chats, GitHub issues, logs, or the public repository.
           EOF
 
       - name: Upload encrypted Foundation export

@@ -1,0 +1,141 @@
+name: Finder's Book GTM State Key Rotation
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type ROTATE to rewrap the existing snapshot without advancing state"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finders-book-gtm-state-key-rotation
+  cancel-in-progress: false
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    env:
+      GTM_STATE_KEY: ${{ secrets.GTM_STATE_KEY }}
+      GTM_STATE_KEY_NEXT: ${{ secrets.GTM_STATE_KEY_NEXT }}
+      GTM_OWNER_ALLOWLIST: ${{ vars.GTM_OWNER_ALLOWLIST || 'miketui' }}
+      STATE_BRANCH: gtm-autopilot-state
+    steps:
+      - name: Checkout trusted main source
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Authorize and validate rotation
+        shell: bash
+        env:
+          AUTOPILOT_ACTOR: ${{ github.actor }}
+          ROTATION_CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          python - <<'PY'
+          import os
+          actor = os.environ.get('AUTOPILOT_ACTOR', '').strip()
+          allowed = {v.strip() for v in os.environ.get('GTM_OWNER_ALLOWLIST', 'miketui').split(',') if v.strip()}
+          if actor not in allowed:
+              raise SystemExit(f'State-key rotation denied for actor {actor or "<missing>"}.')
+          if os.environ.get('ROTATION_CONFIRMATION') != 'ROTATE':
+              raise SystemExit('Rotation confirmation must exactly equal ROTATE.')
+          PY
+          if [[ -z "${GTM_STATE_KEY:-}" || -z "${GTM_STATE_KEY_NEXT:-}" ]]; then
+            echo "Both GTM_STATE_KEY and GTM_STATE_KEY_NEXT are required."
+            exit 1
+          fi
+          if [[ "$GTM_STATE_KEY" == "$GTM_STATE_KEY_NEXT" ]]; then
+            echo "The next state key must differ from the current state key."
+            exit 1
+          fi
+          echo "::add-mask::$GTM_STATE_KEY"
+          echo "::add-mask::$GTM_STATE_KEY_NEXT"
+
+      - name: Fetch and back up current encrypted snapshot
+        shell: bash
+        run: |
+          git fetch origin "+refs/heads/$STATE_BRANCH:refs/remotes/origin/$STATE_BRANCH"
+          for path in gtm/runtime-state.enc gtm/runtime-state.hmac gtm/runtime-state.meta; do
+            git cat-file -e "origin/$STATE_BRANCH:$path" || { echo "Missing required snapshot file: $path"; exit 1; }
+          done
+          backup_branch="gtm-autopilot-state-backup-${GITHUB_RUN_ID}"
+          git push origin "refs/remotes/origin/$STATE_BRANCH:refs/heads/$backup_branch"
+          printf 'BACKUP_BRANCH=%s\n' "$backup_branch" >> "$GITHUB_ENV"
+
+      - name: Verify and decrypt with current key
+        shell: bash
+        run: |
+          git show "origin/$STATE_BRANCH:gtm/runtime-state.enc" > /tmp/gtm-runtime.enc
+          git show "origin/$STATE_BRANCH:gtm/runtime-state.hmac" > /tmp/gtm-runtime.hmac
+          current_passphrase="$GTM_STATE_KEY"
+          export current_passphrase
+          python gtm/autopilot/state_crypto.py verify \
+            --input /tmp/gtm-runtime.enc \
+            --hmac /tmp/gtm-runtime.hmac \
+            --key-env current_passphrase
+          openssl enc -d -aes-256-cbc -pbkdf2 \
+            -in /tmp/gtm-runtime.enc \
+            -out /tmp/gtm-runtime.tgz \
+            -pass env:current_passphrase
+          python - <<'PY'
+          import tarfile
+          from pathlib import PurePosixPath
+          allowed = {'state.json','metrics.json','experiments.json','approvals.json','foundation','reports','ebook','creative'}
+          with tarfile.open('/tmp/gtm-runtime.tgz', 'r:gz') as archive:
+              for member in archive.getmembers():
+                  path = PurePosixPath(member.name)
+                  if path.is_absolute() or '..' in path.parts or not path.parts or path.parts[0] not in allowed:
+                      raise SystemExit(f'Unsafe runtime archive path: {member.name}')
+                  if member.issym() or member.islnk() or not (member.isfile() or member.isdir()):
+                      raise SystemExit(f'Unsupported runtime archive member: {member.name}')
+          print('Current snapshot authenticated and archive paths validated.')
+          PY
+
+      - name: Re-encrypt unchanged snapshot with next key
+        shell: bash
+        run: |
+          next_passphrase="$GTM_STATE_KEY_NEXT"
+          export next_passphrase
+          openssl enc -aes-256-cbc -salt -pbkdf2 \
+            -in /tmp/gtm-runtime.tgz \
+            -out /tmp/gtm-runtime-next.enc \
+            -pass env:next_passphrase
+          python gtm/autopilot/state_crypto.py sign \
+            --input /tmp/gtm-runtime-next.enc \
+            --hmac /tmp/gtm-runtime-next.hmac \
+            --key-env next_passphrase
+          cat > /tmp/gtm-runtime-next.meta <<'EOF'
+          {
+            "version": 2,
+            "key_scheme": "state_key",
+            "cipher": "aes-256-cbc-pbkdf2",
+            "integrity": "hmac-sha256"
+          }
+          EOF
+          python gtm/autopilot/state_crypto.py verify \
+            --input /tmp/gtm-runtime-next.enc \
+            --hmac /tmp/gtm-runtime-next.hmac \
+            --key-env next_passphrase
+
+      - name: Publish rewrapped snapshot
+        shell: bash
+        run: |
+          git config user.name "finders-book-gtm-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git switch --orphan gtm-state-key-rotation
+          git rm -rf . >/dev/null 2>&1 || true
+          mkdir -p gtm
+          cp /tmp/gtm-runtime-next.enc gtm/runtime-state.enc
+          cp /tmp/gtm-runtime-next.hmac gtm/runtime-state.hmac
+          cp /tmp/gtm-runtime-next.meta gtm/runtime-state.meta
+          git add -f gtm/runtime-state.enc gtm/runtime-state.hmac gtm/runtime-state.meta
+          git commit -m "chore(gtm): rewrap authenticated runtime snapshot"
+          git push --force origin "HEAD:$STATE_BRANCH"
+          echo "State snapshot rewrapped without executing or advancing an Autopilot unit."
+          echo "Backup preserved on $BACKUP_BRANCH. Promote GTM_STATE_KEY_NEXT to GTM_STATE_KEY before any Autopilot run."
+
