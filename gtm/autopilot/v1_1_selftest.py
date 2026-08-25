@@ -478,6 +478,16 @@ def check_foundation_qa_reads_complete_section1_package() -> None:
         ):
             assert required in package
 
+        channel_path.write_text("Kindle Apple Kobo Lulu direct checkout")
+        control_plane._ensure_canonical_ebook_safety(channel_path)
+        control_plane._ensure_canonical_ebook_safety(channel_path)
+        normalized = channel_path.read_text()
+        assert normalized.count(control_plane._EBOOK_SAFETY_START) == 1
+        assert normalized.count(control_plane._EBOOK_SAFETY_END) == 1
+        assert "separate, deliberately redesigned, non-fillable reading edition" in normalized
+        assert "Never upload the current interactive PDF unchanged" in normalized
+        assert "owner-approval gated" in normalized
+
 
 def main() -> None:
     check_daily_prompt_fidelity()
