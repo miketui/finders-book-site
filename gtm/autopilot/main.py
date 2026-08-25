@@ -757,8 +757,8 @@ def update_state_after_unit(
     save_runtime_json("state.json", state)
 
 
-def deterministic_foundation_qa(unit: dict) -> RunOutput:
-    qa = run_qa(render=True)
+def deterministic_foundation_qa(unit: dict, qa: dict | None = None) -> RunOutput:
+    qa = qa if qa is not None else run_qa(render=True)
     ok, missing = required_outputs_exist(unit)
     state = load_runtime_json("state.json")
     expected = config_json("phase0-plan.json")["execution_order"]
@@ -902,8 +902,8 @@ async def execute_model_unit(unit: dict, run_id: str) -> tuple[RunOutput, dict]:
 async def execute_unit(unit: dict) -> dict:
     run_id = uuid4().hex[:16]
     if unit["kind"] == "foundation_qa":
-        output = deterministic_foundation_qa(unit)
         qa = run_qa(render=True)
+        output = deterministic_foundation_qa(unit, qa)
     else:
         output, qa = await execute_model_unit(unit, run_id)
 
