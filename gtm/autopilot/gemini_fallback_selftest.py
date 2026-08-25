@@ -127,6 +127,22 @@ def main() -> None:
             pass
         else:
             raise AssertionError("oversized artifact list must fail validation")
+        accepted = autopilot_main.RunOutput(
+            run_status="PASS",
+            executive_summary="bounded",
+            artifact_documents=[
+                autopilot_main.ArtifactDocument(
+                    relative_path="foundation/boundary-a.md", content="a" * 37_500
+                ),
+                autopilot_main.ArtifactDocument(
+                    relative_path="foundation/boundary-b.md", content="b" * 37_500
+                ),
+            ],
+            pass_condition_met=True,
+            next_action="continue",
+            founder_brief="bounded",
+        )
+        assert sum(len(item.content) for item in accepted.artifact_documents) == 75_000
         try:
             autopilot_main.RunOutput(
                 run_status="PASS",
