@@ -158,10 +158,12 @@ of the plain file.
 
 ## Support ownership
 
-`/contact.html` promises "a person reads these". The route stores every message
-in its own MailerLite group *and*, when `CONTACT_NOTIFY_WEBHOOK_URL` is set,
-posts the message to an alerting endpoint so answering does not depend on
-remembering to open MailerLite.
+`/contact.html` promises "a person reads these". The production route emails the
+owner through Resend (`RESEND_CONTACT_API_KEY`). It does **not** create or update
+a MailerLite subscriber, so a support message cannot trigger marketing double
+opt-in or the legacy Contact Acknowledgement workflow. `CONTACT_NOTIFY_WEBHOOK_URL`
+is optional secondary alerting only. If owner email delivery fails, the visitor
+sees the support-address fallback instead of a fake success.
 
 Assign, in writing: who answers, and within how long. An unowned promise is the
 failure mode here, not the code.
@@ -170,15 +172,18 @@ failure mode here, not the code.
 
 The support/contact retention promise is operational, not aspirational. During the
 **first week of January, April, July, and October**, the person responsible for
-`info@familyfindersbook.com` must review the three Finder's Book Contact groups in
-MailerLite.
+`info@familyfindersbook.com` must review the owner inbox (Resend / mailbox), not
+MailerLite, as the system of record for new messages.
 
-For each resolved request:
+The three Finder's Book Contact:* MailerLite groups are leftovers from the old
+subscribe-on-contact path and should stay empty. If any profiles appear there,
+they were not created by the current site route — treat them as a leak to
+investigate, then apply the same minimization rules:
 
 1. decide whether the message body is still needed for an active support issue,
    dispute, legal obligation, or necessary business record;
 2. if it is no longer needed, remove or blank the stored contact-message text and
-   other unnecessary support-only profile fields using MailerLite or its API;
+   other unnecessary support-only profile fields;
 3. preserve unsubscribe/suppression state and any record that must remain to honor
    an opt-out or legal obligation rather than re-subscribing someone by accident;
 4. honor a valid deletion request by removing deletable profile/support data unless

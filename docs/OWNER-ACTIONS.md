@@ -4,6 +4,27 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
+## Production audit — Payhip still says 49 pages (2026-09-05)
+
+The website on `main` (`83dfe67`) is honest: Ultimate is 250 pages; Essentials is
+the 49-page 001–049 starter. **Payhip is not.** Live storefront copy for Ultimate
+(`Y1O7B`) and Family Bundle (`xPuv4`) still says “49-page fillable PDF” and
+“49-page printable PDF”. Essentials (`eHcPG`) 49-page copy is correct. Prices
+are still $29 / $49 / $89. All three listings still show Payhip’s “On Sale”
+badge.
+
+This cannot be fixed in the repository. In the Payhip product editor, change
+**description copy only** for Ultimate and Family to 250 pages. Do not change
+slugs, ZIP files, webhook, or prices. Then read overlay and `/buy?link=Y1O7B`
+because the iframe body comes from the dashboard, not from site JS.
+
+Also open the enabled Ultimate / Family onboarding emails in MailerLite — they
+were designed 2026-08-19, before the honesty pass, and may still say 49 pages.
+Leave the two 2026-09-05 drafts (Gap Check PDF Opt-in, Day-7 Review + Upgrade)
+disabled.
+
+Full audit: [`docs/SITE-AUDIT-2026-09-05.md`](SITE-AUDIT-2026-09-05.md).
+
 ## Week 3 — Gap Check MailerLite hold (2026-09-05)
 
 Site code now scores the Gap Check on the page. The optional “email me this score + the 1-page checklist” path is wired, but **MailerLite is not called** unless `GAP_CHECK_MAILERLITE_ENABLED=1` is set on the deployment. Do not flip that flag until CoS approves a live campaign. No MailerLite send was made in this work. The Day-7 review-ask / review-request incentive stays inactive and unscheduled (incentive TBD). Quote slots stay empty — do not invent reviews.
