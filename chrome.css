@@ -93,9 +93,10 @@
 .hdr-over .hdr.solid .nav a{ color:var(--pine) }
 .hdr-over .hdr.solid .brand em{ color:var(--gold-ink) }
 
-/* -- hide on scroll down, return on scroll up -- */
-html.fx .hdr{ transition:transform var(--dur-2) var(--ease) }
-html.fx .hdr.tuck{ transform:translate3d(0,-100%,0) }
+/* Header stays put on scroll-down so Get Ultimate remains reachable.
+   Solid background on scroll is applied in chrome.js; tuck is unused. */
+html.fx .hdr{ transition:background var(--dur-2) var(--ease),border-color var(--dur-2) var(--ease),box-shadow var(--dur-2) var(--ease) }
+html.fx .hdr.tuck{ transform:none }
 
 /* -- nav links: base typography (previously duplicated in styles.css) -- */
 .nav a{
@@ -307,12 +308,15 @@ html.fx .book3d-hint{ transition:opacity var(--dur-2) var(--ease) }
 }
 .ledger .tier-price{grid-area:price;align-self:center}
 .ledger .tier-body{grid-area:body;align-self:center}
-.ledger .tier > .btn{
+.ledger .tier > .btn,
+.ledger .tier > .tier-action{
   grid-area:action;
   justify-self:end;
   min-height:48px;
   max-width:250px;
 }
+.ledger .tier-action{display:flex;flex-direction:column;align-items:stretch;gap:.45rem;min-width:0}
+.ledger .tier-action .btn{width:100%;max-width:none}
 
 @media (min-width:721px) and (max-width:1000px){
   .ledger .tier{
@@ -323,7 +327,8 @@ html.fx .book3d-hint{ transition:opacity var(--dur-2) var(--ease) }
     align-items:start;
   }
   .ledger .tier > img{width:96px!important;max-width:96px}
-  .ledger .tier > .btn{justify-self:start;margin-top:.35rem;max-width:none}
+  .ledger .tier > .btn,
+  .ledger .tier > .tier-action{justify-self:start;margin-top:.35rem;max-width:none}
 }
 
 @media (max-width:720px){
@@ -370,11 +375,15 @@ html.fx .book3d-hint{ transition:opacity var(--dur-2) var(--ease) }
   .ledger .tier-list{font-size:.86rem;line-height:1.45}
   .ledger .tier-list li{padding:.22rem 0 .22rem 1rem}
   .ledger .tier-list li::before{top:.78rem}
-  .ledger .tier > .btn{
+  .ledger .tier > .btn,
+  .ledger .tier > .tier-action{
     width:100%;
     max-width:none;
     justify-self:stretch;
     margin-top:.3rem;
+  }
+  .ledger .tier > .btn,
+  .ledger .tier-action .btn{
     min-height:52px;
     padding:.95rem 1rem;
     white-space:normal;

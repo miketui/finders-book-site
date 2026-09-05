@@ -71,6 +71,10 @@ p{margin:0 0 1rem}
 
 .skip{position:absolute;left:-9999px;top:0;background:var(--pine);color:var(--paper);padding:.85rem 1.25rem;z-index:200;font-family:var(--sans);font-size:.85rem}
 .skip:focus{left:.5rem;top:.5rem}
+.visually-hidden{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
 
 .wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 clamp(1.15rem,4vw,2.5rem)}
 .band{padding:clamp(4rem,9vw,7.5rem) 0}
@@ -136,6 +140,17 @@ p{margin:0 0 1rem}
 .btn-row{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2rem}
 .btn-note{font-family:var(--sans);font-size:.8rem;color:var(--mute);margin-top:1rem}
 .band-pine .btn-note,.band-deep .btn-note{color:var(--mute-pine)}
+.cta-guarantee{
+  font-family:var(--sans);font-size:.78rem;line-height:1.5;color:var(--mute);
+  max-width:52ch;margin:.7rem 0 0;
+}
+.hero .cta-guarantee,.band-pine .cta-guarantee,.band-deep .cta-guarantee{color:var(--mute-pine)}
+.tier-lead .cta-guarantee{color:var(--mute-pine)}
+.pdf-mobile-note{
+  font-family:var(--sans);font-size:.72rem;line-height:1.45;color:var(--mute);
+  max-width:46ch;margin:.45rem 0 0;
+}
+.hero .pdf-mobile-note,.tier-lead .pdf-mobile-note{color:var(--mute-pine)}
 
 /* ---------- header ----------
    Header styling lives in chrome.css, which loads after this file and owns
@@ -418,24 +433,21 @@ p{margin:0 0 1rem}
 /* ---------- sticky mobile CTA ---------- */
 .sticky{
   position:fixed;left:0;right:0;bottom:0;z-index:80;display:none;
+  flex-direction:column;justify-content:center;
   background:rgba(11,31,25,.97);backdrop-filter:blur(10px);
-  border-top:1px solid var(--hair-lt);padding:.7rem clamp(1rem,4vw,1.5rem);
-  padding-bottom:calc(.7rem + env(safe-area-inset-bottom));
-  align-items:center;justify-content:space-between;gap:1rem;
+  border-top:1px solid var(--hair-lt);
+  min-height:56px;
+  padding:.35rem .85rem;
+  padding-bottom:calc(.35rem + env(safe-area-inset-bottom));
+  gap:.12rem;
   transform:translateY(105%);transition:transform .3s var(--ease);
 }
 .sticky.on{transform:translateY(0)}
-.sticky-txt{font-family:var(--sans);font-size:.76rem;color:var(--mute-pine);line-height:1.3}
-.sticky-txt b{display:block;color:var(--paper);font-size:.9rem;font-weight:600}
-.sticky .btn{padding:.8rem 1.15rem;font-size:.85rem;white-space:nowrap;min-height:46px}
-@media (max-width:860px){.sticky{display:flex}body{padding-bottom:74px}}
-@media (max-width:860px){
-  .sticky{padding:.75rem 1rem;padding-bottom:calc(.75rem + env(safe-area-inset-bottom));gap:.75rem}
-  .sticky-txt{font-size:.72rem}
-  .sticky-txt b{font-size:.85rem}
-  .sticky .btn{padding:.85rem 1rem;min-height:48px}
-  body{padding-bottom:80px}
-}
+.sticky-in{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.sticky-offer{margin:0;font-family:var(--sans);font-size:.78rem;font-weight:600;color:var(--paper);letter-spacing:.01em;line-height:1.2}
+.sticky-proof{margin:0;font-family:var(--sans);font-size:.6rem;line-height:1.3;color:var(--mute-pine)}
+.sticky .btn{padding:.4rem .85rem;font-size:.78rem;white-space:nowrap;min-height:36px}
+@media (max-width:860px){.sticky{display:flex}body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
 
 /* ---------- footer ---------- */
 .ftr{background:var(--pine-900);color:var(--mute-pine);padding:clamp(3rem,5vw,4.5rem) 0 2.5rem;font-family:var(--sans);font-size:.85rem}
@@ -721,8 +733,9 @@ html:not(.fx) .call-hint{display:none}
 /* Skip control: kept below the fixed header band. Placed inside it, the
    transparent header wrap intercepted the click on desktop and overlapped the
    mobile nav toggle, which is how a visible, enabled control did nothing. */
-.call-skip{position:absolute;top:calc(var(--hdr-h) + clamp(.75rem,2vw,1.25rem));right:clamp(1rem,3vw,2rem);z-index:5;display:inline-flex;align-items:center;font-family:var(--sans);font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--gold-hi);background:transparent;border:1px solid rgba(223,201,157,.4);border-radius:var(--r);padding:.5rem .85rem;cursor:pointer;min-height:44px}
-.call-skip:hover{background:rgba(223,201,157,.1)}
+.call-skip{position:absolute;top:auto;bottom:calc(1.6rem + env(safe-area-inset-bottom,0px));left:50%;right:auto;transform:translateX(-50%);z-index:5;display:inline-flex;align-items:center;font-family:var(--sans);font-size:.82rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--gold-hi);background:rgba(11,31,25,.35);border:1.5px solid rgba(223,201,157,.7);border-radius:var(--r);padding:.75rem 1.35rem;cursor:pointer;min-height:48px}
+.call-skip:hover{background:rgba(223,201,157,.12)}
+.call-hint{bottom:5.2rem}
 /* Warm / returning / anchored traffic: one statement, not four. */
 html.call-compress.fx .call{height:100vh;height:100svh}
 html.call-compress.fx .call-line:not([data-slot="3"]){display:none}
@@ -747,6 +760,13 @@ html.fx .reveal.is-revealed .reveal-h1 .rl:nth-child(2) i{transition-delay:.08s}
 html.fx .reveal .btn-row,html.fx .reveal .btn-note{opacity:0;transform:translateY(14px)}
 html.fx .reveal.is-revealed .btn-row{opacity:1;transform:none;transition:opacity .6s .95s var(--ease),transform .6s .95s var(--ease)}
 html.fx .reveal.is-revealed .btn-note{opacity:1;transform:none;transition:opacity .6s 1.1s var(--ease),transform .6s 1.1s var(--ease)}
+/* Answers and the offer stay readable before the reveal animation finishes. */
+.hero-answers{list-style:none;margin:1rem 0 0;padding:0;max-width:46ch}
+.hero-answers li{font-size:1rem;line-height:1.45;color:var(--mute-pine);padding:.45rem 0;border-top:1px solid var(--hair-lt)}
+.hero-answers li:last-child{border-bottom:1px solid var(--hair-lt)}
+.hero-answers strong{display:inline;font-family:var(--sans);font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-hi);margin-right:.4rem}
+.hero-offer{margin:1.1rem 0 0;font-family:var(--sans);font-size:.95rem;font-weight:600;letter-spacing:.02em;color:var(--paper)}
+.hero .btn-row{margin-top:1.15rem}
 
 /* the object: one earned rotation, then still */
 .stage{position:relative;display:flex;justify-content:center;perspective:1700px;perspective-origin:50% 44%}
@@ -782,6 +802,20 @@ html.fx .reveal.is-revealed .book-shadow{opacity:1;transition:opacity 1s 1.2s va
   .fact-rail li{border-bottom:1px solid var(--hair-lt)}
   .fact-rail li:nth-child(2){border-right:0}
   .fact-rail li:nth-child(3){padding-left:0}
+}
+@media (max-width:720px){
+  .hero{padding:calc(var(--hdr-h) + .85rem) 0 1.35rem}
+  .hero .h-xl{font-size:1.7rem;line-height:1.14;letter-spacing:-.02em}
+  .hero .lede{margin-top:.7rem;font-size:.95rem;line-height:1.45}
+  .hero-answers{margin-top:.7rem}
+  .hero-answers li{font-size:.92rem;padding:.35rem 0}
+  .hero-offer{margin-top:.75rem;font-size:.88rem}
+  .hero .btn-row{margin-top:.8rem;gap:.55rem}
+  .hero .btn{padding:.85rem 1.1rem;font-size:.88rem;min-height:48px}
+  .hero .cta-guarantee,.hero .pdf-mobile-note{font-size:.7rem}
+  .hero-grid{gap:1.4rem}
+  .hero .book3d{width:min(168px,42vw)}
+  .fact-rail{margin-top:1.35rem}
 }
 
 /* ---------- ACT III · THE SNAPSHOT ---------- */
@@ -856,6 +890,18 @@ html.fx.js .spread-viewport{overflow-x:hidden}
 
 /* ---------- ACT IX · THE LEDGER (pricing rows) ----------
    .tiers.ledger (0,2,0) beats the base .tiers grid (0,1,0) unconditionally. */
+.pricing-split{display:grid;grid-template-columns:minmax(240px,.92fr) minmax(0,1.2fr);gap:clamp(1.4rem,3vw,2.4rem);align-items:start}
+@media (max-width:900px){.pricing-split{grid-template-columns:1fr}}
+.compare-card{
+  background:var(--paper);border:1px solid var(--hair);border-radius:var(--r);
+  padding:1.15rem 1.15rem 1rem;position:sticky;top:calc(var(--hdr-h) + .75rem);
+}
+@media (max-width:900px){.compare-card{position:static}}
+.compare{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:.78rem;line-height:1.4}
+.compare th,.compare td{text-align:left;vertical-align:top;padding:.55rem .55rem .55rem 0;border-bottom:1px solid var(--hair);overflow-wrap:anywhere}
+.compare thead th{font-size:.64rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-ink);border-bottom:1px solid var(--gold)}
+.compare tbody td:last-child{color:var(--pine);font-weight:600}
+.compare-note{margin:.7rem 0 0}
 .tiers.ledger{display:block;grid-template-columns:none;align-items:stretch}
 .ledger .tier{display:grid;grid-template-columns:120px 1fr auto;gap:1.5rem;align-items:center;background:transparent;border:0;border-top:1px solid var(--hair);border-radius:0;padding:1.7rem 0}
 .ledger .tier:first-child{border-top:0}

@@ -28,26 +28,16 @@
   /* ============================================================
      1. HEADER SCROLL STATE
      solid  — past the hero, paper background
-     tuck   — hidden on scroll down, returns on scroll up
+     The header (and Get Ultimate) stay visible on scroll-down.
      ============================================================ */
   if (hdr) {
-    var lastY    = window.pageYOffset || 0;
     var queued   = false;
     var SOLID_AT = isOver ? 80 : 8;
-    var TUCK_AT  = 260;
 
     function applyHeaderState() {
       var y = window.pageYOffset || 0;
-
       hdr.classList.toggle("solid", y > SOLID_AT);
-
-      /* Never tuck while the drawer is open, or the close button
-         disappears out from under the user's finger. */
-      if (!document.body.classList.contains("nav-open")) {
-        var down = y > lastY;
-        hdr.classList.toggle("tuck", down && y > TUCK_AT);
-      }
-      lastY = y > 0 ? y : 0;
+      hdr.classList.remove("tuck");
     }
 
     function queueHeader() {
@@ -265,5 +255,17 @@
     if (path === "/" || /index\.html$/.test(path)) return;
     var name = path.replace(/^\//, "").replace(/\.html$/, "") || "unknown";
     track("subpage_view", Object.assign({ page: name }, attribution()));
+  })();
+
+  /* Visiting any inner page counts as a return: the homepage intro
+     compresses on the next arrival. Do not set this on "/" here —
+     motion.js owns the first-home-visit write after Act 0 has decided. */
+  (function markReturningVisitor() {
+    var path = window.location.pathname;
+    if (path === "/" || /index\.html$/.test(path)) return;
+    try {
+      document.cookie = "fb_seen_intro=1; Max-Age=31536000; Path=/; SameSite=Lax";
+      localStorage.setItem("fb_seen_intro", "1");
+    } catch (e) {}
   })();
 })();
