@@ -95,6 +95,7 @@ export default function handler(req, res) {
       respect_email_consent: process.env.RESPECT_EMAIL_CONSENT !== 'false',
       refund_on_partial: process.env.REFUND_ON_PARTIAL === 'true',
       lead_status: process.env.MAILERLITE_SUBSCRIBER_STATUS || 'unconfirmed',
+      gap_check_mailerlite_enabled: /^(1|true|yes)$/i.test(String(process.env.GAP_CHECK_MAILERLITE_ENABLED || '')),
       product_map_source: process.env.PAYHIP_PRODUCT_MAP ? 'environment' : 'built_in',
       product_map_valid: mapValid,
       webhook_token_mode: process.env.PAYHIP_WEBHOOK_TOKENS ? 'rotation_array' : 'single',

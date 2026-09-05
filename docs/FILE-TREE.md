@@ -179,6 +179,7 @@ finders-book-site/
     ├── contact.js
     ├── family-emergency-planning.html
     ├── Family-Readiness-Gap-Check.pdf
+    ├── gap-check.js
     ├── how-it-works.html
     ├── important-documents.html
     ├── in-case-of-death-binder.html

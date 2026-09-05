@@ -66,7 +66,7 @@ for (const file of htmlFiles) {
   }
 }
 
-for (const file of ['contact.js', 'motion.js']) {
+for (const file of ['contact.js', 'motion.js', 'gap-check.js']) {
   const contents = await readFile(resolve(root, file), 'utf8');
   if (!contents.includes(supportEmail)) missing.push(`${file} -> canonical support address is missing`);
   for (const email of retiredSupportEmails) {

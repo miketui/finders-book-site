@@ -44,7 +44,7 @@
       ]
     },
     {
-      "source": "/:file(styles.css|chrome.css|pages.css|consent.css|analytics.js|consent.js|chrome.js|motion.js|contact.js|start.js)",
+      "source": "/:file(styles.css|chrome.css|pages.css|consent.css|analytics.js|consent.js|chrome.js|motion.js|contact.js|start.js|gap-check.js)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
