@@ -47,7 +47,9 @@ const NO_HEADER_CTA = new Set([]);
  * fragment below must appear on both pricing pages.
  */
 const TIER_PARITY = [
-  { label: "Essentials · fillable + print",  needle: "49-page organizer: fillable PDF + print PDF" },
+  { label: "Essentials · fillable + print",  needle: "49-page first-hours organizer (pages 001–049): fillable PDF + print PDF" },
+  { label: "Essentials · first-hours blurb", needle: "Start here: pages 001–049 for the first hours — who to call, where records live. Fillable + print." },
+  { label: "Essentials · upgrade",           needle: "Upgrade to Ultimate for the full 250-page system + five implementation tools." },
   { label: "Essentials · Start Here",        needle: "Start Here orientation page" },
   { label: "Ultimate · five tools named",    needle: "All five implementation tools: fridge card, secure vault setup, check-in plan, handoff scripts, digital legacy link + QR guide" },
   { label: "Ultimate · checksums",           needle: "File checksums so you can verify every download" },

@@ -70,7 +70,7 @@
 
   function copied(status, ok) {
     if (!status) return;
-    status.textContent = ok ? "Copied." : "Select the script and copy it yourself.";
+    status.textContent = ok ? "Copied" : "Select the script and copy it yourself.";
   }
 
   function copyText(text) {

@@ -60,7 +60,7 @@ FOOTER = """<!-- CHROME:FOOTER:START — identical in every page. Guarded by scr
     <div class="ftr-grid">
       <div>
         <h2>The Finder's Book</h2>
-        <p class="footer-summary">The Family Clarity System™: a 49-page family emergency and legacy organizer by Michael David.</p>
+        <p class="footer-summary">The Family Clarity System™: a 250-page family emergency and legacy organizer by Michael David.</p>
         <p class="ftr-nav-note">A pointer, not a vault. No passwords stored, ever.</p>
       </div>
       <div>

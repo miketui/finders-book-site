@@ -856,7 +856,7 @@ html.fx #security.is-struck .doc-no li:nth-child(7) span::after{transition-delay
 
 /* ---------- ACT V · THE SPREAD ----------
    Native horizontal scroll is the default and the only thing that makes
-   pages 2-5 and the "see all 49" trigger reachable under reduced motion
+   pages 2-5 and the page-previews trigger reachable under reduced motion
    or any script failure — nothing else moves .spread-track in that case.
    Only once html.fx.js confirms the whole Act sequence is bound (not
    just that the file started — see the ACT 0 note above) does the JS

@@ -7,7 +7,8 @@ import { chromium } from 'playwright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.VERIFY_PORT || 8125);
-const FRIDGE = 'Fridge card and the other implementation tools ship with Ultimate and Family Bundle — not Essentials.';
+const HOME_FRIDGE = 'Fridge card and the other implementation tools ship with Ultimate and Family Bundle — not Essentials.';
+const START_FRIDGE = 'Fridge card is included with Ultimate and Family Bundle. Essentials buyers: use page 2 as your posted snapshot until you upgrade.';
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css',
   '.js': 'text/javascript', '.mjs': 'text/javascript',
@@ -50,7 +51,7 @@ async function run(name, width, fn) {
 await run('homepage fridge + overlay decorate', 390, async (page) => {
   await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
   const note = await page.locator('.compare-note').innerText();
-  if (note.includes(FRIDGE)) ok('comparison table has exact fridge sentence');
+  if (note.includes(HOME_FRIDGE)) ok('comparison table has exact fridge sentence');
   else fail(`fridge note was: ${note}`);
   const href = await page.locator('[data-checkout][data-placement="hero"]').getAttribute('href');
   const product = await page.locator('[data-checkout][data-placement="hero"]').getAttribute('data-product');
@@ -83,7 +84,7 @@ await run('start wizard one step at a time', 390, async (page) => {
     ok('Next reveals fridge step only');
   } else fail('step 2 after Next');
   const fridge = await page.locator('[data-start-step="2"]').innerText();
-  if (fridge.includes(FRIDGE)) ok('step 2 repeats exact fridge sentence');
+  if (fridge.includes(START_FRIDGE)) ok('step 2 uses Marketing fridge sentence');
   else fail('step 2 missing fridge sentence');
   await page.locator('[data-start-goto="5"]').click();
   await page.waitForTimeout(200);
