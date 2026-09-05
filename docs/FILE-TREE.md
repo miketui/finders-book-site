@@ -160,7 +160,8 @@ finders-book-site/
     │   ├── test-gap-check.mjs
     │   ├── test-health.mjs
     │   ├── test-start.mjs
-    │   └── test-webhook.mjs
+    │   ├── test-webhook.mjs
+    │   └── verify-start-flow.mjs
     ├── .env.example
     ├── .gitattributes
     ├── .gitignore

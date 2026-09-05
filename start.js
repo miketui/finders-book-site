@@ -23,7 +23,7 @@
     if (typeof window.fbTrack === "function") window.fbTrack(name, params);
   }
 
-  function show(n) {
+  function show(n, opts) {
     if (n < 1) n = 1;
     if (n > total) n = total;
     current = n;
@@ -44,7 +44,9 @@
       next.hidden = current === total;
       next.textContent = current === total ? "Done" : "Next step";
     }
-    if (!reduced && wizard.scrollIntoView) {
+    if (opts && opts.scroll === false) {
+      /* initial paint — do not shift the page */
+    } else if (!reduced && wizard.scrollIntoView) {
       try { wizard.scrollIntoView({ block: "start", behavior: "smooth" }); }
       catch (e) { wizard.scrollIntoView(true); }
     }
@@ -52,7 +54,7 @@
   }
 
   wizard.classList.add("is-stepped");
-  show(1);
+  show(1, { scroll: false });
 
   if (prev) {
     prev.addEventListener("click", function () { show(current - 1); });

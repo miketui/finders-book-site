@@ -216,6 +216,7 @@ html.fx .cf-row textarea{ transition:border-color var(--dur-1) var(--ease) }
 }
 .start-progress{
   list-style:none; display:flex; gap:.55rem; margin:0 0 1.8rem; padding:0;
+  scroll-margin-top:calc(var(--hdr-h) + 1rem);
 }
 .start-progress li{ margin:0 }
 .start-dot{
@@ -248,10 +249,10 @@ html.fx .cf-row textarea{ transition:border-color var(--dur-1) var(--ease) }
   display:flex; flex-wrap:wrap; gap:.75rem; margin-top:.4rem;
 }
 .start-nav .btn[disabled]{ opacity:.45; cursor:not-allowed }
-.start-wizard.is-stepped .start-nav{ position:sticky; bottom:.75rem }
-.start-wizard:not(.is-stepped) .start-progress,
-.start-wizard:not(.is-stepped) .start-progress-label,
-.start-wizard:not(.is-stepped) .start-nav{ display:none }
+.start-nav{ margin-top:1.2rem; scroll-margin-bottom:12rem }
+/* html.fx is set by the existing blocking script before first paint.
+   Hide later steps immediately so start.js does not collapse them after paint. */
+html.fx .start-wizard:not(.is-stepped) .start-step:not([data-start-step="1"]){ display:none }
 
 @media (max-width:720px){
   .start-wizard.is-stepped .start-step{ min-height:12rem }

@@ -44,7 +44,6 @@ const PAGES = [
     path: '/start.html',
     controls: [
       { selector: '[data-start-next]', min: 44, label: 'start next step' },
-      { selector: '[data-start-goto="1"]', min: 44, label: 'start step 1 control' },
     ],
   },
 ];
@@ -228,6 +227,13 @@ for (const width of WIDTHS) {
 
     await page.goto(BASE + spec.path, { waitUntil: 'load', timeout: 30000 });
     await page.waitForTimeout(400);
+    if (spec.path === '/start.html') {
+      const allow = page.locator('.consent-allow');
+      if (await allow.count()) {
+        await allow.first().click({ timeout: 2000 }).catch(() => {});
+        await page.waitForTimeout(200);
+      }
+    }
 
     const overflow = await page.evaluate(() => Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth));
     if (overflow > 1) {

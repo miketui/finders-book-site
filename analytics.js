@@ -272,7 +272,14 @@
      Overlay never replaces the href, so middle-click and "Open in new tab" stay. */
   hidePayhipSaleChrome();
   watchOverlaySuccess();
-  loadPayhipScript(function(){});
+  function idleLoadPayhip(){
+    loadPayhipScript(function(){});
+  }
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(idleLoadPayhip, { timeout: 4000 });
+  } else {
+    window.addEventListener("load", function(){ setTimeout(idleLoadPayhip, 1); });
+  }
   checkoutLinks().forEach(function(el){
     decorateOverlayLink(el);
     // Direct-checkout + UTM decoration happens at initialization so middle-click,
@@ -293,7 +300,7 @@
         e.preventDefault();
         return;
       }
-      if (payhipScriptState === "loading") {
+      if (payhipScriptState === "idle" || payhipScriptState === "loading") {
         e.preventDefault();
         loadPayhipScript(function(ready){
           if (ready && openPayhipOverlay(el)) return;
