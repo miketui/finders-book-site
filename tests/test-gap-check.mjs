@@ -4,7 +4,7 @@
  */
 import { createHmac } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { inflateSync } from 'node:zlib';
 
 process.env.MAILERLITE_API_KEY = 'test-ml-key';
 process.env.GAP_CHECK_TOKEN_SECRET = 'test-gap-check-secret-that-is-at-least-32-bytes';
@@ -58,10 +58,66 @@ function expiredToken() {
   return `${payload}.${sig}`;
 }
 
+function pdfObject(latin, n) {
+  const match = latin.match(new RegExp(`(?:^|\\n)${n} 0 obj\\n([\\s\\S]*?)\\nendobj`));
+  if (!match) throw new Error(`PDF is missing object ${n}`);
+  return match[1];
+}
+
+function pdfStream(body) {
+  const start = body.indexOf('stream');
+  let offset = start + 6;
+  if (body[offset] === '\r') offset += 1;
+  if (body[offset] === '\n') offset += 1;
+  const raw = Buffer.from(body.slice(offset, body.lastIndexOf('endstream')), 'latin1');
+  return /\/Filter \/FlateDecode/.test(body) ? inflateSync(raw) : raw;
+}
+
+function pdfCmap(text) {
+  const map = new Map();
+  for (const block of text.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
+    for (const pair of block[1].matchAll(/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g)) {
+      let value = '';
+      for (let i = 0; i < pair[2].length; i += 4) value += String.fromCharCode(parseInt(pair[2].slice(i, i + 4), 16));
+      map.set(parseInt(pair[1], 16), value);
+    }
+  }
+  return map;
+}
+
+function extractGapCheckPdf(path) {
+  const buf = readFileSync(path);
+  const latin = buf.toString('latin1');
+  const pageCount = (latin.match(/\/Type \/Page(?!s)/g) || []).length;
+  const page = latin.match(/\/Contents (\d+) 0 R\n\/Parent \d+ 0 R\n\/Resources (\d+) 0 R\n\/Type \/Page/);
+  if (!page) throw new Error('PDF is missing a single page content stream');
+  const fontCmaps = new Map();
+  for (const font of pdfObject(latin, page[2]).matchAll(/\/(F\d+) (\d+) 0 R/g)) {
+    const unicode = pdfObject(latin, font[2]).match(/\/ToUnicode (\d+) 0 R/);
+    fontCmaps.set(font[1], pdfCmap(pdfStream(pdfObject(latin, unicode[1])).toString('latin1')));
+  }
+  const content = pdfStream(pdfObject(latin, page[1])).toString('latin1');
+  let current = 'F1';
+  let text = '';
+  const tokens = /\/(F\d+)[\s\d.]+Tf|\((?:\\.|[^\\)])*\)\s*Tj/g;
+  let token;
+  while ((token = tokens.exec(content))) {
+    if (token[1]) {
+      current = token[1];
+      continue;
+    }
+    const inner = token[0].slice(1, token[0].lastIndexOf(')'));
+    const bytes = Buffer.from(inner.replace(/\\([\\()nrt])/g, (_, ch) => ({ '\\': '\\', '(': '(', ')': ')', n: '\n', r: '\r', t: '\t' }[ch])), 'latin1');
+    const cmap = fontCmaps.get(current);
+    for (let i = 0; i + 1 < bytes.length; i += 2) text += cmap?.get((bytes[i] << 8) | bytes[i + 1]) || '';
+    text += '\n';
+  }
+  return { buf, pageCount, text };
+}
+
 const index = readFileSync('index.html', 'utf8');
 const gapJs = readFileSync('gap-check.js', 'utf8');
-const pdf = readFileSync('Family-Readiness-Gap-Check.pdf');
-const pdfText = execFileSync('python3', ['-c', 'from pypdf import PdfReader; print(PdfReader("Family-Readiness-Gap-Check.pdf").pages[0].extract_text() or "")'], { encoding: 'utf8' });
+const { buf: pdf, pageCount: pdfPages, text: pdfText } = extractGapCheckPdf('Family-Readiness-Gap-Check.pdf');
 const gapHtml = index.split('id="gap-check"')[1]?.split('id="faq"')[0] || '';
 
 const QUESTIONS = [
@@ -202,10 +258,7 @@ process.env.MAILERLITE_API_KEY = savedKey;
 delete process.env.GAP_CHECK_MAILERLITE_ENABLED;
 
 console.log('\n=== Gap Check PDF one-pager ===\n');
-check('lead magnet is a single-page PDF', (() => {
-  const text = execFileSync('python3', ['-c', 'from pypdf import PdfReader; r=PdfReader("Family-Readiness-Gap-Check.pdf"); print(len(r.pages))'], { encoding: 'utf8' }).trim();
-  return text === '1';
-})());
+check('lead magnet is a single-page PDF', pdfPages === 1);
 check('PDF is diagnostic-only and honest',
   /Family Readiness Gap Check/.test(pdfText)
   && /Yes - we could find this tonight/.test(pdfText)
