@@ -35,6 +35,14 @@ const PAGES = [
     ],
   },
   {
+    path: '/gift.html',
+    controls: [
+      { selector: '[data-checkout][data-placement="gift-essentials"]', min: 44, label: 'Gift Essentials CTA' },
+      { selector: '[data-checkout][data-placement="gift-ultimate"]', min: 44, label: 'Gift Ultimate CTA' },
+      { selector: '[data-copy="#giftEmailUltimate"]', min: 44, label: 'Copy Ultimate note' },
+    ],
+  },
+  {
     path: '/contact.html',
     controls: [
       { selector: '#cfSubmit', min: 44, label: 'contact submit' },

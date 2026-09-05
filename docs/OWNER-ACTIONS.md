@@ -4,6 +4,12 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
+## Week 4 — Gift path hold (2026-09-05)
+
+`/gift.html` is a draft on-site path only: in-page card face, copyable email templates, and the existing Payhip SKUs (`eHcPG`, `Y1O7B`, `xPuv4`). **No Payhip dashboard setting was changed.** **No MailerLite send was made.** Designer gift-card PDF remains a placeholder — do not attach a product PDF or ZIP to the repo. Hold merge for CoS / Michael.
+
+---
+
 ## Week 3 — Gap Check MailerLite hold (2026-09-05)
 
 Site code now scores the Gap Check on the page. The optional “email me this score + the 1-page checklist” path is wired, but **MailerLite is not called** unless `GAP_CHECK_MAILERLITE_ENABLED=1` is set on the deployment. Do not flip that flag until CoS approves a live campaign. No MailerLite send was made in this work. The Day-7 review-ask / review-request incentive stays inactive and unscheduled (incentive TBD). Quote slots stay empty — do not invent reviews.
