@@ -291,14 +291,20 @@
      Overlay never replaces the href, so middle-click and "Open in new tab" stay. */
   hidePayhipSaleChrome();
   watchOverlaySuccess();
-  function idleLoadPayhip(){
-    loadPayhipScript(function(){});
+  function scheduleIdlePayhip(){
+    function idleLoadPayhip(){
+      loadPayhipScript(function(){});
+    }
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(idleLoadPayhip, { timeout: 4000 });
+    } else {
+      setTimeout(idleLoadPayhip, 1);
+    }
   }
-  if (typeof requestIdleCallback === "function") {
-    requestIdleCallback(idleLoadPayhip, { timeout: 4000 });
-  } else {
-    window.addEventListener("load", function(){ setTimeout(idleLoadPayhip, 1); });
-  }
+  /* Wait for `load` first. An idle callback during parse/image fetch
+     steals the throttled pipe from the order-page cover (lab LCP). */
+  if (document.readyState === "complete") scheduleIdlePayhip();
+  else window.addEventListener("load", scheduleIdlePayhip);
   checkoutLinks().forEach(function(el){
     decorateOverlayLink(el);
     // Direct-checkout + UTM decoration happens at initialization so middle-click,

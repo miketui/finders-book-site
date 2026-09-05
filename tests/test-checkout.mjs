@@ -88,6 +88,8 @@ check('overlay prefers in-page checkout and keeps /buy fallback', () => {
   assert.match(analytics, /e\.preventDefault\(\)/);
   assert.match(analytics, /brandedStartUrl/);
   assert.match(analytics, /start\.html/);
+  assert.match(analytics, /readyState === "complete"/);
+  assert.match(analytics, /addEventListener\("load", scheduleIdlePayhip\)/);
 });
 
 check('product-key helper reads /b/ and /buy?link=', () => {
