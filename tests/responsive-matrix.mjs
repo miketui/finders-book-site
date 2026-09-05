@@ -22,8 +22,8 @@ const PAGES = [
     path: '/',
     controls: [
       { selector: '#callSkip', min: 0, label: 'Skip Intro' },
-      { selector: '.btn-row .btn-primary', min: 44, label: 'hero preview CTA' },
-      { selector: '.btn-row .btn-ghost', min: 44, label: 'hero checkout CTA' },
+      { selector: '.hero .btn-row .btn-primary', min: 44, label: 'hero checkout CTA' },
+      { selector: '.hero .btn-row [data-placement="hero-preview"]', min: 44, label: 'hero preview link' },
     ],
   },
   {
@@ -152,9 +152,8 @@ async function checkControl(page, width, { selector, min, label }) {
 }
 
 async function checkNavigation(page, width) {
-  // Header behaviour is intentionally stateful: it tucks while scrolling down.
-  // Test navigation from its actual entry state at the top of the page, before
-  // the control matrix scrolls through downstream CTAs.
+  // Header stays visible on scroll-down (Get Ultimate must remain reachable).
+  // Test navigation from the top of the page before downstream CTAs are exercised.
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(350);
 

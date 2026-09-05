@@ -73,19 +73,21 @@
     var warm = false;
     try {
       if (location.hash && location.hash.length > 1) warm = true;
-      var qs = new URLSearchParams(location.search);
-      var medium = (qs.get("utm_medium") || "").toLowerCase();
-      if (/cpc|paid|retarget|remarket|display|social|email|affiliate/.test(medium)) warm = true;
-      /* sessionStorage, not localStorage: this is a same-session warm-
-         traffic signal for choosing which UI variant to show, not data
-         this site persists across visits without consent — consent.js
-         owns that decision for everything that actually needs it. */
+      if (/[?&]utm_/i.test(location.search)) warm = true;
+      if (/\/order(\.html)?/i.test(location.pathname) || /\/order(\.html)?/i.test(document.referrer || "")) warm = true;
+      if (document.cookie.indexOf("fb_seen_intro=1") !== -1) warm = true;
       if (sessionStorage.getItem("fb_seen_call") === "1") warm = true;
+      if (localStorage.getItem("fb_seen_intro") === "1") warm = true;
+      if (window.matchMedia && window.matchMedia("(max-width:720px)").matches) warm = true;
     } catch (e) {}
     if (warm) docEl.classList.add("call-compress");
     try {
       window.addEventListener("load", function(){
-        try { sessionStorage.setItem("fb_seen_call", "1"); } catch (e) {}
+        try {
+          sessionStorage.setItem("fb_seen_call", "1");
+          localStorage.setItem("fb_seen_intro", "1");
+          document.cookie = "fb_seen_intro=1; Max-Age=31536000; Path=/; SameSite=Lax";
+        } catch (e) {}
       });
     } catch (e) {}
   })();
@@ -253,6 +255,11 @@
          is not. */
       callSkip.addEventListener("click", function(e){
         e.preventDefault();
+        try {
+          sessionStorage.setItem("fb_seen_call", "1");
+          localStorage.setItem("fb_seen_intro", "1");
+          document.cookie = "fb_seen_intro=1; Max-Age=31536000; Path=/; SameSite=Lax";
+        } catch (err) {}
         scrollToTarget(reveal);
       });
     }
