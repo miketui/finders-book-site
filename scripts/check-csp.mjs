@@ -8,6 +8,7 @@ const PAGES = [
   'about.html',
   'order.html',
   'contact.html',
+  'start.html',
   'how-it-works.html',
   'family-emergency-planning.html',
   'important-documents.html',
@@ -34,6 +35,12 @@ console.log('\ncontent security policy');
 
 if (!/(?:^|;)\s*frame-ancestors\s+'self'\s*(?:;|$)/.test(csp)) {
   fail("production CSP must enforce frame-ancestors 'self'");
+}
+if (!/\bscript-src\b[^;]*https:\/\/payhip\.com/.test(csp)) {
+  fail('production CSP must allow https://payhip.com in script-src for overlay checkout');
+}
+if (!/\bframe-src\b[^;]*https:\/\/payhip\.com/.test(csp)) {
+  fail('production CSP must allow https://payhip.com in frame-src for overlay checkout');
 }
 if (!consentSource.includes('G-ZXX0M4VYT5') ||
     !consentSource.includes('/_vercel/insights/script.js')) {

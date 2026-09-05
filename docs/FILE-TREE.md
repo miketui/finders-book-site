@@ -93,6 +93,7 @@ finders-book-site/
     │   ├── LAUNCH-READINESS.md
     │   ├── OPERATIONS.md
     │   ├── OWNER-ACTIONS.md
+    │   ├── PAYHIP-OVERLAY.md
     │   ├── PAYHIP-PACKAGE-MATRIX.md
     │   ├── PRIVATE-PAYHIP-FILES.md
     │   ├── PRODUCTION-VERIFICATION.md
@@ -153,11 +154,14 @@ finders-book-site/
     ├── tests/
     │   ├── responsive-matrix.mjs
     │   ├── smoke-render.mjs
+    │   ├── test-checkout.mjs
     │   ├── test-consent.mjs
     │   ├── test-contact.mjs
     │   ├── test-gap-check.mjs
     │   ├── test-health.mjs
-    │   └── test-webhook.mjs
+    │   ├── test-start.mjs
+    │   ├── test-webhook.mjs
+    │   └── verify-start-flow.mjs
     ├── .env.example
     ├── .gitattributes
     ├── .gitignore
@@ -191,6 +195,8 @@ finders-book-site/
     ├── robots.txt
     ├── SECURITY.md
     ├── sitemap.xml
+    ├── start.html
+    ├── start.js
     ├── styles.css
     ├── terms.html
     └── vercel.json

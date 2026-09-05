@@ -140,6 +140,11 @@ p{margin:0 0 1rem}
 .btn-row{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2rem}
 .btn-note{font-family:var(--sans);font-size:.8rem;color:var(--mute);margin-top:1rem}
 .band-pine .btn-note,.band-deep .btn-note{color:var(--mute-pine)}
+.checkout-subline{
+  font-family:var(--sans);font-size:.78rem;line-height:1.45;color:var(--mute);
+  margin:.55rem 0 0;
+}
+.tier-lead .checkout-subline,.hero .checkout-subline,.band-pine .checkout-subline,.band-deep .checkout-subline{color:var(--mute-pine)}
 .cta-guarantee{
   font-family:var(--sans);font-size:.78rem;line-height:1.5;color:var(--mute);
   max-width:52ch;margin:.7rem 0 0;

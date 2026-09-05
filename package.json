@@ -5,7 +5,7 @@
   "type": "module",
   "description": "The Finder's Book static landing page with Payhip and MailerLite Vercel serverless routes",
   "scripts": {
-    "test": "node tests/test-consent.mjs && node tests/test-webhook.mjs && node tests/test-contact.mjs && node tests/test-gap-check.mjs && node tests/test-health.mjs",
+    "test": "node tests/test-consent.mjs && node tests/test-webhook.mjs && node tests/test-contact.mjs && node tests/test-gap-check.mjs && node tests/test-health.mjs && node tests/test-checkout.mjs && node tests/test-start.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:refs": "node scripts/check-local-references.mjs",
     "check:csp": "node scripts/check-csp.mjs",
@@ -16,7 +16,7 @@
     "hydrate": "node scripts/hydrate-assets.mjs",
     "manifests": "node scripts/regen-manifests.mjs",
     "check:chrome": "node scripts/check-chrome-drift.mjs",
-    "test:render": "node tests/smoke-render.mjs && node tests/responsive-matrix.mjs",
+    "test:render": "node tests/smoke-render.mjs && node tests/responsive-matrix.mjs && node tests/verify-start-flow.mjs",
     "check:deploy": "node scripts/check-deploy-surface.mjs",
     "check:manifests": "node scripts/regen-manifests.mjs && git diff --exit-code -- docs/FILE-INVENTORY.md docs/FILE-TREE.md"
   },
