@@ -14,15 +14,25 @@ This is a current-state audit of the live website, checkout listings, MailerLite
 
 Public pages, security headers, serverless routes, and repository validation are healthy after Weeks 1–3. A browser pass of home, order, contact, `/start`, Gap Check, mobile nav, consent, and the branded 404 found no customer-facing site defect.
 
-The blocking issue is a **three-way page-count split**, not a simple copy typo:
+The blocking issue is a **page-count split nobody can currently settle**:
 
 1. The **website** (after PR #82) says Ultimate is **250 pages**.
-2. Live **Payhip listings** for Ultimate and Family still say **49-page** fillable and print PDFs.
-3. The last **verified attached ZIPs** (`docs/PAYHIP-PACKAGE-MATRIX.md`, 2026-08-18) were **49-page cores on every tier**. Those paid files are not in this repository, and this audit did not reopen them.
+2. Live **Payhip listings** for Ultimate and Family still say **49-page** fillable and print PDFs, as do three enabled MailerLite buyer emails.
+3. The last **verified attached ZIPs** (`docs/PAYHIP-PACKAGE-MATRIX.md`, 2026-08-18) had **49-page cores on every tier** — but **those are no longer the attached files.** Payhip now advertises different download sizes on all three products, so the packages were replaced after that audit.
 
-PR #82 changed public copy to match “the files that ship” but explicitly did **not** edit Payhip or commit paid PDFs. Until someone opens the currently attached Ultimate ZIP and counts pages, advertising 250 on Payhip would be a guess — and if the ZIP is still 49 pages, the website is the side that is overselling.
+That third point is the important one. The 49-page baseline is stale, and the 250-page website copy was never checked against a file either. **Both numbers are currently unverified.** Nobody should publish either until someone opens the attached ZIP.
 
-Do not treat `docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md` as the current commerce-copy verdict.
+Do not treat `docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md` or the package matrix as the current commerce verdict.
+
+### Download size drift (public Payhip product pages, 2026-09-05)
+
+| Tier | Slug | Verified 2026-08-18 | Payhip advertises now | Same file? |
+|---|---|---:|---:|---|
+| Essentials | `eHcPG` | 28,876,111 B (~28.9 MB) | ZIP (9 MB) | **no** |
+| Ultimate | `Y1O7B` | 27,206,126 B (~27.2 MB) | ZIP (21 MB) | **no** |
+| Family Bundle | `xPuv4` | 28,145,047 B (~28.1 MB) | ZIP (22 MB) | **no** |
+
+Every tier shrank. A 49 → 250 page rewrite would normally grow a PDF, so this is more consistent with re-optimized or re-cut packages than with a straight page expansion — but size cannot prove page count either way. It only proves the audited archives are gone.
 
 ## Evidence matrix
 
@@ -37,7 +47,8 @@ Do not treat `docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md` as the current comm
 | Browser UX | PASS | Desktop + 375px: Skip intro, hero $49 / 250 pages, header CTA, Gap Check scores without email, three-tier order page, consent allow/decline, `/start` is post-purchase not an upsell |
 | Website copy | PASS vs current HTML | Public HTML, JSON-LD (`Pages: 250`), and order cards use 250 for Ultimate and 49 only for Essentials 001–049. **Not proven against the live ZIP.** |
 | Payhip listings | FAIL / owner | Ultimate (`Y1O7B`) and Family Bundle (`xPuv4`) still say 49-page PDFs. Essentials (`eHcPG`) 49-page copy matches both the site and the 2026-08-18 ZIP audit. All three still show “On Sale”. Prices remain $29 / $49 / $89 |
-| Attached paid PDFs | **UNVERIFIED this pass** | Last counted 2026-08-18: 49-page fillable + 49-page print in Essentials, Ultimate, and Family. No new download or page count. |
+| Attached paid PDFs | **UNVERIFIABLE from here** | Advertised ZIP sizes (9/21/22 MB) no longer match the 2026-08-18 archives, so the 49-page record is stale. Download needs a Payhip login this environment does not have. |
+| MailerLite buyer copy | FAIL / owner | Three **enabled** emails still say 49 pages: Ultimate `196196207638349589`, Family `196196225144326000`, Essentials `196196188456748062`. Only the Essentials one is consistent with its own tier |
 | MailerLite buyer mail | PASS with notes | Five original production workflows still **enabled** (Essentials, Ultimate, Family, Review Request, Gap Check Lead Nurture). Two Week 3 drafts remain **disabled**. Site Gap Check does not subscribe unless `GAP_CHECK_MAILERLITE_ENABLED=1` |
 | Analytics / traffic | INFO | Vercel Web Analytics since 2026-07-28: 124 visitors / 239 pageviews. Home 119, `/order.html` 4. Almost all referrers are blank; Google 2, Bing 1 |
 | GTM Autopilot | FAIL / owner | Scheduled runs still die on OpenAI `credit_balance_exhausted` |
@@ -55,16 +66,38 @@ Live Payhip **copy** observed 2026-09-05:
 | Ultimate | `Y1O7B` | $49.00 | “combines a **49-page** family emergency binder” and “**49-page** fillable PDF • **49-page** printable PDF” |
 | Family Bundle | `xPuv4` | $89.00 | “Everything included in the Ultimate Digital Edition • **49-page** fillable PDF • **49-page** printable PDF” |
 
-Last **file** evidence (`docs/PAYHIP-PACKAGE-MATRIX.md`, 2026-08-18): the attached ZIPs were `The_Finders_Book_Ultimate_v1.2.3_PAYHIP_READY_FINAL.zip` (and the matching Family archive), each with a 49-page fillable core and a 49-page print core. This audit did not re-download those packages.
+Last **file** evidence (`docs/PAYHIP-PACKAGE-MATRIX.md`, 2026-08-18) recorded `The_Finders_Book_Ultimate_v1.2.3_PAYHIP_READY_FINAL.zip` with a 49-page fillable core and a 49-page print core. The advertised download size has since changed on all three products, so that record no longer describes what buyers receive.
 
-**Required sequence:**
+**Required sequence — one person with a Payhip login, 10 minutes:**
 
-1. In the Payhip product editor, download the currently attached Ultimate ZIP. Open the fillable PDF and the print PDF. Record the page count of each. Repeat for Family Bundle.
-2. **If both Ultimate PDFs are 250 pages:** then the website is right and Payhip/MailerLite copy is stale. Update listing + onboarding emails to 250. Keep $49 / $89 and slugs `Y1O7B` / `xPuv4`. Rewrite the package matrix. Then re-read overlay and `/buy?link=Y1O7B`.
-3. **If they are still 49 pages:** the website is overselling. Either attach the real 250-page package and *then* change copy, or revert public HTML/schema to 49 until that file exists. **Do not** set Payhip or MailerLite to 250 while the ZIP is 49.
-4. Optional after the count is honest: remove Payhip “On Sale” / compare-at chrome. Site CSS cannot restyle the iframe.
+1. Payhip → product editor → download the currently attached **Ultimate** ZIP. Open the fillable PDF and the print PDF and read the page count of each. Repeat for **Family Bundle** and **Essentials**. Record filename and byte size.
+2. **If Ultimate is 250 pages:** the website is right. Update the Payhip Ultimate/Family descriptions and the three MailerLite emails listed below to 250. Keep $29 / $49 / $89 and slugs `eHcPG` / `Y1O7B` / `xPuv4`. Rewrite `docs/PAYHIP-PACKAGE-MATRIX.md` with the new sizes and hashes.
+3. **If Ultimate is still 49 pages:** the **website** is overselling and is the thing to fix. Either attach the real 250-page package and then update copy everywhere, or revert public HTML/JSON-LD to 49 until that file exists. Do not raise Payhip or MailerLite to 250 to match a claim the file does not support.
+4. Either way, rewrite the package matrix. It is now known-stale.
 
-All three listings still show **On Sale**. That is independent of page count (`docs/PAYHIP-OVERLAY.md`).
+MailerLite emails to correct in the same pass (all **enabled**, so they are reaching real buyers):
+
+| Automation | Email | ID | Current wording |
+|---|---|---|---|
+| Ultimate Onboarding | Your Finder's Book Ultimate is ready | `196196207638349589` | “both **49-page** editions (fillable and print), five implementation tools” |
+| Family Bundle Onboarding | Your Family Bundle is ready | `196196225144326000` | “do not hand a blank **49-page** book to an ageing parent” |
+| Essentials Onboarding | Your Finder's Book is ready | `196196188456748062` | “two editions of the same **49 pages**” — correct for Essentials; leave unless the extract changes |
+
+All three listings also still show **On Sale** chrome, independent of page count (`docs/PAYHIP-OVERLAY.md`).
+
+## Why this audit could not fix it
+
+The remediation was attempted and is blocked on credentials, not on effort:
+
+| Path | Result |
+|---|---|
+| Composio MCP (Payhip connector) | `needsAuth`. OAuth cannot be completed from a headless cloud agent. Even in August the connector could not read products, files, or webhook settings — only coupons/payloads |
+| Payhip REST | No `PAYHIP_API_KEY` in this environment. Payhip also exposes no public product-description write API |
+| Cloud browser → `payhip.com/dashboard` | Redirects to `payhip.com/auth/login`. No existing session; no credentials supplied, and none were guessed |
+| Cloud browser → `dashboard.mailerlite.com` | Cloudflare “verify you are human” challenge |
+| MailerLite MCP | Authenticated, and used for all read evidence here. Exposes no enable/disable toggle — the only destructive option is permanent deletion, which was deliberately not used |
+
+The one action that unblocks everything — opening the attached PDF and counting pages — requires a Payhip seller login. That is an owner action by construction.
 
 ## P1
 

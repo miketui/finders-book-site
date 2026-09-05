@@ -4,23 +4,38 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
-## Production audit — count the attached PDFs before advertising 250 pages (2026-09-05)
+## Count the attached PDFs — only you can (2026-09-05)
 
-The website on `main` (`83dfe67`) **says** Ultimate is 250 pages and Essentials
-is the 49-page 001–049 starter. Live Payhip **listings** for Ultimate (`Y1O7B`)
-and Family Bundle (`xPuv4`) still say 49-page fillable and print PDFs. The last
-**verified ZIPs** (2026-08-18, `docs/PAYHIP-PACKAGE-MATRIX.md`) also had 49-page
-cores on every tier. This audit did not reopen those files. Prices are still
-$29 / $49 / $89. All three listings still show Payhip’s “On Sale” badge.
+**This is the one open blocker and it needs a Payhip seller login.**
 
-**Do not rewrite Payhip or MailerLite to 250 pages yet.** Download the currently
-attached Ultimate (and Family) ZIPs from the product editor and count pages:
+Three surfaces disagree about how long the book is:
 
-- If the fillable and print PDFs are 250: update listing + onboarding copy, then
-  rewrite the package matrix. Keep slugs, prices, webhook.
-- If they are still 49: the website is overselling. Attach the 250-page package
-  first, or revert public copy to 49. Do not advertise 250 while the ZIP is 49.
+- The **website** says Ultimate is 250 pages.
+- **Payhip** Ultimate/Family listings say 49-page fillable and print PDFs.
+- Three **enabled MailerLite** buyer emails also say 49 pages.
 
+And the 2026-08-18 package audit no longer applies: Payhip now advertises
+different download sizes on every product (Essentials 9 MB, Ultimate 21 MB,
+Family 22 MB, versus ~28.9 / 27.2 / 28.1 MB verified in August). The packages
+were replaced after that audit, so **both 49 and 250 are unverified today.**
+
+Do this before changing any copy anywhere:
+
+1. Payhip → product editor → download the attached Ultimate ZIP. Open the
+   fillable and print PDFs. Read the page count. Repeat for Family and
+   Essentials. Note filename and size.
+2. If Ultimate is 250: raise Payhip and the three MailerLite emails to 250.
+3. If Ultimate is still 49: the **website** is the thing to fix — attach the
+   real 250-page file first, or revert public copy to 49.
+4. Rewrite `docs/PAYHIP-PACKAGE-MATRIX.md` either way. It is known-stale.
+
+MailerLite emails that say 49 pages (all enabled): Ultimate
+`196196207638349589`, Family `196196225144326000`, Essentials
+`196196188456748062` (the Essentials one is correct for its tier).
+
+Automation could not close this: the Composio Payhip connector needs OAuth a
+headless agent cannot complete, no `PAYHIP_API_KEY` exists, Payhip has no
+product-description write API, and `payhip.com/dashboard` requires your login.
 Leave the two 2026-09-05 MailerLite drafts (Gap Check PDF Opt-in, Day-7 Review
 + Upgrade) disabled.
 
