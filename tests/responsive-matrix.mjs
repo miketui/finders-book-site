@@ -23,7 +23,7 @@ const PAGES = [
     controls: [
       { selector: '#callSkip', min: 0, label: 'Skip Intro' },
       { selector: '.hero .btn-row .btn-primary', min: 44, label: 'hero checkout CTA' },
-      { selector: '.hero .btn-row .btn-ghost', min: 44, label: 'hero preview CTA' },
+      { selector: '.hero .btn-row [data-placement="hero-preview"]', min: 44, label: 'hero preview link' },
     ],
   },
   {

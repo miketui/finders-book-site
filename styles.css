@@ -767,6 +767,11 @@ html.fx .reveal.is-revealed .btn-note{opacity:1;transform:none;transition:opacit
 .hero-answers strong{display:inline;font-family:var(--sans);font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-hi);margin-right:.4rem}
 .hero-offer{margin:1.1rem 0 0;font-family:var(--sans);font-size:.95rem;font-weight:600;letter-spacing:.02em;color:var(--paper)}
 .hero .btn-row{margin-top:1.15rem}
+.hero-preview-link{
+  display:inline-flex;align-items:center;min-height:44px;
+  font-family:var(--sans);font-size:.82rem;font-weight:600;
+  color:var(--gold-hi);text-decoration:underline;text-underline-offset:.16em;
+}
 
 /* the object: one earned rotation, then still */
 .stage{position:relative;display:flex;justify-content:center;perspective:1700px;perspective-origin:50% 44%}
