@@ -4,15 +4,16 @@ What to watch, what to ignore, and what to do when something breaks. Written for
 a low-volume serverless site with four API routes — deliberately proportionate:
 Vercel's own logs and alerts plus this page, not an observability platform.
 
-Last verified: 2026-08-18.
+Last verified: 2026-09-05.
 
-## The five things worth an alert
+## Alerts worth acting on
 
 | Signal | Where | Why it matters | First action |
 |---|---|---|---|
 | Any 5xx burst on `/api/*` | Vercel → Logs, filter status ≥ 500 | Purchases and leads are being dropped | Open the log line, read the `[payhip]` / `[gap-check]` / `[contact]` prefix |
 | `unmapped_product` in webhook logs | Vercel logs, search `UNMAPPED` | A buyer paid and received no entitlement group | Compare the logged key against the product map in `api/payhip-webhook.js` |
-| `502`/`503` from `/api/contact` or `/api/gap-check-subscribe` | Vercel logs | MailerLite is down or the API key expired | Check `/api/health`, then MailerLite status |
+| `502`/`503` from `/api/contact` | Vercel logs | Resend owner email is down, rejected, or `RESEND_CONTACT_API_KEY` is missing | Check `/api/health` → `behaviour.contact_owner_email` and `secrets_present.RESEND_CONTACT_API_KEY`. Secondary webhook failures do not 5xx the visitor |
+| `502`/`503` from `/api/gap-check-subscribe` | Vercel logs | Missing `GAP_CHECK_TOKEN_SECRET`, or MailerLite is down **only if** `behaviour.gap_check_mailerlite_enabled` is true | Check `/api/health` for the Gap Check flag and MailerLite key; the default hold path does not call MailerLite |
 | Sustained `429`/edge `403` on the public form routes | Vercel logs / Firewall | Either abuse or a genuine traffic spike | Inspect the active combined WAF rate-limit rule for `/api/contact` and `/api/gap-check-subscribe`; keep the in-process limiter as defense-in-depth |
 | GA4 purchases stop while Payhip sales continue | GA4 vs Payhip dashboard | Revenue attribution is blind again | `/api/health` → `behaviour.ga4_purchase_reporting` |
 
@@ -81,8 +82,10 @@ https://www.familyfindersbook.com/api/health?t=YOUR_PRIVATE_TOKEN
 It reports presence and behaviour flags only — never values, IDs, map contents,
 signatures, or subscriber data.
 
-Read `behaviour.ga4_purchase_reporting` and `behaviour.contact_owner_alert` to
-confirm the two optional integrations are actually live.
+Read `behaviour.ga4_purchase_reporting`, `behaviour.contact_owner_email`, and
+`behaviour.contact_secondary_alert` to confirm revenue reporting, Resend owner
+email, and optional secondary alerting are actually live. There is no
+`contact_owner_alert` flag.
 
 ## Static asset caching posture
 
@@ -172,18 +175,21 @@ failure mode here, not the code.
 
 The support/contact retention promise is operational, not aspirational. During the
 **first week of January, April, July, and October**, the person responsible for
-`info@familyfindersbook.com` must review the owner inbox (Resend / mailbox), not
-MailerLite, as the system of record for new messages.
+`info@familyfindersbook.com` must review the owner inbox (Resend / mailbox) first.
+That mailbox is the system of record for contact-form copies. For each resolved
+request, apply the numbered minimization steps to the mailbox copy before looking
+anywhere else.
 
-The three Finder's Book Contact:* MailerLite groups are leftovers from the old
-subscribe-on-contact path and should stay empty. If any profiles appear there,
-they were not created by the current site route — treat them as a leak to
-investigate, then apply the same minimization rules:
+Then check the three Finder's Book Contact:* MailerLite groups. They are leftovers
+from the old subscribe-on-contact path and should stay empty. Any profile there
+was not created by the current site route — treat it as a leak to investigate,
+then apply the same steps to that profile.
 
 1. decide whether the message body is still needed for an active support issue,
    dispute, legal obligation, or necessary business record;
 2. if it is no longer needed, remove or blank the stored contact-message text and
-   other unnecessary support-only profile fields;
+   other unnecessary support-only fields (mailbox copy first; MailerLite profile
+   only if one exists);
 3. preserve unsubscribe/suppression state and any record that must remain to honor
    an opt-out or legal obligation rather than re-subscribing someone by accident;
 4. honor a valid deletion request by removing deletable profile/support data unless

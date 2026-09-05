@@ -4,24 +4,25 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
-## Production audit — Payhip still says 49 pages (2026-09-05)
+## Production audit — count the attached PDFs before advertising 250 pages (2026-09-05)
 
-The website on `main` (`83dfe67`) is honest: Ultimate is 250 pages; Essentials is
-the 49-page 001–049 starter. **Payhip is not.** Live storefront copy for Ultimate
-(`Y1O7B`) and Family Bundle (`xPuv4`) still says “49-page fillable PDF” and
-“49-page printable PDF”. Essentials (`eHcPG`) 49-page copy is correct. Prices
-are still $29 / $49 / $89. All three listings still show Payhip’s “On Sale”
-badge.
+The website on `main` (`83dfe67`) **says** Ultimate is 250 pages and Essentials
+is the 49-page 001–049 starter. Live Payhip **listings** for Ultimate (`Y1O7B`)
+and Family Bundle (`xPuv4`) still say 49-page fillable and print PDFs. The last
+**verified ZIPs** (2026-08-18, `docs/PAYHIP-PACKAGE-MATRIX.md`) also had 49-page
+cores on every tier. This audit did not reopen those files. Prices are still
+$29 / $49 / $89. All three listings still show Payhip’s “On Sale” badge.
 
-This cannot be fixed in the repository. In the Payhip product editor, change
-**description copy only** for Ultimate and Family to 250 pages. Do not change
-slugs, ZIP files, webhook, or prices. Then read overlay and `/buy?link=Y1O7B`
-because the iframe body comes from the dashboard, not from site JS.
+**Do not rewrite Payhip or MailerLite to 250 pages yet.** Download the currently
+attached Ultimate (and Family) ZIPs from the product editor and count pages:
 
-Also open the enabled Ultimate / Family onboarding emails in MailerLite — they
-were designed 2026-08-19, before the honesty pass, and may still say 49 pages.
-Leave the two 2026-09-05 drafts (Gap Check PDF Opt-in, Day-7 Review + Upgrade)
-disabled.
+- If the fillable and print PDFs are 250: update listing + onboarding copy, then
+  rewrite the package matrix. Keep slugs, prices, webhook.
+- If they are still 49: the website is overselling. Attach the 250-page package
+  first, or revert public copy to 49. Do not advertise 250 while the ZIP is 49.
+
+Leave the two 2026-09-05 MailerLite drafts (Gap Check PDF Opt-in, Day-7 Review
++ Upgrade) disabled.
 
 Full audit: [`docs/SITE-AUDIT-2026-09-05.md`](SITE-AUDIT-2026-09-05.md).
 
@@ -174,9 +175,10 @@ empty property list on the Admin API, so neither could read account settings.
 
 ## 4. Contact alerting
 
-**Complete as of 2026-08-18 — do not redo.** `/api/health` reports
-`contact_owner_alert: true`, so `CONTACT_NOTIFY_WEBHOOK_URL` is set in Vercel
-and inbound contact messages are being pushed to it.
+**Complete as of 2026-08-18 — do not redo the webhook.** `/api/health` now reports
+`contact_owner_email` (Resend) and `contact_secondary_alert` (optional webhook).
+There is no `contact_owner_alert` flag. A 2026-08-18 health read showed the
+secondary webhook was set; Resend is the visitor-facing delivery path.
 
 ~~Set `CONTACT_NOTIFY_WEBHOOK_URL` in Vercel to any https endpoint that accepts
 JSON.~~ Done.

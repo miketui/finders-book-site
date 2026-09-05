@@ -10,11 +10,17 @@ This is a current-state audit of the live website, checkout listings, MailerLite
 
 ## Verdict
 
-**The website is live, gated, and internally honest. Checkout is not.**
+**The website is live and gated. Page count is unresolved.**
 
 Public pages, security headers, serverless routes, and repository validation are healthy after Weeks 1–3. A browser pass of home, order, contact, `/start`, Gap Check, mobile nav, consent, and the branded 404 found no customer-facing site defect.
 
-The blocking issue is off-site: Payhip’s Ultimate and Family Bundle storefronts still describe a **49-page** product. The website, schema, and PR #82 now say Ultimate is **250 pages**. Anyone who lands on Payhip’s product page, or who reads the listing after a no-JS `/buy` click, is sold a different book than the site promises.
+The blocking issue is a **three-way page-count split**, not a simple copy typo:
+
+1. The **website** (after PR #82) says Ultimate is **250 pages**.
+2. Live **Payhip listings** for Ultimate and Family still say **49-page** fillable and print PDFs.
+3. The last **verified attached ZIPs** (`docs/PAYHIP-PACKAGE-MATRIX.md`, 2026-08-18) were **49-page cores on every tier**. Those paid files are not in this repository, and this audit did not reopen them.
+
+PR #82 changed public copy to match “the files that ship” but explicitly did **not** edit Payhip or commit paid PDFs. Until someone opens the currently attached Ultimate ZIP and counts pages, advertising 250 on Payhip would be a guess — and if the ZIP is still 49 pages, the website is the side that is overselling.
 
 Do not treat `docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md` as the current commerce-copy verdict.
 
@@ -29,46 +35,46 @@ Do not treat `docs/FINAL-LAUNCH-CERTIFICATION-2026-08-19.md` as the current comm
 | Security headers / APIs | PASS | CSP, `X-Frame-Options`, nosniff. Health/webhook/contact/gap-check fail closed (401/405/400). Contact POST does not write MailerLite |
 | Repository CI | PASS | Latest `main` “Validate Finder's Book site” green. Local validate + 144 unit assertions pass |
 | Browser UX | PASS | Desktop + 375px: Skip intro, hero $49 / 250 pages, header CTA, Gap Check scores without email, three-tier order page, consent allow/decline, `/start` is post-purchase not an upsell |
-| Website copy honesty | PASS | Public HTML, JSON-LD (`Pages: 250`), and order cards use 250 for Ultimate and 49 only for Essentials 001–049 |
-| Payhip listings | **FAIL / owner** | Ultimate (`Y1O7B`) and Family Bundle (`xPuv4`) still say “49-page fillable PDF / 49-page printable PDF”. Essentials (`eHcPG`) 49-page copy is correct. All three still show Payhip “On Sale”. Prices remain $29 / $49 / $89 |
+| Website copy | PASS vs current HTML | Public HTML, JSON-LD (`Pages: 250`), and order cards use 250 for Ultimate and 49 only for Essentials 001–049. **Not proven against the live ZIP.** |
+| Payhip listings | FAIL / owner | Ultimate (`Y1O7B`) and Family Bundle (`xPuv4`) still say 49-page PDFs. Essentials (`eHcPG`) 49-page copy matches both the site and the 2026-08-18 ZIP audit. All three still show “On Sale”. Prices remain $29 / $49 / $89 |
+| Attached paid PDFs | **UNVERIFIED this pass** | Last counted 2026-08-18: 49-page fillable + 49-page print in Essentials, Ultimate, and Family. No new download or page count. |
 | MailerLite buyer mail | PASS with notes | Five original production workflows still **enabled** (Essentials, Ultimate, Family, Review Request, Gap Check Lead Nurture). Two Week 3 drafts remain **disabled**. Site Gap Check does not subscribe unless `GAP_CHECK_MAILERLITE_ENABLED=1` |
 | Analytics / traffic | INFO | Vercel Web Analytics since 2026-07-28: 124 visitors / 239 pageviews. Home 119, `/order.html` 4. Almost all referrers are blank; Google 2, Bing 1 |
 | GTM Autopilot | FAIL / owner | Scheduled runs still die on OpenAI `credit_balance_exhausted` |
 | Paid journey re-proof | NOT RERUN | No new charge. Prior controlled Ultimate QA remains the last paid proof |
 
-## P0 — Payhip still sells the old 49-page Ultimate
+## P0 — Count the attached PDFs before advertising 250 pages
 
-**Owner-only. Do not edit slugs, prices, or files.**
+**Owner-only. Do not change slugs, prices, or webhook. Do not rewrite Payhip or MailerLite copy until the page count is in hand.**
 
-Live Payhip copy observed 2026-09-05:
+Live Payhip **copy** observed 2026-09-05:
 
 | Product | Slug | Price | Listing claim |
 |---|---|---|---|
-| Essentials | `eHcPG` | $29.00 | 49-page binder — **matches** the site |
-| Ultimate | `Y1O7B` | $49.00 | “combines a **49-page** family emergency binder” and “**49-page** fillable PDF • **49-page** printable PDF” — **contradicts** the site |
-| Family Bundle | `xPuv4` | $89.00 | “Everything included in the Ultimate Digital Edition • **49-page** fillable PDF • **49-page** printable PDF” — **contradicts** the site |
+| Essentials | `eHcPG` | $29.00 | 49-page binder |
+| Ultimate | `Y1O7B` | $49.00 | “combines a **49-page** family emergency binder” and “**49-page** fillable PDF • **49-page** printable PDF” |
+| Family Bundle | `xPuv4` | $89.00 | “Everything included in the Ultimate Digital Edition • **49-page** fillable PDF • **49-page** printable PDF” |
 
-Website (production HTML + Product JSON-LD) says Ultimate is a 250-page fillable + print system. PR #82 called shipping under “49 pages” a ship-stop **for the site**. The Payhip editor was never updated.
+Last **file** evidence (`docs/PAYHIP-PACKAGE-MATRIX.md`, 2026-08-18): the attached ZIPs were `The_Finders_Book_Ultimate_v1.2.3_PAYHIP_READY_FINAL.zip` (and the matching Family archive), each with a 49-page fillable core and a 49-page print core. This audit did not re-download those packages.
 
-Also still present on all three listings: Payhip’s **On Sale** badge (compare-at chrome). Site CSS cannot restyle the iframe. Already listed in `docs/PAYHIP-OVERLAY.md`.
+**Required sequence:**
 
-**What to change in Payhip (copy only):**
+1. In the Payhip product editor, download the currently attached Ultimate ZIP. Open the fillable PDF and the print PDF. Record the page count of each. Repeat for Family Bundle.
+2. **If both Ultimate PDFs are 250 pages:** then the website is right and Payhip/MailerLite copy is stale. Update listing + onboarding emails to 250. Keep $49 / $89 and slugs `Y1O7B` / `xPuv4`. Rewrite the package matrix. Then re-read overlay and `/buy?link=Y1O7B`.
+3. **If they are still 49 pages:** the website is overselling. Either attach the real 250-page package and *then* change copy, or revert public HTML/schema to 49 until that file exists. **Do not** set Payhip or MailerLite to 250 while the ZIP is 49.
+4. Optional after the count is honest: remove Payhip “On Sale” / compare-at chrome. Site CSS cannot restyle the iframe.
 
-1. Ultimate and Family descriptions: 250-page fillable PDF and 250-page print PDF. Keep $49 / $89. Keep slugs `Y1O7B` / `xPuv4`.
-2. Optional: remove sale/compare-at so checkout is not dressed as a discount.
-3. After saving, open `/buy?link=Y1O7B` and the overlay from the homepage CTA and read the iframe copy. Overlay titles from site JS are already “The Finder's Book — Ultimate · The Family Clarity System™”; the **body** still comes from the dashboard.
-
-Until that is done, a buyer can be told 250 pages on the website and 49 pages at the register.
+All three listings still show **On Sale**. That is independent of page count (`docs/PAYHIP-OVERLAY.md`).
 
 ## P1
 
 | ID | Area | Finding | Action |
 |---|---|---|---|
 | A-01 | Payhip return | Overlay `successUrl` to `/start.html` is still best-effort. Dashboard redirect is not confirmed on this pass | Owner: Checkout Settings redirect, all three SKUs. Tradeoff: in-overlay instant download is skipped; `/start` already says use the Payhip email |
-| A-02 | MailerLite copy | Enabled onboarding emails were designed 2026-08-19, before the 250-page honesty pass. They may still say 49 pages | Owner: open Ultimate / Family welcome emails in MailerLite and align page count. Do not enable the two new Week 3 drafts |
+| A-02 | MailerLite copy | Enabled onboarding emails were designed 2026-08-19 against the 49-page package. Align them only after the attached PDF page count is known | Same gate as P0. Do not enable the two new Week 3 drafts |
 | A-03 | Gap Check hold | Site scoring is on-page and MailerLite subscribe is held. **Gap Check Lead Nurture is still enabled** on the Leads group. New site signups will not join Leads until the flag is on; the two existing unconfirmed leads still could | Leave held unless CoS wants lead mail. Do not flip `GAP_CHECK_MAILERLITE_ENABLED` from this audit |
 | A-04 | Review / onboarding queues | Ultimate Onboarding: 1 in queue. Review Request: 3 in queue, 0 sent | Expected for a tiny list; confirm none are refunded QA leftovers |
-| A-05 | Ops docs | `docs/OPERATIONS.md` still said `/api/contact` stores messages in MailerLite groups. Production code emails the owner via Resend and does not create subscribers | Corrected in this PR. Leftover Contact:* groups remain at 0 |
+| A-05 | Ops docs | Contact runbook still pointed 502/503 at MailerLite and named `behaviour.contact_owner_alert`, which the health route does not emit | Corrected in this PR: Resend is the contact outage target; flags are `contact_owner_email` / `contact_secondary_alert`. Leftover Contact:* groups remain at 0 |
 
 ## P2
 
@@ -131,9 +137,10 @@ Groups: All Customers 2, Leads 2 (unconfirmed), Ultimate 1, Family Bundle 1, Ref
 
 - No new card charge, refund, or webhook redelivery.
 - No live contact-form or Gap Check email submit.
+- Attached Payhip ZIP page counts were not re-opened (last count 2026-08-18).
 - PageSpeed Insights API returned 429 from this environment; latest CI render job on `main` after #83 is the performance gate.
 - GA4 Admin key-event UI was not re-opened; last recorded verification is 2026-08-18 in `docs/OWNER-ACTIONS.md`.
 
 ## Release rule
 
-Ship site code as-is for Weeks 1–3. **Do not advertise 250 pages in paid or outbound channels until Payhip Ultimate/Family copy matches.** After the dashboard edit, spot-check overlay + `/buy?link=Y1O7B` and the Ultimate welcome email. Then, and only then, the August “ready for launch traffic” claim applies to checkout as well as the website.
+Ship no further page-count marketing until the attached Ultimate PDFs are counted. **Do not advertise 250 pages on Payhip, in MailerLite, or in paid channels unless those PDFs are actually 250 pages.** If they are still 49, the website copy from PR #82 is the defect. If they are 250, then update Payhip and MailerLite and rewrite `docs/PAYHIP-PACKAGE-MATRIX.md`. The August “ready for launch traffic” claim does not cover this split.

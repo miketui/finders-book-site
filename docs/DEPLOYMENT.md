@@ -43,7 +43,8 @@ https://www.familyfindersbook.com/api/health?t=YOUR_PRIVATE_TOKEN
 
 Expected result: `ok: true`, with every required secret reported as effectively
 configured, the deployed commit, `behaviour.product_map_valid: true`, and
-behaviour flags including `ga4_purchase_reporting` and `contact_owner_alert`.
+behaviour flags including `ga4_purchase_reporting`, `contact_owner_email`, and
+`contact_secondary_alert`.
 `GAP_CHECK_TOKEN_SECRET` is healthy only at 32+ characters. The response reports
 presence/health only — never secret values, group IDs, product-map contents,
 signatures, or subscriber data.
