@@ -58,6 +58,13 @@ await run('homepage fridge + overlay decorate', 390, async (page) => {
   else fail(`hero href ${href}`);
   if (product === 'Y1O7B') ok('hero CTA carries data-product=Y1O7B');
   else fail(`hero data-product ${product}`);
+  const sublines = await page.locator('.checkout-subline').allInnerTexts();
+  if (sublines.length === 3 && sublines.every((t) => t.includes('Instant download · One-time · No account required'))) {
+    ok('three pricing cards show the locked checkout subline');
+  } else fail(`checkout sublines: ${JSON.stringify(sublines)}`);
+  const guarantees = await page.locator('#pricing .cta-guarantee').count();
+  if (guarantees >= 3) ok('30-day guarantee sits under all three checkout buttons');
+  else fail(`pricing guarantees ${guarantees}`);
 });
 
 await run('start wizard one step at a time', 390, async (page) => {
