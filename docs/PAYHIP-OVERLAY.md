@@ -14,7 +14,8 @@ This file records what the **website** does and what still requires a Payhip das
 
 - Checkout links keep the live `/b/{slug}` hrefs and are rewritten to Payhip **direct checkout** (`/buy?link={slug}`) so a no-JS or new-tab click skips the Payhip product listing.
 - When `https://payhip.com/payhip.js` loads, a left-click opens Payhip’s **in-page overlay** instead of navigating away. Overlay miss, script block, or modifier-click still uses `/buy?link=`.
-- Overlay options pass `successUrl` / `redirect` pointing at `https://www.familyfindersbook.com/start.html` **if** Payhip’s script honors those keys. That is not documented as a public API. Treat it as best-effort only.
+- Overlay options pass locked titles (`The Finder's Book — Essentials` / `Ultimate` / `Family Bundle`) plus `successUrl` / `redirect` pointing at `https://www.familyfindersbook.com/start.html` **if** Payhip’s script honors those keys. The public embed API documents `product` only. Treat title and return as best-effort. The iframe still prints the dashboard product name.
+- Pricing cards on `/` and `/order.html` show the locked subline `Instant download · One-time · No account required` and the existing 30-day guarantee under each of the three checkout buttons. That chrome is ours. It is not injected into Payhip’s iframe.
 - If a same-origin-allowed `postMessage` from `payhip.com` looks like a completed purchase, the site assigns `/start.html`. Cross-origin checkout UI cannot be styled from this repo.
 - Best-effort CSS hides Payhip “sale” badges **only if they are injected into our document**. Badges inside the Payhip iframe cannot be hidden from site CSS.
 
@@ -34,7 +35,14 @@ Do not flip these until Michael approves. They change live checkout behavior.
    - If a sale badge or compare-at price still appears in checkout, that is a **product price setting** in the Payhip editor (sale / compare-at / strikethrough), not something this repo can suppress inside their iframe.
    - Approval ask: remove sale / compare-at pricing on Essentials, Ultimate, and Family Bundle if Michael wants that chrome gone. Do not change the live $29 / $49 / $89 prices unless he asks.
 
-3. **Do not change**
+3. **Overlay product titles (only if the iframe title does not match)**
+   - Site JS already passes:
+     - `eHcPG` → The Finder's Book — Essentials
+     - `Y1O7B` → The Finder's Book — Ultimate
+     - `xPuv4` → The Finder's Book — Family Bundle
+   - If the overlay still shows a different name, that string is the Payhip **product title** in the editor. Rename there only if Michael wants the iframe to match. Do not change slugs, files, or prices.
+
+4. **Do not change**
    - Product slugs
    - Attached ZIP files
    - Webhook URL

@@ -14,6 +14,7 @@ Site code now prefers in-page Payhip overlay checkout and ships a branded `/star
 |---|---|---|---|
 | Checkout success redirect to `https://www.familyfindersbook.com/start.html` | Overlay `successUrl` is best-effort only. A reliable return to `/start` is a Payhip dashboard checkbox. | Account → Settings → Advanced Settings → Checkout Settings → redirect all three SKUs | Buyers lose the in-overlay instant download and must use the Payhip email. `/start` already says so. |
 | Remove “On Sale” / compare-at price, if it still shows in overlay or `/buy` | Site CSS cannot restyle Payhip’s iframe. | Product editor for `eHcPG`, `Y1O7B`, `xPuv4` — clear sale/compare-at only. Keep $29 / $49 / $89. | Changing the actual price would disagree with the website. |
+| Rename overlay titles if the iframe still disagrees | Site JS passes Essentials / Ultimate / Family Bundle titles. The iframe prints the dashboard product name. | Product editor titles: `The Finder's Book — Essentials`, `The Finder's Book — Ultimate`, `The Finder's Book — Family Bundle`. | Renaming slugs or files would break checkout and the webhook map. |
 
 ---
 

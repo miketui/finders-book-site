@@ -61,6 +61,12 @@
 
   /* Live product slugs. Do not invent new ones. */
   var PAYHIP_SLUGS = { essentials: "eHcPG", ultimate: "Y1O7B", family_bundle: "xPuv4" };
+  var PAYHIP_TITLES = {
+    eHcPG: "The Finder's Book — Essentials",
+    Y1O7B: "The Finder's Book — Ultimate",
+    xPuv4: "The Finder's Book — Family Bundle"
+  };
+  var CHECKOUT_SUBLINE = "Instant download · One-time · No account required";
   var PAYHIP_SCRIPT = "https://payhip.com/payhip.js";
   var START_PATH = "/start.html";
   var payhipScriptState = "idle";
@@ -135,11 +141,24 @@
     (document.head || document.documentElement).appendChild(s);
   }
 
+  function overlayTitleFor(key){
+    return PAYHIP_TITLES[key] || "";
+  }
+
   function callPayhipCheckout(key){
     var Payhip = window.Payhip;
     if (!Payhip || !key) return false;
     var start = brandedStartUrl();
-    var options = { product: key, successUrl: start, redirect: start };
+    var title = overlayTitleFor(key);
+    /* title / name are best-effort. Payhip's public embed API documents
+       `product` only; the iframe still prints the dashboard product name. */
+    var options = {
+      product: key,
+      title: title,
+      name: title,
+      successUrl: start,
+      redirect: start
+    };
     try {
       if (Payhip.Checkout && typeof Payhip.Checkout.open === "function") {
         Payhip.Checkout.open(options);
@@ -313,7 +332,10 @@
 
   window.fbPayhip = {
     slugs: PAYHIP_SLUGS,
+    titles: PAYHIP_TITLES,
+    checkoutSubline: CHECKOUT_SUBLINE,
     startPath: START_PATH,
+    overlayTitleFor: overlayTitleFor,
     productKeyFromHref: productKeyFromHref,
     productKeyFromEl: productKeyFromEl,
     brandedStartUrl: brandedStartUrl,

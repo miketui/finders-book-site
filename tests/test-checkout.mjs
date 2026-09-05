@@ -58,7 +58,7 @@ function bootCheckout(hrefs) {
     addEventListener() {},
     dispatchEvent() {},
     Payhip: {
-      Checkout: { open() { window.__opened = true; } },
+      Checkout: { open(options) { window.__opened = true; window.__overlayOptions = options; } },
     },
     location: { origin: 'https://www.familyfindersbook.com', pathname: '/', hostname: 'www.familyfindersbook.com' },
     va() {},
@@ -102,6 +102,31 @@ check('overlay open is used when Payhip.Checkout is present', () => {
   const { window, links } = bootCheckout(['https://payhip.com/b/Y1O7B']);
   assert.equal(window.fbPayhip.openOverlay(links[0]), true);
   assert.equal(window.__opened, true);
+});
+
+check('overlay passes locked titles and /start return', () => {
+  const { window, links } = bootCheckout([
+    'https://payhip.com/b/eHcPG',
+    'https://payhip.com/b/Y1O7B',
+    'https://payhip.com/b/xPuv4',
+  ]);
+  assert.equal(window.fbPayhip.titles.eHcPG, "The Finder's Book — Essentials");
+  assert.equal(window.fbPayhip.titles.Y1O7B, "The Finder's Book — Ultimate");
+  assert.equal(window.fbPayhip.titles.xPuv4, "The Finder's Book — Family Bundle");
+  assert.equal(window.fbPayhip.checkoutSubline, 'Instant download · One-time · No account required');
+  assert.equal(window.fbPayhip.overlayTitleFor('Y1O7B'), "The Finder's Book — Ultimate");
+  assert.equal(window.fbPayhip.openOverlay(links[1]), true);
+  assert.equal(window.__overlayOptions.product, 'Y1O7B');
+  assert.equal(window.__overlayOptions.title, "The Finder's Book — Ultimate");
+  assert.match(window.__overlayOptions.successUrl, /\/start\.html$/);
+});
+
+check('pricing cards carry the locked subline and 30-day trust strip', () => {
+  assert.equal(index.split('Instant download · One-time · No account required').length - 1, 3);
+  assert.match(index, /email us within 30 days and we’ll make it right/);
+  const order = readFileSync('order.html', 'utf8');
+  assert.equal(order.split('Instant download · One-time · No account required').length - 1, 3);
+  assert.match(order, /email us within 30 days and we’ll make it right/);
 });
 
 check('sale chrome is suppressed from our document when possible', () => {

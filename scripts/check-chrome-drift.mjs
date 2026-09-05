@@ -53,6 +53,7 @@ const TIER_PARITY = [
   { label: "Ultimate · checksums",           needle: "File checksums so you can verify every download" },
   { label: "Family · coordination guide",    needle: "Family Coordination Guide" },
   { label: "Family · three-household cap",   needle: "Licensed for up to three households" },
+  { label: "Checkout subline",               needle: "Instant download · One-time · No account required" },
 ];
 const PRICING_PAGES = ["index.html", "order.html"];
 
