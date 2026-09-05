@@ -4,6 +4,10 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
+## Week 3 — Gap Check MailerLite hold (2026-09-05)
+
+Site code now scores the Gap Check on the page. The optional “email me this score + the 1-page checklist” path is wired, but **MailerLite is not called** unless `GAP_CHECK_MAILERLITE_ENABLED=1` is set on the deployment. Do not flip that flag until CoS approves a live campaign. No MailerLite send was made in this work. The Day-7 review-ask / review-request incentive stays inactive and unscheduled (incentive TBD). Quote slots stay empty — do not invent reviews.
+
 ## Week 2 — Payhip overlay + `/start` (2026-09-05)
 
 Site code now prefers in-page Payhip overlay checkout and ships a branded `/start` orientation page. **No Payhip admin setting was changed in this work.** See `docs/PAYHIP-OVERLAY.md`.

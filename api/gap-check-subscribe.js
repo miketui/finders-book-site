@@ -11,8 +11,11 @@
  * and expiry before streaming the file.
  *
  * Env:
- *   MAILERLITE_API_KEY            required
  *   GAP_CHECK_TOKEN_SECRET        required — at least 32 random bytes in hex
+ *   GAP_CHECK_MAILERLITE_ENABLED  "1" / "true" to POST to MailerLite.
+ *                                 Default is held: validate, issue a download
+ *                                 token, and do not create or email a subscriber.
+ *   MAILERLITE_API_KEY            required only when MailerLite is enabled
  *   ML_GROUP_LEADS                optional, defaults to the live Leads group
  *   MAILERLITE_SUBSCRIBER_STATUS  "unconfirmed" (default) or "active"
  */
@@ -69,8 +72,17 @@ export default async function handler(req, res) {
 
   const key = process.env.MAILERLITE_API_KEY;
   const secret = process.env.GAP_CHECK_TOKEN_SECRET;
+  const mailEnabled = /^(1|true|yes)$/i.test(String(process.env.GAP_CHECK_MAILERLITE_ENABLED || ''));
 
-  if (!key || !secret || secret.length < 32) {
+  if (!secret || secret.length < 32) {
+    return res.status(503).json({
+      ok: false,
+      error: 'not_configured',
+      message: 'The signup form is not connected yet.',
+    });
+  }
+
+  if (mailEnabled && !key) {
     return res.status(503).json({
       ok: false,
       error: 'not_configured',
@@ -110,6 +122,10 @@ export default async function handler(req, res) {
   const name = String(payload.name ?? '').trim().slice(0, 80);
   const groupId = process.env.ML_GROUP_LEADS || DEFAULT_LEADS_GROUP;
   const status = process.env.MAILERLITE_SUBSCRIBER_STATUS || 'unconfirmed';
+
+  if (!mailEnabled) {
+    return res.status(200).json({ ok: true, token: makeToken(secret), held: true });
+  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);

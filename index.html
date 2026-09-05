@@ -301,7 +301,7 @@
          has just shifted from "is this safe?" to "do I actually need it?" -->
     <div class="gap-inline">
       <p class="gap-inline-q">Not sure whether your family would find any of this today?</p>
-      <p class="gap-inline-a">The free Family Readiness Gap Check is twelve questions and about four minutes. You score it yourself. No purchase.</p>
+      <p class="gap-inline-a">The free Family Readiness Gap Check is twelve questions and about four minutes. Answer on this page. No purchase, and no email required to see your score.</p>
       <a class="btn btn-ghost" href="#gap-check" data-scroll-cta data-placement="security-gapcheck">Take the free Gap Check</a>
     </div>
   </div>
@@ -474,6 +474,28 @@
         <p>When one person holds most of the household knowledge, this makes the essentials easier to share after a marriage, home purchase, birth, diagnosis, or move.</p>
       </div>
     </div>
+    <div class="creator-strip" aria-label="Creators">
+      <figure class="creator-slot">
+        <div class="creator-frame" role="img" aria-label="Portrait placeholder for Joanne Godfrey">
+          <span class="creator-initials">JG</span>
+          <span class="creator-ph">Portrait to come</span>
+        </div>
+        <figcaption>
+          <strong>Joanne Godfrey</strong>
+          <span>Co-author</span>
+        </figcaption>
+      </figure>
+      <figure class="creator-slot">
+        <div class="creator-frame" role="img" aria-label="Portrait placeholder for Michael David">
+          <span class="creator-initials">MD</span>
+          <span class="creator-ph">Portrait to come</span>
+        </div>
+        <figcaption>
+          <strong>Michael David</strong>
+          <span>Co-author · public byline</span>
+        </figcaption>
+      </figure>
+    </div>
     <div class="trust-foot">
       <div class="rfield">
         <span class="rfield-label">Created by</span>
@@ -608,23 +630,106 @@
      as its own band. Same nine questions, same FAQPage JSON-LD. -->
 <section class="band gap" id="gap-check">
   <div class="wrap">
-    <div class="gap-grid">
-      <div>
-        <p class="eyebrow">Free · No purchase</p>
-        <h2 class="h-lg gap-title">Not sure you need this yet? <span class="ital">Find out in four minutes.</span></h2>
-        <p class="lede gap-lede">The Family Readiness Gap Check is a one-page diagnostic. Twelve questions about what your family could actually locate tomorrow morning if you were unreachable. You score it yourself. Most people miss more than they expect.</p>
-        <ul class="gap-list">
-          <li>Twelve questions across people, documents, access, and money</li>
-          <li>A plain scoring band, so you know whether this is urgent or simply overdue</li>
-          <li>Written to stand alone &mdash; it is a diagnostic, not a sample chapter</li>
-          <li>Confirm once by email. Unsubscribe in one click.</li>
-        </ul>
-      </div>
+    <div class="head-block gap-intro">
+      <p class="eyebrow">Free · No purchase · About four minutes</p>
+      <h2 class="h-lg gap-title">Family Readiness Gap Check</h2>
+      <p class="lede gap-lede">Twelve questions. About four minutes. Answer for your household as it is tonight — not as you wish it were.</p>
+      <p class="gap-score-help">Count every “Yes — we could find this tonight.” Your result is that number out of 12.</p>
+      <p class="tiny gap-progress" id="gapProgress">0 of 12 answered.</p>
+    </div>
 
-      <div class="gap-card">
-        <h3>Send me the Gap Check</h3>
-        <p class="tiny">Check your inbox for a confirmation link. The printable PDF arrives right after.</p>
+    <form class="gap-quiz" id="gapQuiz">
+      <fieldset class="gap-group">
+        <legend>People</legend>
+        <fieldset class="gap-q">
+          <legend>1. If you were unreachable tonight, would someone know the <strong>first person to call</strong>?</legend>
+          <label><input type="radio" name="q1" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q1" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>2. Is there a named <strong>backup</strong> if that first person does not answer?</legend>
+          <label><input type="radio" name="q2" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q2" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>3. Would someone know who handles <strong>children, dependents, or pets</strong> in the first hour?</legend>
+          <label><input type="radio" name="q3" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q3" value="no"> No — not tonight</label>
+        </fieldset>
+      </fieldset>
 
+      <fieldset class="gap-group">
+        <legend>Documents</legend>
+        <fieldset class="gap-q">
+          <legend>4. Could someone find where the <strong>signed will</strong> (if you have one) is physically kept?</legend>
+          <label><input type="radio" name="q4" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q4" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>5. Could someone find your <strong>power of attorney</strong> or healthcare directive — or confirm you do not have one yet?</legend>
+          <label><input type="radio" name="q5" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q5" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>6. Is there a single written list of <strong>where the important originals live</strong> (not the documents themselves — the locations)?</legend>
+          <label><input type="radio" name="q6" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q6" value="no"> No — not tonight</label>
+        </fieldset>
+      </fieldset>
+
+      <fieldset class="gap-group">
+        <legend>Access</legend>
+        <fieldset class="gap-q">
+          <legend>7. Does at least one trusted person know <strong>where the binder or files would be</strong>?</legend>
+          <label><input type="radio" name="q7" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q7" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>8. Have you written down <strong>who may know what, and when</strong> (now / later / never) — even roughly?</legend>
+          <label><input type="radio" name="q8" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q8" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>9. Is there a clear pointer to the <strong>separate place</strong> where passwords and PINs actually live? (Not the passwords themselves.)</legend>
+          <label><input type="radio" name="q9" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q9" value="no"> No — not tonight</label>
+        </fieldset>
+      </fieldset>
+
+      <fieldset class="gap-group">
+        <legend>Money &amp; care</legend>
+        <fieldset class="gap-q">
+          <legend>10. Could someone identify your <strong>primary bank or credit union by name</strong> without digging through mail for an hour?</legend>
+          <label><input type="radio" name="q10" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q10" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>11. Could someone find <strong>insurance contacts</strong> (health, home, or auto — whichever you carry) by name or phone?</legend>
+          <label><input type="radio" name="q11" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q11" value="no"> No — not tonight</label>
+        </fieldset>
+        <fieldset class="gap-q">
+          <legend>12. Is there a note for <strong>life-critical medication or care instructions</strong> a helper would need in the first night?</legend>
+          <label><input type="radio" name="q12" value="yes"> Yes — we could find this tonight</label>
+          <label><input type="radio" name="q12" value="no"> No — not tonight</label>
+        </fieldset>
+      </fieldset>
+    </form>
+
+    <noscript>
+      <p class="gap-score-help">JavaScript is off. Count every “Yes — we could find this tonight.” Your result is that number out of 12.</p>
+    </noscript>
+
+    <div class="gap-results" id="gapResults" hidden>
+      <p class="gap-score-line" id="gapScoreLine"></p>
+      <p class="gap-score-band" id="gapScoreBand"></p>
+      <a class="btn btn-primary" href="https://payhip.com/b/Y1O7B" data-checkout data-placement="gap-check" data-tier="ultimate" data-price="49">Fix the four blanks — Ultimate, $49</a>
+      <p class="gap-cta-help">Start with the Continuity Snapshot, two trusted people, document locations, and a pointer to where passwords live. Instant download.</p>
+      <p class="cta-guarantee">Instant download. One-time payment. If the files won’t open, we refund — no argument. If what you got isn’t what we showed, email us within 30 days and we’ll make it right.</p>
+
+      <div class="gap-card gap-optional">
+        <h3>Optional — keep a copy</h3>
+        <p class="tiny">You already have your score. Email is not required. If you want a copy, we can send this score and the 1-page checklist. Campaign sends are held for now; the checklist still downloads here.</p>
         <form class="gap-form" id="gapForm" novalidate>
           <div class="gap-field">
             <label for="gapName">First name <span aria-hidden="true">(optional)</span></label>
@@ -634,23 +739,43 @@
             <label for="gapEmail">Email address</label>
             <input id="gapEmail" name="fields[email]" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com">
           </div>
-
           <div class="gap-hp" aria-hidden="true">
             <label for="gapHp">Do not fill this in</label>
             <input id="gapHp" name="company_website" type="text" tabindex="-1" autocomplete="off">
           </div>
-
-          <button class="btn btn-primary" id="gapSubmit" type="submit">Send me the Gap Check</button>
+          <button class="btn btn-ghost" id="gapSubmit" type="submit">Email me this score + the 1-page checklist</button>
         </form>
-
         <p class="gap-msg" id="gapMsg" role="status" aria-live="polite" hidden></p>
-
         <p class="gap-note">
-          We send the checklist, occasional notes about the book, and nothing else. No sharing, no reselling.
+          Optional only. We will not add you to a mailing list until email delivery is switched on.
           See the <a href="/privacy-policy.html">privacy policy</a>.
         </p>
+        <button class="btn btn-ghost" id="gapPrintBtn" type="button">Print the 1-page checklist</button>
       </div>
     </div>
+
+    <article class="gap-print" id="gapPrint">
+      <p class="eyebrow">Family Readiness Gap Check · 1-page checklist</p>
+      <h2>Twelve questions for tonight</h2>
+      <p>Count every “Yes — we could find this tonight.” Your result is that number out of 12.</p>
+      <p id="gapPrintScore"></p>
+      <p id="gapPrintBand"></p>
+      <ol>
+        <li>First person to call</li>
+        <li>Named backup</li>
+        <li>Children, dependents, or pets in the first hour</li>
+        <li>Where the signed will is kept (if you have one)</li>
+        <li>Power of attorney or healthcare directive — or confirm you do not have one yet</li>
+        <li>A written list of where the important originals live</li>
+        <li>Where the binder or files would be</li>
+        <li>Who may know what, and when (now / later / never)</li>
+        <li>A pointer to the separate place where passwords and PINs live</li>
+        <li>Primary bank or credit union by name</li>
+        <li>Insurance contacts by name or phone</li>
+        <li>Life-critical medication or care instructions for the first night</li>
+      </ol>
+      <p>This is a diagnostic, not a sample chapter. Pointers only — never passwords, PINs, or account numbers.</p>
+    </article>
 
     <div class="faq-wrap" id="faq">
       <div class="head-block centered-head faq-head">
@@ -841,6 +966,7 @@
 <script defer src="assets/vendor/lenis.min.js"></script>
 
 <script defer src="motion.js"></script>
+<script defer src="gap-check.js"></script>
 
 <script type="application/ld+json">
 {

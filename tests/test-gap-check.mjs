@@ -1,11 +1,14 @@
 /**
- * Local verification for the Gap Check subscribe -> signed download chain.
- * MailerLite is mocked; the real PDF is read from the repository.
+ * Gap Check: on-page scored product + held MailerLite path.
+ * MailerLite is mocked and must not be called unless explicitly enabled.
  */
 import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { inflateSync } from 'node:zlib';
 
 process.env.MAILERLITE_API_KEY = 'test-ml-key';
 process.env.GAP_CHECK_TOKEN_SECRET = 'test-gap-check-secret-that-is-at-least-32-bytes';
+delete process.env.GAP_CHECK_MAILERLITE_ENABLED;
 
 let upstreamStatus = 201;
 let calls = [];
@@ -55,24 +58,140 @@ function expiredToken() {
   return `${payload}.${sig}`;
 }
 
-console.log('\n=== Gap Check subscribe and delivery ===\n');
+function pdfObject(latin, n) {
+  const match = latin.match(new RegExp(`(?:^|\\n)${n} 0 obj\\n([\\s\\S]*?)\\nendobj`));
+  if (!match) throw new Error(`PDF is missing object ${n}`);
+  return match[1];
+}
+
+function pdfStream(body) {
+  const start = body.indexOf('stream');
+  let offset = start + 6;
+  if (body[offset] === '\r') offset += 1;
+  if (body[offset] === '\n') offset += 1;
+  const raw = Buffer.from(body.slice(offset, body.lastIndexOf('endstream')), 'latin1');
+  return /\/Filter \/FlateDecode/.test(body) ? inflateSync(raw) : raw;
+}
+
+function pdfCmap(text) {
+  const map = new Map();
+  for (const block of text.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
+    for (const pair of block[1].matchAll(/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g)) {
+      let value = '';
+      for (let i = 0; i < pair[2].length; i += 4) value += String.fromCharCode(parseInt(pair[2].slice(i, i + 4), 16));
+      map.set(parseInt(pair[1], 16), value);
+    }
+  }
+  return map;
+}
+
+function extractGapCheckPdf(path) {
+  const buf = readFileSync(path);
+  const latin = buf.toString('latin1');
+  const pageCount = (latin.match(/\/Type \/Page(?!s)/g) || []).length;
+  const page = latin.match(/\/Contents (\d+) 0 R\n\/Parent \d+ 0 R\n\/Resources (\d+) 0 R\n\/Type \/Page/);
+  if (!page) throw new Error('PDF is missing a single page content stream');
+  const fontCmaps = new Map();
+  for (const font of pdfObject(latin, page[2]).matchAll(/\/(F\d+) (\d+) 0 R/g)) {
+    const unicode = pdfObject(latin, font[2]).match(/\/ToUnicode (\d+) 0 R/);
+    fontCmaps.set(font[1], pdfCmap(pdfStream(pdfObject(latin, unicode[1])).toString('latin1')));
+  }
+  const content = pdfStream(pdfObject(latin, page[1])).toString('latin1');
+  let current = 'F1';
+  let text = '';
+  const tokens = /\/(F\d+)[\s\d.]+Tf|\((?:\\.|[^\\)])*\)\s*Tj/g;
+  let token;
+  while ((token = tokens.exec(content))) {
+    if (token[1]) {
+      current = token[1];
+      continue;
+    }
+    const inner = token[0].slice(1, token[0].lastIndexOf(')'));
+    const bytes = Buffer.from(inner.replace(/\\([\\()nrt])/g, (_, ch) => ({ '\\': '\\', '(': '(', ')': ')', n: '\n', r: '\r', t: '\t' }[ch])), 'latin1');
+    const cmap = fontCmaps.get(current);
+    for (let i = 0; i + 1 < bytes.length; i += 2) text += cmap?.get((bytes[i] << 8) | bytes[i + 1]) || '';
+    text += '\n';
+  }
+  return { buf, pageCount, text };
+}
+
+const index = readFileSync('index.html', 'utf8');
+const gapJs = readFileSync('gap-check.js', 'utf8');
+const { buf: pdf, pageCount: pdfPages, text: pdfText } = extractGapCheckPdf('Family-Readiness-Gap-Check.pdf');
+const gapHtml = index.split('id="gap-check"')[1]?.split('id="faq"')[0] || '';
+
+const QUESTIONS = [
+  'If you were unreachable tonight, would someone know the **first person to call**?',
+  'Is there a named **backup** if that first person does not answer?',
+  'Would someone know who handles **children, dependents, or pets** in the first hour?',
+  'Could someone find where the **signed will** (if you have one) is physically kept?',
+  'Could someone find your **power of attorney** or healthcare directive — or confirm you do not have one yet?',
+  'Is there a single written list of **where the important originals live** (not the documents themselves — the locations)?',
+  'Does at least one trusted person know **where the binder or files would be**?',
+  'Have you written down **who may know what, and when** (now / later / never) — even roughly?',
+  'Is there a clear pointer to the **separate place** where passwords and PINs actually live? (Not the passwords themselves.)',
+  'Could someone identify your **primary bank or credit union by name** without digging through mail for an hour?',
+  'Could someone find **insurance contacts** (health, home, or auto — whichever you carry) by name or phone?',
+  'Is there a note for **life-critical medication or care instructions** a helper would need in the first night?',
+];
+
+const BONUS_LEAK = /fridge card|vault setup|check-in plan|handoff scripts|digital legacy/i;
+
+console.log('\n=== Gap Check on-page product ===\n');
+
+check('email gate copy is gone', !/Send me the Gap Check/.test(index) && !/You score it yourself/.test(index));
+check('intro is the REV2 lock', index.includes('Twelve questions. About four minutes. Answer for your household as it is tonight — not as you wish it were.'));
+check('scoring instruction is the REV2 lock', index.includes('Count every “Yes — we could find this tonight.” Your result is that number out of 12.'));
+check('answer labels are locked', index.includes('Yes — we could find this tonight') && index.includes('No — not tonight'));
+check('instant score template is present',
+  gapJs.includes('Your family would find ') && gapJs.includes(' of 12 things tonight.'));
+check('all 12 Editor REV2 questions are on the page', QUESTIONS.every((q) => {
+  const visible = q.replace(/\*\*(.*?)\*\*/g, '$1');
+  const htmlish = q.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  return index.includes(visible) || index.includes(htmlish);
+}));
+check('score is not email-gated', /id="gapResults"/.test(index) && /id="gapQuiz"/.test(index) && /Email me this score \+ the 1-page checklist/.test(index));
+check('primary CTA is Ultimate $49 with checkout attrs',
+  /Fix the four blanks — Ultimate, \$49/.test(index)
+  && /data-placement="gap-check"/.test(index)
+  && /data-tier="ultimate"/.test(index)
+  && /data-price="49"/.test(index)
+  && /payhip\.com\/b\/Y1O7B/.test(gapHtml));
+check('CTA helper names the four blanks only', index.includes('Start with the Continuity Snapshot, two trusted people, document locations, and a pointer to where passwords live. Instant download.'));
+check('Week 1 30-day guarantee sits under the Gap Check CTA', /id="gapResults"[\s\S]*email us within 30 days and we’ll make it right/.test(index));
+check('bands are locked', [
+  'Most of the first-hour basics are still in someone’s head. A short first pass would change that.',
+  'Some pieces are findable. The gaps are usually people, locations, or access — not more paperwork.',
+  'You are ahead of most households. Fill the remaining blanks while it is still calm.',
+  'The map is largely in place. Review it after the next big life change.',
+].every((band) => gapJs.includes(band)));
+const jsPublic = gapJs.replace(/var BONUS_LEAK[\s\S]*?;/, '');
+check('Gap Check HTML/JS/PDF do not leak Ultimate bonuses',
+  !BONUS_LEAK.test(gapHtml) && !BONUS_LEAK.test(jsPublic) && !BONUS_LEAK.test(pdfText || pdf.toString('latin1')));
+const strip = index.match(/<div class="creator-strip"[\s\S]*?<\/div>\s*<div class="trust-foot">/)?.[0] || '';
+check('creator strip names both people and invents no portraits',
+  strip.includes('Joanne Godfrey')
+  && strip.includes('Michael David')
+  && strip.includes('Portrait to come')
+  && !/<(img|svg)\b/i.test(strip));
+check('public byline stays Michael David', /rfield-label">Created by[\s\S]*Michael David/.test(index));
+check('no AggregateRating or invented reviews', !/aggregateRating|★★★★★|5-star|verified buyer/i.test(index));
+
+console.log('\n=== Gap Check subscribe hold ===\n');
 
 calls = [];
 let res = mockRes();
 await subscribe(req({ email: '  Family@Example.COM ', name: '  Joanne  ' }), res);
 const issuedToken = res.payload?.token;
-const sent = calls[0]?.body;
-check('valid signup returns a signed token', res.statusCode === 200 && typeof issuedToken === 'string' && issuedToken.includes('.'));
+check('held signup returns a signed token without MailerLite',
+  res.statusCode === 200 && res.payload?.held === true && typeof issuedToken === 'string' && calls.length === 0);
 const issuedClaims = JSON.parse(Buffer.from(issuedToken.split('.')[0], 'base64url').toString('utf8'));
 check('issued download token contains exactly one numeric expiry claim and no additional data',
   typeof issuedClaims.exp === 'number' && Object.keys(issuedClaims).sort().join(',') === 'exp');
-check('signup normalises email and uses Leads group', sent?.email === 'family@example.com' && sent?.groups?.[0] === '194226608569059081');
-check('signup defaults to unconfirmed consent state', sent?.status === 'unconfirmed');
-check('signup trims and maps the optional name', sent?.fields?.name === 'Joanne');
 
 res = mockRes();
 download({ method: 'GET', query: { token: issuedToken } }, res);
-check('issued token downloads the PDF', res.statusCode === 200 && Buffer.isBuffer(res.body) && res.body.length > 10_000);
+check('issued token downloads the PDF', res.statusCode === 200 && Buffer.isBuffer(res.body) && res.body.length > 5_000);
 check('download has safe attachment headers', res.headers['content-type'] === 'application/pdf' && /attachment/.test(res.headers['content-disposition']));
 
 res = mockRes();
@@ -97,19 +216,6 @@ res = mockRes();
 await subscribe(req({ email: 'bot@example.com', company_website: 'spam.example' }), res);
 check('honeypot succeeds silently without issuing a download', res.statusCode === 200 && !res.payload?.token && calls.length === 0);
 
-upstreamStatus = 422;
-res = mockRes();
-await subscribe(req({ email: 'existing@example.com' }), res);
-check('existing subscriber still receives a download token', res.statusCode === 200 && typeof res.payload?.token === 'string');
-upstreamStatus = 201;
-
-const savedKey = process.env.MAILERLITE_API_KEY;
-delete process.env.MAILERLITE_API_KEY;
-res = mockRes();
-await subscribe(req({ email: 'valid@example.com' }), res);
-check('missing configuration fails closed', res.statusCode === 503);
-process.env.MAILERLITE_API_KEY = savedKey;
-
 res = mockRes();
 await subscribe({ method: 'GET', headers: {}, body: {} }, res);
 check('unsupported subscribe method is rejected', res.statusCode === 405);
@@ -121,6 +227,44 @@ for (let i = 0; i < 6; i++) {
   await subscribe(req({ email: `rate${i}@example.com` }, rateIp), last);
 }
 check('per-instance rate limit rejects the sixth request', last.statusCode === 429);
+
+const savedKey = process.env.MAILERLITE_API_KEY;
+delete process.env.MAILERLITE_API_KEY;
+res = mockRes();
+await subscribe(req({ email: 'valid@example.com' }), res);
+check('held path does not require MailerLite when sends are off', res.statusCode === 200 && res.payload?.held === true);
+process.env.MAILERLITE_API_KEY = savedKey;
+
+process.env.GAP_CHECK_MAILERLITE_ENABLED = '1';
+calls = [];
+res = mockRes();
+await subscribe(req({ email: '  Family@Example.COM ', name: '  Joanne  ' }), res);
+const sent = calls[0]?.body;
+check('enabled path still posts to MailerLite', res.statusCode === 200 && calls.length === 1 && sent?.email === 'family@example.com');
+check('enabled signup uses Leads group and unconfirmed status', sent?.groups?.[0] === '194226608569059081' && sent?.status === 'unconfirmed');
+check('enabled signup trims and maps the optional name', sent?.fields?.name === 'Joanne');
+
+upstreamStatus = 422;
+res = mockRes();
+await subscribe(req({ email: 'existing@example.com' }), res);
+check('existing subscriber still receives a download token', res.statusCode === 200 && typeof res.payload?.token === 'string');
+upstreamStatus = 201;
+
+delete process.env.MAILERLITE_API_KEY;
+res = mockRes();
+await subscribe(req({ email: 'valid@example.com' }), res);
+check('enabled path fails closed without MailerLite', res.statusCode === 503);
+process.env.MAILERLITE_API_KEY = savedKey;
+delete process.env.GAP_CHECK_MAILERLITE_ENABLED;
+
+console.log('\n=== Gap Check PDF one-pager ===\n');
+check('lead magnet is a single-page PDF', pdfPages === 1);
+check('PDF is diagnostic-only and honest',
+  /Family Readiness Gap Check/.test(pdfText)
+  && /Yes - we could find this tonight/.test(pdfText)
+  && /of 12 things tonight/.test(pdfText)
+  && !/49-page/.test(pdfText)
+  && !BONUS_LEAK.test(pdfText));
 
 console.log(`\n${'='.repeat(46)}\n  ${passed} passed, ${failed} failed\n${'='.repeat(46)}\n`);
 process.exit(failed ? 1 : 0);

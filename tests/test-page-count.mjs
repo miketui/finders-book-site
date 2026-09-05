@@ -1,5 +1,6 @@
 /** Public page-count honesty: Ultimate ships 250; Essentials extract is 001–049. */
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 
 const pages = readdirSync('.').filter((name) => name.endsWith('.html'));
@@ -114,6 +115,12 @@ check('/start has no full-file 49-page claims and uses Marketing lock', () => {
 check('gold-tree sell cover is unchanged', () => {
   assert.match(index, /assets\/finders-book-cover-800\.webp/);
   assert.doesNotMatch(index + order, /Direction A|continuity-cover|sell-cover-a/i);
+});
+
+check('product rasters no longer ship the old 49-PAGES hashes', () => {
+  const sha = (path) => createHash('sha256').update(readFileSync(path)).digest('hex');
+  assert.notEqual(sha('assets/ultimate-product-800.webp'), '74897c34f07dd9391294822d92842fe0771f53776824da6d8228c103a5ec6c0b');
+  assert.notEqual(sha('assets/essentials-product-800.webp'), '19473cf966e76a4977fe7ac6837a51da6a04ed5b99c4b23ecbd039baa53a6c4b');
 });
 
 console.log(`\n${'='.repeat(46)}\n  ${pass} passed\n${'='.repeat(46)}\n`);
