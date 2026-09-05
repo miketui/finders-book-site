@@ -283,7 +283,7 @@
   })();
 
   /* ============================================================
-     3. THE "ALL 49" OVERLAY — holds the seven scans off the spread.
+     3. THE PAGE PREVIEWS OVERLAY — holds the seven scans off the spread.
      ============================================================ */
   (function(){
     var overlay = document.getElementById("allPages");

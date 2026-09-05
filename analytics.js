@@ -62,9 +62,9 @@
   /* Live product slugs. Do not invent new ones. */
   var PAYHIP_SLUGS = { essentials: "eHcPG", ultimate: "Y1O7B", family_bundle: "xPuv4" };
   var PAYHIP_TITLES = {
-    eHcPG: "The Finder's Book — Essentials",
-    Y1O7B: "The Finder's Book — Ultimate",
-    xPuv4: "The Finder's Book — Family Bundle"
+    eHcPG: "The Finder's Book — Essentials · The Family Clarity System™",
+    Y1O7B: "The Finder's Book — Ultimate · The Family Clarity System™",
+    xPuv4: "The Finder's Book — Family Bundle · The Family Clarity System™"
   };
   var CHECKOUT_SUBLINE = "Instant download · One-time · No account required";
   var PAYHIP_SCRIPT = "https://payhip.com/payhip.js";

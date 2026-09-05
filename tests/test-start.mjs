@@ -18,19 +18,22 @@ function check(name, fn) {
   }
 }
 
-const FRIDGE = 'Fridge card and the other implementation tools ship with Ultimate and Family Bundle — not Essentials.';
+const HOME_FRIDGE = 'Fridge card and the other implementation tools ship with Ultimate and Family Bundle — not Essentials.';
+const START_FRIDGE = 'Fridge card is included with Ultimate and Family Bundle. Essentials buyers: use page 2 as your posted snapshot until you upgrade.';
 
 console.log('\n=== Post-purchase /start ===\n');
 
 check('homepage comparison table uses the exact fridge sentence', () => {
-  assert.ok(index.includes(FRIDGE));
+  assert.ok(index.includes(HOME_FRIDGE));
 });
 
-check('start page walks five named steps', () => {
+check('start page walks five named Marketing steps', () => {
+  assert.match(html, /<h1 class="h-xl fx-up">Start tonight<\/h1>/);
+  assert.match(html, /You have the files\. These five steps turn them into something your people can find/);
   assert.match(html, /data-start-step="1"/);
   assert.match(html, /data-start-step="5"/);
   assert.match(html, /Continuity Snapshot/);
-  assert.match(html, /15 minutes/);
+  assert.match(html, /15 minutes|Fifteen minutes/);
   assert.match(html, /fridge card/i);
   assert.match(html, /Name two people/);
   assert.match(html, /Point to where passwords live/);
@@ -38,8 +41,8 @@ check('start page walks five named steps', () => {
 });
 
 check('fridge tools are not claimed for Essentials', () => {
-  assert.ok(html.includes(FRIDGE));
-  assert.match(html, /If you have Essentials, skip this step/);
+  assert.ok(html.includes(START_FRIDGE));
+  assert.match(html, /Essentials buyers: use page 2/);
 });
 
 check('step 4 is pointer-not-vault, not a credential store', () => {
@@ -51,11 +54,14 @@ check('step 4 is pointer-not-vault, not a credential store', () => {
 check('handoff script can be copied', () => {
   assert.match(html, /id="handoffScript"/);
   assert.match(html, /data-copy="#handoffScript"/);
+  assert.match(html, />Copy message</);
+  assert.match(js, /Copied/);
   assert.match(js, /navigator\.clipboard/);
   assert.match(js, /execCommand\("copy"\)/);
 });
 
 check('support and byline stay honest', () => {
+  assert.match(html, /Questions about the files\?/);
   assert.match(html, /info@familyfindersbook\.com/);
   assert.match(html, /A person answers within 3 business days/);
   assert.match(html, /The Finder&rsquo;s Book is by Michael David/);

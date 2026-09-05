@@ -112,14 +112,14 @@ check('overlay passes locked titles and /start return', () => {
     'https://payhip.com/b/Y1O7B',
     'https://payhip.com/b/xPuv4',
   ]);
-  assert.equal(window.fbPayhip.titles.eHcPG, "The Finder's Book — Essentials");
-  assert.equal(window.fbPayhip.titles.Y1O7B, "The Finder's Book — Ultimate");
-  assert.equal(window.fbPayhip.titles.xPuv4, "The Finder's Book — Family Bundle");
+  assert.equal(window.fbPayhip.titles.eHcPG, "The Finder's Book — Essentials · The Family Clarity System™");
+  assert.equal(window.fbPayhip.titles.Y1O7B, "The Finder's Book — Ultimate · The Family Clarity System™");
+  assert.equal(window.fbPayhip.titles.xPuv4, "The Finder's Book — Family Bundle · The Family Clarity System™");
   assert.equal(window.fbPayhip.checkoutSubline, 'Instant download · One-time · No account required');
-  assert.equal(window.fbPayhip.overlayTitleFor('Y1O7B'), "The Finder's Book — Ultimate");
+  assert.equal(window.fbPayhip.overlayTitleFor('Y1O7B'), "The Finder's Book — Ultimate · The Family Clarity System™");
   assert.equal(window.fbPayhip.openOverlay(links[1]), true);
   assert.equal(window.__overlayOptions.product, 'Y1O7B');
-  assert.equal(window.__overlayOptions.title, "The Finder's Book — Ultimate");
+  assert.equal(window.__overlayOptions.title, "The Finder's Book — Ultimate · The Family Clarity System™");
   assert.match(window.__overlayOptions.successUrl, /\/start\.html$/);
 });
 

@@ -47,7 +47,7 @@ const NO_HEADER_CTA = new Set([]);
  * fragment below must appear on both pricing pages.
  */
 const TIER_PARITY = [
-  { label: "Essentials · fillable + print",  needle: "49-page organizer: fillable PDF + print PDF" },
+  { label: "Essentials · fillable + print",  needle: "Fillable organizer PDF + print PDF" },
   { label: "Essentials · Start Here",        needle: "Start Here orientation page" },
   { label: "Ultimate · five tools named",    needle: "All five implementation tools: fridge card, secure vault setup, check-in plan, handoff scripts, digital legacy link + QR guide" },
   { label: "Ultimate · checksums",           needle: "File checksums so you can verify every download" },
