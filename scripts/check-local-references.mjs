@@ -7,6 +7,7 @@ const htmlFiles = [
   'about.html',
   'order.html',
   'contact.html',
+  'start.html',
   'how-it-works.html',
   'family-emergency-planning.html',
   'important-documents.html',

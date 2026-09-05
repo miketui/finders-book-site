@@ -59,6 +59,126 @@
     return document.querySelectorAll("[data-checkout]");
   }
 
+  /* Live product slugs. Do not invent new ones. */
+  var PAYHIP_SLUGS = { essentials: "eHcPG", ultimate: "Y1O7B", family_bundle: "xPuv4" };
+  var PAYHIP_SCRIPT = "https://payhip.com/payhip.js";
+  var START_PATH = "/start.html";
+  var payhipScriptState = "idle";
+
+  function brandedStartUrl(){
+    try { return new URL(START_PATH, location.origin).href; }
+    catch (e) { return START_PATH; }
+  }
+
+  function productKeyFromHref(href){
+    var raw = String(href || "");
+    var buy = raw.match(/[?&]link=([A-Za-z0-9_-]+)/i);
+    if (buy) return buy[1];
+    var page = raw.match(/payhip\.com\/b\/([A-Za-z0-9_-]+)/i);
+    return page ? page[1] : "";
+  }
+
+  function productKeyFromEl(el){
+    if (!el) return "";
+    return el.getAttribute("data-product")
+      || PAYHIP_SLUGS[el.getAttribute("data-tier")]
+      || productKeyFromHref(el.getAttribute("href"));
+  }
+
+  function hidePayhipSaleChrome(){
+    if (document.getElementById("fb-payhip-sale-hide")) return;
+    var style = document.createElement("style");
+    style.id = "fb-payhip-sale-hide";
+    style.textContent = [
+      ".payhip-sale,",
+      ".payhip-sale-badge,",
+      ".payhip-product-badge,",
+      ".payhip-on-sale,",
+      "[class*='payhip'][class*='sale'],",
+      "[class*='Payhip'][class*='Sale'],",
+      ".payhip-buy-button [class*='sale']{display:none!important}"
+    ].join("");
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  function decorateOverlayLink(el){
+    var key = productKeyFromEl(el);
+    if (!key) return;
+    el.setAttribute("data-product", key);
+    el.setAttribute("data-theme", "none");
+    /* Own the click in openPayhipOverlay. Do not add payhip-buy-button —
+       that class lets Payhip.js bind a second handler and can double-open. */
+  }
+
+  function loadPayhipScript(done){
+    if (window.Payhip) { payhipScriptState = "ready"; done(true); return; }
+    if (payhipScriptState === "ready") { done(!!window.Payhip); return; }
+    if (payhipScriptState === "loading") {
+      var once = function(){ done(!!window.Payhip); };
+      window.addEventListener("finder:payhip-ready", once, { once: true });
+      return;
+    }
+    payhipScriptState = "loading";
+    var s = document.createElement("script");
+    s.src = PAYHIP_SCRIPT;
+    s.async = true;
+    s.onload = function(){
+      payhipScriptState = window.Payhip ? "ready" : "error";
+      try { window.dispatchEvent(new Event("finder:payhip-ready")); } catch (e) {}
+      done(!!window.Payhip);
+    };
+    s.onerror = function(){
+      payhipScriptState = "error";
+      try { window.dispatchEvent(new Event("finder:payhip-ready")); } catch (e) {}
+      done(false);
+    };
+    (document.head || document.documentElement).appendChild(s);
+  }
+
+  function callPayhipCheckout(key){
+    var Payhip = window.Payhip;
+    if (!Payhip || !key) return false;
+    var start = brandedStartUrl();
+    var options = { product: key, successUrl: start, redirect: start };
+    try {
+      if (Payhip.Checkout && typeof Payhip.Checkout.open === "function") {
+        Payhip.Checkout.open(options);
+        return true;
+      }
+    } catch (e) {}
+    try {
+      if (typeof Payhip.Buy === "function") { Payhip.Buy(key); return true; }
+    } catch (e) {}
+    try {
+      if (Payhip.Buy && typeof Payhip.Buy.product === "function") {
+        Payhip.Buy.product(key);
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function openPayhipOverlay(el){
+    var key = productKeyFromEl(el);
+    if (!key) return false;
+    return callPayhipCheckout(key);
+  }
+
+  function watchOverlaySuccess(){
+    if (watchOverlaySuccess.bound) return;
+    watchOverlaySuccess.bound = true;
+    window.addEventListener("message", function(e){
+      var origin = String(e && e.origin || "");
+      if (!/^https:\/\/(?:[\w-]+\.)?payhip\.com$/i.test(origin)) return;
+      var data = e.data;
+      var text = "";
+      try { text = typeof data === "string" ? data : JSON.stringify(data || ""); }
+      catch (err) { text = ""; }
+      if (!/purchas|success|complete|paid|order/i.test(text)) return;
+      try { location.assign(brandedStartUrl()); } catch (err) {}
+    });
+  }
+
   function asPayhipDirectCheckout(url){
     if (!/(^|\.)payhip\.com$/i.test(url.hostname)) return url;
     var match = url.pathname.match(/^\/b\/([A-Za-z0-9_-]+)\/?$/);
@@ -97,11 +217,15 @@
         });
       }
       el.href = url.toString();
+      decorateOverlayLink(el);
     }catch(e){}
   }
 
   function refreshCheckoutLinks(){
-    checkoutLinks().forEach(forwardAttribution);
+    checkoutLinks().forEach(function(el){
+      decorateOverlayLink(el);
+      forwardAttribution(el);
+    });
   }
 
   function hydrateGaCheckout(){
@@ -142,12 +266,19 @@
     if (status === "granted" || status === "denied") hydrateGaCheckout();
   });
 
-  /* ---------- checkout click tracking ---------- */
+  /* ---------- checkout click tracking + in-page overlay ----------
+     Prefer Payhip's overlay when the script is present. Fall back to the
+     existing /buy?link= full-page path (no-JS, modifier-click, or overlay miss).
+     Overlay never replaces the href, so middle-click and "Open in new tab" stay. */
+  hidePayhipSaleChrome();
+  watchOverlaySuccess();
+  loadPayhipScript(function(){});
   checkoutLinks().forEach(function(el){
+    decorateOverlayLink(el);
     // Direct-checkout + UTM decoration happens at initialization so middle-click,
     // Cmd/Ctrl-click and context "Open in new tab" retain the intended checkout.
     forwardAttribution(el);
-    el.addEventListener("click", function(){
+    el.addEventListener("click", function(e){
       forwardAttribution(el);
       track("checkout_click", Object.assign({
         placement: el.getAttribute("data-placement"),
@@ -155,9 +286,32 @@
         value: Number(el.getAttribute("data-price") || 0),
         currency: "USD"
       }, attribution()));
+      if (!e || e.defaultPrevented) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (typeof e.button === "number" && e.button !== 0) return;
+      if (openPayhipOverlay(el)) {
+        e.preventDefault();
+        return;
+      }
+      if (payhipScriptState === "loading") {
+        e.preventDefault();
+        loadPayhipScript(function(ready){
+          if (ready && openPayhipOverlay(el)) return;
+          try { location.assign(el.href); } catch (err) {}
+        });
+      }
     });
   });
   if (window.fbAnalyticsConsent === "granted") hydrateGaCheckout();
+
+  window.fbPayhip = {
+    slugs: PAYHIP_SLUGS,
+    startPath: START_PATH,
+    productKeyFromHref: productKeyFromHref,
+    productKeyFromEl: productKeyFromEl,
+    brandedStartUrl: brandedStartUrl,
+    openOverlay: openPayhipOverlay
+  };
 
   /* ---------- supporting CTA clicks ---------- */
   document.querySelectorAll("[data-scroll-cta]").forEach(function(el){

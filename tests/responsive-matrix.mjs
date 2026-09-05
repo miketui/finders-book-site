@@ -40,6 +40,13 @@ const PAGES = [
       { selector: '#cfSubmit', min: 44, label: 'contact submit' },
     ],
   },
+  {
+    path: '/start.html',
+    controls: [
+      { selector: '[data-start-next]', min: 44, label: 'start next step' },
+      { selector: '[data-start-goto="1"]', min: 44, label: 'start step 1 control' },
+    ],
+  },
 ];
 
 const MIME = {

@@ -38,6 +38,7 @@ const PAGES = [
   { path: '/about.html',   must: ['h1', '.lede', '.eyebrow'] },
   { path: '/order.html',   must: ['h1', '.lede', '.eyebrow', '.book3d', '.tier'] },
   { path: '/contact.html', must: ['h1', '.lede', '.eyebrow', '.cf-radio'] },
+  { path: '/start.html', must: ['h1', '.lede', '.eyebrow', '[data-start-step="1"]', '[data-start-next]'] },
   { path: '/how-it-works.html', must: ['h1', '.lede', '.eyebrow', '.doc-list'] },
   { path: '/family-emergency-planning.html', must: ['h1', '.lede', '.eyebrow', '.ticks'] },
   { path: '/important-documents.html', must: ['h1', '.lede', '.eyebrow', '.ticks'] },

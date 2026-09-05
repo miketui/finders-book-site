@@ -4,6 +4,19 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
+## Week 2 — Payhip overlay + `/start` (2026-09-05)
+
+Site code now prefers in-page Payhip overlay checkout and ships a branded `/start` orientation page. **No Payhip admin setting was changed in this work.** See `docs/PAYHIP-OVERLAY.md`.
+
+### APPROVAL NEEDED
+
+| Setting | Why | What to type | Risk if flipped without reading |
+|---|---|---|---|
+| Checkout success redirect to `https://www.familyfindersbook.com/start.html` | Overlay `successUrl` is best-effort only. A reliable return to `/start` is a Payhip dashboard checkbox. | Account → Settings → Advanced Settings → Checkout Settings → redirect all three SKUs | Buyers lose the in-overlay instant download and must use the Payhip email. `/start` already says so. |
+| Remove “On Sale” / compare-at price, if it still shows in overlay or `/buy` | Site CSS cannot restyle Payhip’s iframe. | Product editor for `eHcPG`, `Y1O7B`, `xPuv4` — clear sale/compare-at only. Keep $29 / $49 / $89. | Changing the actual price would disagree with the website. |
+
+---
+
 ## Status as of 2026-08-18 — current AGM execution
 
 | Item | State | Current evidence |

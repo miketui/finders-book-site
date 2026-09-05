@@ -39,6 +39,7 @@ const WEIGHTS = [
   { match: /^letter-of-instruction\.html$/, changefreq: 'monthly', priority: '0.7' },
   { match: /^about\.html$/, changefreq: 'yearly', priority: '0.6' },
   { match: /^contact\.html$/, changefreq: 'yearly', priority: '0.5' },
+  { match: /^start\.html$/, changefreq: 'yearly', priority: '0.4' },
   { match: /.*/, changefreq: 'yearly', priority: '0.3' },
 ];
 

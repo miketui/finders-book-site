@@ -207,7 +207,58 @@ html.fx .cf-row textarea{ transition:border-color var(--dur-1) var(--ease) }
 #order-security .doctrine{ margin-top:clamp(2rem,4vw,3rem) }
 
 /* ============================================================
-   7. REDUCED MOTION
+   7. START — post-purchase orientation
+   ============================================================ */
+.start-wrap{ max-width:42rem }
+.start-progress-label{
+  font-family:var(--sans); font-size:.78rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--gold-ink); margin:0 0 .7rem;
+}
+.start-progress{
+  list-style:none; display:flex; gap:.55rem; margin:0 0 1.8rem; padding:0;
+}
+.start-progress li{ margin:0 }
+.start-dot{
+  width:44px; height:44px; border-radius:50%;
+  border:1px solid var(--hair); background:var(--paper-hi); color:var(--pine);
+  font-family:var(--sans); font-size:.9rem; font-weight:600; cursor:pointer;
+}
+.start-dot[aria-current="step"]{
+  background:var(--pine); color:var(--paper); border-color:var(--pine);
+}
+.start-step{ margin:0 0 2rem }
+.start-step .h-lg{ margin:.2em 0 .7em }
+.start-note{
+  font-family:var(--sans); font-size:.92rem; color:var(--mute);
+  border-left:2px solid var(--gold); padding:.15rem 0 .15rem .9rem;
+}
+.start-script{
+  margin:1.4rem 0 0; padding:1.15rem 1.2rem;
+  background:var(--paper-hi); border:1px solid var(--hair); border-radius:var(--r);
+}
+.start-script pre{
+  margin:0 0 1rem; white-space:pre-wrap; font-family:var(--serif);
+  font-size:1.02rem; line-height:1.55; color:var(--pine);
+}
+.start-copy-row{
+  display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; margin:0;
+}
+.start-copy-status{ font-family:var(--sans); font-size:.88rem; color:var(--ok) }
+.start-nav{
+  display:flex; flex-wrap:wrap; gap:.75rem; margin-top:.4rem;
+}
+.start-nav .btn[disabled]{ opacity:.45; cursor:not-allowed }
+.start-wizard.is-stepped .start-nav{ position:sticky; bottom:.75rem }
+.start-wizard:not(.is-stepped) .start-progress,
+.start-wizard:not(.is-stepped) .start-progress-label,
+.start-wizard:not(.is-stepped) .start-nav{ display:none }
+
+@media (max-width:720px){
+  .start-wizard.is-stepped .start-step{ min-height:12rem }
+}
+
+/* ============================================================
+   8. REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion:reduce){
   html.fx .tier,html.fx .q summary::after,

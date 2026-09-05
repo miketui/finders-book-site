@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 const pages = [
-  'index.html', 'about.html', 'order.html', 'contact.html',
+  'index.html', 'about.html', 'order.html', 'contact.html', 'start.html',
   'privacy-policy.html', 'refund-policy.html', 'terms.html', '404.html',
 ];
 const consent = readFileSync('consent.js', 'utf8');

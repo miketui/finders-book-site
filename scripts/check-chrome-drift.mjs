@@ -25,7 +25,7 @@ import { createHash } from "node:crypto";
  * the whole site and any new page must be added here deliberately.
  */
 const PAGES = [
-  "index.html", "about.html", "order.html", "contact.html",
+  "index.html", "about.html", "order.html", "contact.html", "start.html",
   "how-it-works.html", "family-emergency-planning.html", "important-documents.html",
   "letter-of-instruction.html", "in-case-of-death-binder.html",
   "privacy-policy.html", "refund-policy.html", "terms.html", "404.html",
@@ -153,6 +153,15 @@ for (const { label, needle } of TIER_PARITY) {
   if (misses.length) fail(`tier copy "${label}" missing from: ${misses.join(", ")}`);
 }
 if (!failed) ok(`${TIER_PARITY.length} tier fragments identical on ${PRICING_PAGES.join(" + ")}`);
+
+/* ---- 3e. Essentials fridge disclosure under the homepage comparison ---- */
+console.log("\nfridge disclosure");
+const FRIDGE_NOTE = "Fridge card and the other implementation tools ship with Ultimate and Family Bundle — not Essentials.";
+if (!src["index.html"] || !src["index.html"].includes(FRIDGE_NOTE)) {
+  fail(`index.html comparison table is missing the exact fridge disclosure`);
+} else {
+  ok("homepage comparison table names fridge tools as Ultimate/Bundle only");
+}
 
 /* ---- 3d. third-party scripts ---- */
 console.log("\nthird-party scripts");
