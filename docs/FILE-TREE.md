@@ -99,6 +99,7 @@ finders-book-site/
     │   ├── PRODUCTION-VERIFICATION.md
     │   ├── redesign-direction.html
     │   ├── redesign-mock.html
+    │   ├── SITE-AUDIT-2026-09-05.md
     │   ├── SOURCE-ZIP-AUDIT.md
     │   ├── VENDOR-MAP.md
     │   └── VERIFIED-STATE-2026-08-15.md

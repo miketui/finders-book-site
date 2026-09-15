@@ -18,7 +18,8 @@ row. Do not mark a row green from inspection — every row needs an observation.
 | All secrets landed | same response | every `secrets_present` value `true` |
 | Revenue reporting armed | same response | `behaviour.ga4_purchase_reporting: true` |
 | GA4 key events | GA4 Admin | `purchase`, `checkout_click`, and `lead_submit` are configured as key events before traffic |
-| Owner alerting armed | same response | `behaviour.contact_owner_alert: true` |
+| Owner email armed | same response | `behaviour.contact_owner_email: true` |
+| Optional secondary alert | same response | `behaviour.contact_secondary_alert` matches whether `CONTACT_NOTIFY_WEBHOOK_URL` is set |
 | Product map health | same response | `behaviour.product_map_valid: true`; source may be `built_in` or an intentionally configured environment override |
 
 ## 1. Lead magnet (Gap Check)
@@ -41,7 +42,8 @@ Run once per kind: **question**, **feedback**, **licensing**. The production rou
 | 2.1 | Submit the form | 200 and the on-page confirmation |
 | 2.2 | MailerLite subscriber/groups | **No subscriber or group mutation** caused by the support submission |
 | 2.3 | Marketing protection | The sender is not added to `Leads`, a buyer group, or any contact-marketing group merely for asking for support |
-| 2.4 | Owner alert | The configured `CONTACT_NOTIFY_WEBHOOK_URL` endpoint receives the message |
+| 2.4 | Owner email | The Resend-backed owner inbox receives the message (`behaviour.contact_owner_email`) |
+| 2.4b | Secondary alert | If `CONTACT_NOTIFY_WEBHOOK_URL` is set, that endpoint also receives a copy; its failure must not hide a successful owner email |
 | 2.5 | Reply | A human replies within the stated response window |
 
 ## 3. Purchase — one controlled order

@@ -4,11 +4,48 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
-## Week 4 — Gift path hold (2026-09-05)
+## Week 4 — Gift path (2026-09-05)
 
-`/gift.html` is a draft on-site path only: in-page card face, copyable email templates, and the existing Payhip SKUs (`eHcPG`, `Y1O7B`, `xPuv4`). **No Payhip dashboard setting was changed.** **No MailerLite send was made.** Designer gift-card PDF remains a placeholder — do not attach a product PDF or ZIP to the repo. Hold merge for CoS / Michael.
+`/gift.html` is on-site: in-page card face, copy-only email templates, and the existing Payhip SKUs (`eHcPG`, `Y1O7B`, `xPuv4`). **No Payhip dashboard setting was changed.** **No MailerLite send was made.** Designer gift-card PDF remains a placeholder — do not attach a product PDF or ZIP to the repo.
 
 ---
+
+## Count the attached PDFs — only you can (2026-09-05)
+
+**This is the one open blocker and it needs a Payhip seller login.**
+
+Three surfaces disagree about how long the book is:
+
+- The **website** says Ultimate is 250 pages.
+- **Payhip** Ultimate/Family listings say 49-page fillable and print PDFs.
+- Three **enabled MailerLite** buyer emails also say 49 pages.
+
+And the 2026-08-18 package audit no longer applies: Payhip now advertises
+different download sizes on every product (Essentials 9 MB, Ultimate 21 MB,
+Family 22 MB, versus ~28.9 / 27.2 / 28.1 MB verified in August). The packages
+were replaced after that audit, so **both 49 and 250 are unverified today.**
+
+Do this before changing any copy anywhere:
+
+1. Payhip → product editor → download the attached Ultimate ZIP. Open the
+   fillable and print PDFs. Read the page count. Repeat for Family and
+   Essentials. Note filename and size.
+2. If Ultimate is 250: raise Payhip and the three MailerLite emails to 250.
+3. If Ultimate is still 49: the **website** is the thing to fix — attach the
+   real 250-page file first, or revert public copy to 49.
+4. Rewrite `docs/PAYHIP-PACKAGE-MATRIX.md` either way. It is known-stale.
+
+MailerLite emails that say 49 pages (all enabled): Ultimate
+`196196207638349589`, Family `196196225144326000`, Essentials
+`196196188456748062` (the Essentials one is correct for its tier).
+
+Automation could not close this: the Composio Payhip connector needs OAuth a
+headless agent cannot complete, no `PAYHIP_API_KEY` exists, Payhip has no
+product-description write API, and `payhip.com/dashboard` requires your login.
+Leave the two 2026-09-05 MailerLite drafts (Gap Check PDF Opt-in, Day-7 Review
++ Upgrade) disabled.
+
+Full audit: [`docs/SITE-AUDIT-2026-09-05.md`](SITE-AUDIT-2026-09-05.md).
 
 ## Week 3 — Gap Check MailerLite hold (2026-09-05)
 
@@ -159,9 +196,10 @@ empty property list on the Admin API, so neither could read account settings.
 
 ## 4. Contact alerting
 
-**Complete as of 2026-08-18 — do not redo.** `/api/health` reports
-`contact_owner_alert: true`, so `CONTACT_NOTIFY_WEBHOOK_URL` is set in Vercel
-and inbound contact messages are being pushed to it.
+**Complete as of 2026-08-18 — do not redo the webhook.** `/api/health` now reports
+`contact_owner_email` (Resend) and `contact_secondary_alert` (optional webhook).
+There is no `contact_owner_alert` flag. A 2026-08-18 health read showed the
+secondary webhook was set; Resend is the visitor-facing delivery path.
 
 ~~Set `CONTACT_NOTIFY_WEBHOOK_URL` in Vercel to any https endpoint that accepts
 JSON.~~ Done.

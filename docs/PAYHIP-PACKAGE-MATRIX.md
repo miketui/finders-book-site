@@ -1,5 +1,14 @@
 # Payhip package matrix — verified 2026-08-18
 
+> **STALE AS OF 2026-09-05 — DO NOT CITE THE PAGE COUNTS OR HASHES BELOW.**
+> Payhip now advertises different download sizes on all three products
+> (Essentials 9 MB, Ultimate 21 MB, Family 22 MB) than the archives verified
+> here (~28.9 / 27.2 / 28.1 MB). The attached packages were replaced after this
+> audit, so the "49-page core" rows no longer describe what buyers receive, and
+> the recorded SHA-256 values no longer match. Re-download the attached ZIPs,
+> count pages, and rewrite this file. See
+> [`docs/SITE-AUDIT-2026-09-05.md`](SITE-AUDIT-2026-09-05.md).
+
 This document records current launch evidence for the three live Finder’s Book Payhip products. It intentionally contains no customer email addresses, payment credentials, webhook secrets, or private account identifiers.
 
 ## Live store/account settings verified
