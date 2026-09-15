@@ -259,7 +259,117 @@ html.fx .start-wizard:not(.is-stepped) .start-step:not([data-start-step="1"]){ d
 }
 
 /* ============================================================
-   8. REDUCED MOTION
+   8. GIFT — for a parent / partner
+   ============================================================ */
+.gift-wrap{ max-width:52rem }
+.gift-buy-grid{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(1rem,2.4vw,1.8rem); margin:1.6rem 0 1.2rem;
+}
+@media (max-width:720px){ .gift-buy-grid{ grid-template-columns:1fr; max-width:34rem } }
+.gift-buy-grid .tier{ height:auto }
+.gift-buy-grid .tier img{ margin:0 0 1rem }
+.gift-steps{
+  list-style:none; margin:0; padding:0; counter-reset:gift-step;
+}
+.gift-steps li{
+  position:relative; padding:0 0 1.4rem 3.2rem;
+  border-left:1px solid var(--hair); margin-left:.7rem;
+}
+.gift-steps li:last-child{ border-left-color:transparent; padding-bottom:0 }
+.gift-steps li::before{
+  counter-increment:gift-step; content:counter(gift-step);
+  position:absolute; left:-0.85rem; top:0;
+  width:1.7rem; height:1.7rem; border-radius:50%;
+  background:var(--pine); color:var(--paper);
+  font-family:var(--sans); font-size:.82rem; font-weight:600;
+  display:flex; align-items:center; justify-content:center;
+}
+.gift-steps strong{ display:block; font-family:var(--sans); margin-bottom:.25rem }
+.cta-helper{
+  font-family:var(--sans); font-size:.92rem; color:var(--mute);
+  margin:1rem 0 .35rem;
+}
+.gift-card-sheet{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(1rem,2.5vw,1.6rem); margin:1.4rem 0 1rem;
+}
+@media (max-width:700px){ .gift-card-sheet{ grid-template-columns:1fr; max-width:22rem } }
+.gift-card{
+  aspect-ratio:5/7; padding:clamp(1.2rem,3vw,1.8rem);
+  border:1px solid var(--gold); border-radius:var(--r);
+  display:flex; flex-direction:column; justify-content:space-between;
+  background:var(--paper-hi);
+}
+.gift-card-front{
+  background:var(--pine); color:var(--paper); border-color:var(--gold-hi);
+  align-items:center; text-align:center;
+}
+.gift-card-kicker,.gift-card-meta,.gift-card-mute{
+  font-family:var(--sans); letter-spacing:.12em; text-transform:uppercase;
+  font-size:.68rem; margin:0;
+}
+.gift-card-kicker{ color:var(--gold-hi) }
+.gift-card-cover{
+  width:min(42%, 7.5rem); height:auto; margin:.6rem auto;
+  box-shadow:var(--shadow-sm);
+}
+.gift-card-line{
+  font-family:var(--serif); font-size:clamp(1.35rem,3vw,1.7rem);
+  line-height:1.25; margin:0; color:var(--paper);
+}
+.gift-card-title{
+  font-family:var(--serif); font-size:1.7rem; line-height:1.15; margin:0 0 .4rem;
+}
+.gift-card-meta{ color:var(--gold-ink); margin-bottom:auto }
+.gift-card-start{
+  font-family:var(--serif); font-size:1.15rem; margin:.8rem 0 .6rem;
+}
+.gift-card-mute{ color:var(--mute) }
+.gift-card-placeholder{
+  font-family:var(--sans); font-size:.88rem; color:var(--mute);
+  border:1px dashed var(--hair); border-radius:var(--r);
+  padding:.85rem 1rem; margin:0 0 1rem;
+}
+.gift-card-placeholder-action{ font-weight:600; color:var(--pine) }
+.gift-mail-fields{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 1.2rem; margin:0 0 1.6rem;
+}
+.gift-mail-fields .cf-row:last-child{ grid-column:1 / -1 }
+@media (max-width:700px){ .gift-mail-fields{ grid-template-columns:1fr } }
+.gift-optional{ font-weight:400; color:var(--mute); text-transform:none; letter-spacing:0 }
+.gift-mail-grid{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(1rem,2.4vw,1.6rem);
+}
+@media (max-width:900px){ .gift-mail-grid{ grid-template-columns:1fr } }
+.gift-mail-grid figcaption{
+  font-family:var(--sans); font-size:.78rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--gold-ink); margin:0 0 .8rem;
+}
+
+@media print{
+  .skip,.hdr,.scrim,.ftr,.page-head,#gift-buy,#gift-how,#gift-email,#gift-support,
+  .gift-no-print,.gift-card-placeholder, .consent-root, #consentBanner, .fb-consent{
+    display:none !important;
+  }
+  body.gift-printing, body.gift-printing main, body.gift-printing #gift-card,
+  body.gift-printing .gift-wrap{
+    display:block !important; background:#fff; color:#14372D; padding:0; margin:0;
+    max-width:none;
+  }
+  body.gift-printing .gift-card-sheet{
+    display:grid; grid-template-columns:1fr 1fr; gap:0.6in; padding:0.4in;
+    page-break-inside:avoid;
+  }
+  body.gift-printing .gift-card{
+    break-inside:avoid; box-shadow:none; min-height:5.5in;
+  }
+}
+
+/* ============================================================
+   9. REDUCED MOTION
    ============================================================ */
 @media (prefers-reduced-motion:reduce){
   html.fx .tier,html.fx .q summary::after,

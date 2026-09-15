@@ -145,6 +145,9 @@ p{margin:0 0 1rem}
   margin:.55rem 0 0;
 }
 .tier-lead .checkout-subline,.hero .checkout-subline,.band-pine .checkout-subline,.band-deep .checkout-subline{color:var(--mute-pine)}
+.cta-helper{
+  font-family:var(--sans);font-size:.92rem;color:var(--mute);margin:1rem 0 .35rem
+}
 .cta-guarantee{
   font-family:var(--sans);font-size:.78rem;line-height:1.5;color:var(--mute);
   max-width:52ch;margin:.7rem 0 0;

@@ -4,6 +4,12 @@ Everything in this file needs a human with an account login. Each item records
 what was **verified live**, so the next person starts from evidence rather than
 from the assumption in an older document.
 
+## Week 4 — Gift path (2026-09-05)
+
+`/gift.html` is on-site: in-page card face, copy-only email templates, and the existing Payhip SKUs (`eHcPG`, `Y1O7B`, `xPuv4`). **No Payhip dashboard setting was changed.** **No MailerLite send was made.** Designer gift-card PDF remains a placeholder — do not attach a product PDF or ZIP to the repo.
+
+---
+
 ## Count the attached PDFs — only you can (2026-09-05)
 
 **This is the one open blocker and it needs a Payhip seller login.**

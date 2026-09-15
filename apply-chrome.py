@@ -69,6 +69,7 @@ FOOTER = """<!-- CHROME:FOOTER:START — identical in every page. Guarded by scr
           <li><a href="/">Home</a></li>
           <li><a href="/about.html">About</a></li>
           <li><a href="/order.html">Editions &amp; pricing</a></li>
+          <li><a href="/gift.html">Gift for a parent</a></li>
           <li><a href="/contact.html">Contact &amp; feedback</a></li>
           <li><a href="/#gap-check">Free Gap Check</a></li>
         </ul>

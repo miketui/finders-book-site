@@ -8,6 +8,7 @@ const htmlFiles = [
   'order.html',
   'contact.html',
   'start.html',
+  'gift.html',
   'how-it-works.html',
   'family-emergency-planning.html',
   'important-documents.html',

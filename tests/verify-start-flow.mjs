@@ -21,6 +21,7 @@ const server = await new Promise((resolve) => {
     let f = decodeURIComponent(req.url.split('?')[0]);
     if (f === '/') f = '/index.html';
     if (f === '/start') f = '/start.html';
+    if (f === '/gift') f = '/gift.html';
     const p = join(ROOT, f);
     if (p.startsWith(ROOT) && existsSync(p) && statSync(p).isFile()) {
       res.writeHead(200, { 'Content-Type': MIME[extname(p)] || 'application/octet-stream' });

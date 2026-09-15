@@ -5,7 +5,7 @@
   "type": "module",
   "description": "The Finder's Book static landing page with Payhip and MailerLite Vercel serverless routes",
   "scripts": {
-    "test": "node tests/test-consent.mjs && node tests/test-webhook.mjs && node tests/test-contact.mjs && node tests/test-gap-check.mjs && node tests/test-health.mjs && node tests/test-checkout.mjs && node tests/test-start.mjs && node tests/test-page-count.mjs",
+    "test": "node tests/test-consent.mjs && node tests/test-webhook.mjs && node tests/test-contact.mjs && node tests/test-gap-check.mjs && node tests/test-health.mjs && node tests/test-checkout.mjs && node tests/test-start.mjs && node tests/test-page-count.mjs && node tests/test-gift.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:refs": "node scripts/check-local-references.mjs",
     "check:csp": "node scripts/check-csp.mjs",

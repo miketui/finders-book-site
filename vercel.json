@@ -9,7 +9,8 @@
     { "source": "/index.html", "destination": "/", "permanent": true },
     { "source": "/order", "destination": "/order.html", "permanent": true },
     { "source": "/contact", "destination": "/contact.html", "permanent": true },
-    { "source": "/start", "destination": "/start.html", "permanent": true }
+    { "source": "/start", "destination": "/start.html", "permanent": true },
+    { "source": "/gift", "destination": "/gift.html", "permanent": true }
   ],
   "functions": {
     "api/*.js": {
@@ -44,7 +45,7 @@
       ]
     },
     {
-      "source": "/:file(styles.css|chrome.css|pages.css|consent.css|analytics.js|consent.js|chrome.js|motion.js|contact.js|start.js|gap-check.js)",
+      "source": "/:file(styles.css|chrome.css|pages.css|consent.css|analytics.js|consent.js|chrome.js|motion.js|contact.js|start.js|gap-check.js|gift.js)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
